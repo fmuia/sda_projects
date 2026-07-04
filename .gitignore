@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.pytest_cache/
+.marimo/
+*.egg-info/
+dist/
+build/
+.DS_Store
+.jupyter_cache/
+notebooks/*.html

@@ -1,0 +1,18 @@
+# "legacy" environment — pymc<6 stack, needed because causalpy and
+# pymc-marketing have not yet moved to pymc>=6 (see README "Environment
+# split"). Powers notebooks 06 (incrementality MMM) and 08-11 (CausalPy:
+# DiD, RDD, ITS, IV). Built into .venv-legacy by `make env-legacy`, kept
+# out of pyproject.toml on purpose so `uv sync` never has to resolve both
+# pymc majors at once.
+pymc>=5.15.1,<6
+causalpy>=0.8,<0.9
+pymc-marketing>=0.15,<0.20
+arviz>=0.20,<1
+numpy>=1.26,<2.1
+pandas>=2.2,<3
+scipy>=1.13,<2
+scikit-learn>=1.5,<2
+matplotlib>=3.9,<4
+networkx>=3.3,<4
+jupyter>=1.1,<2
+ipykernel>=6.29,<7
