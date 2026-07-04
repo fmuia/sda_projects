@@ -4,6 +4,7 @@ __pycache__/
 .ipynb_checkpoints/
 .pytest_cache/
 .marimo/
+apps/__marimo__/
 *.egg-info/
 dist/
 build/
