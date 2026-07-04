@@ -310,17 +310,19 @@ def did_rollout(n_stores: int = 40, n_weeks: int = 24, launch_week: int = 12, tr
     effects + a shared seasonal pattern), so DiD identifies `true_effect`.
     """
     rng = np.random.default_rng(seed)
-    store_fx = rng.normal(5000, 800, n_stores)
+    # Baseline revenue is kept close in scale to the effect so the treatment is a
+    # meaningful fraction of the level (matters for the Bayesian fit's default priors).
+    store_fx = rng.normal(1000, 150, n_stores)
     treated = np.zeros(n_stores, dtype=bool)
     treated[: n_stores // 2] = True
     rng.shuffle(treated)
 
     rows = []
-    season = 200 * np.sin(2 * np.pi * np.arange(n_weeks) / 12)
+    season = 60 * np.sin(2 * np.pi * np.arange(n_weeks) / 12)
     for s in range(n_stores):
         post = (np.arange(n_weeks) >= launch_week).astype(float)
         effect = true_effect * post * treated[s]
-        revenue = store_fx[s] + season + effect + rng.normal(0, 250, n_weeks)
+        revenue = store_fx[s] + season + effect + rng.normal(0, 80, n_weeks)
         rows.append(pd.DataFrame({
             "store": f"store_{s:02d}", "unit": s, "t": np.arange(n_weeks), "week": np.arange(n_weeks),
             "group": int(treated[s]),
@@ -341,9 +343,12 @@ def rdd_perk(n: int = 2000, cutoff: float = 100.0, true_jump: float = 0.14, seed
     jump at the cutoff from the perk itself.
     """
     rng = np.random.default_rng(seed)
-    spend = rng.gamma(shape=3.0, scale=45.0, size=n)
+    # Spend concentrated around the cutoff so both sides are well-populated for a
+    # local-linear fit. A gentle *linear* smooth trend in spend (big spenders retain
+    # more anyway) plus a genuine discontinuous jump at the cutoff from the perk.
+    spend = np.clip(rng.normal(cutoff, 40.0, size=n), 1, None)
     treated = (spend >= cutoff).astype(float)
-    baseline = 0.35 + 0.0025 * spend - 0.0000045 * spend**2
+    baseline = 0.45 + 0.0015 * (spend - cutoff)        # linear so local-linear RD is unbiased
     retention_p = np.clip(baseline + true_jump * treated, 0.02, 0.98)
     retention = (rng.uniform(size=n) < retention_p).astype(float)
     df = pd.DataFrame({"spend": spend, "treated": treated, "retention": retention})
