@@ -1,0 +1,87 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.23.13",
+    "script_metadata_hash": null
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "e7ad2659eab7a276ddf2001ff2f6d47d",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "d5e5e97a783e9545ea4b088a42aedeed",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"confounding-sensitivity-how-fragile-is-the-conclusion\">Confounding sensitivity \u2014 how fragile is the conclusion?</h1>\n<span class=\"paragraph\">We assumed we measured every confounder. What if we didn't? Below, a hidden\ndriver <code>U</code> moves <em>both</em> who gets the email and how much they spend. Slide its\nstrength up and watch the ATE we'd estimate (adjusting for the <strong>observed</strong>\nfeatures only) drift \u2014 and note the point where it crosses the cost line and\nwould wrongly say <em>\"email everyone pays.\"</em></span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "9e899fba5a63f666459223d4e628f3e5",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "0b1d0f23368b0482761dc27ae336c737",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='bkHC-0' random-id='5b9286a4-973c-4ad7-867f-166250bcfdcb'><marimo-slider data-initial-value='0.0' data-label='&quot;&#92;u003cspan class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&#92;u003e&#92;u003cspan class=&#92;&quot;paragraph&#92;&quot;&#92;u003eunobserved confounder strength&#92;u003c/span&#92;u003e&#92;u003c/span&#92;u003e&quot;' data-start='0.0' data-stop='12.0' data-step='0.25' data-steps='[]' data-debounce='false' data-disabled='false' data-orientation='&quot;horizontal&quot;' data-show-value='false' data-include-input='false' data-full-width='false'></marimo-slider></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "97fa610df8b70bcde1be065c5471dd80",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "e63c5eb18b735c59daa2ef447846ae22",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\"><strong>Decision holds.</strong> At strength 0.00 the estimate is \u20ac6.3, still below the \u20ac8 cost. True ATE \u20ac5.8.</span>\n<span class=\"paragraph\">The <strong>tipping point</strong> is strength \u2248 <strong>1.0</strong>. Ask the domain expert:\n<em>is a hidden confounder that strong plausible here?</em> If yes, the result is\nfragile and needs an experiment; if no, it's robust. That judgement \u2014 not a\np-value \u2014 is what makes the conclusion defensible.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    }
+  ]
+}
