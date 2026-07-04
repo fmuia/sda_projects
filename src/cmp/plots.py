@@ -32,6 +32,32 @@ def use_style():
     plt.rcParams.update(STYLE)
 
 
+def draw_dag(ax, pos: dict, edges, node_colors=None, title=None, curved=None):
+    """Draw a small causal DAG. `pos` maps node -> (x, y); `edges` is a list
+    of (src, dst). `node_colors` optionally maps node -> colour (e.g. to
+    flag a collider in red). `curved` is a set of edges to draw with a slight
+    arc so overlapping arrows stay readable."""
+    node_colors = node_colors or {}
+    curved = curved or set()
+    for src, dst in edges:
+        x0, y0 = pos[src]; x1, y1 = pos[dst]
+        rad = 0.25 if (src, dst) in curved else 0.0
+        ax.annotate(
+            "", xy=(x1, y1), xytext=(x0, y0),
+            arrowprops=dict(arrowstyle="-|>", color="#555555", lw=1.4,
+                            shrinkA=16, shrinkB=16,
+                            connectionstyle=f"arc3,rad={rad}"),
+        )
+    for node, (x, y) in pos.items():
+        c = node_colors.get(node, "#eef3f8")
+        ax.scatter([x], [y], s=2100, color=c, edgecolors="#2c7fb8", zorder=3, linewidths=1.4)
+        ax.text(x, y, node, ha="center", va="center", fontsize=8.5, zorder=4)
+    ax.set_xlim(-0.15, 1.15); ax.set_ylim(-0.15, 1.15)
+    ax.axis("off")
+    if title:
+        ax.set_title(title)
+
+
 # --------------------------------------------------------------------------
 def recovery_scatter(ax, tau_true, estimates: dict, title="Does the method recover the truth?"):
     """45-degree recovery plot: estimated CATE vs true tau, for one or more
