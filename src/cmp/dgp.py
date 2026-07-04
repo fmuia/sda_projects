@@ -164,8 +164,11 @@ def price_panel(n_regions: int = 12, n_weeks: int = 80, confounder_strength: flo
         trend = 0.01 * np.arange(n_weeks)
         competitor_price = rng.normal(20, 2, n_weeks)
         demand_shock = rng.normal(0, 1, n_weeks) if confounder_strength > 0 else np.zeros(n_weeks)
-        # price responds to the (partly unobserved) demand shock: targeted discounting
-        log_price = np.log(15) - 0.05 * competitor_price / 20 - confounder_strength * demand_shock + rng.normal(0, 0.05, n_weeks)
+        # Price responds to the (partly unobserved) demand shock: managers cut price
+        # WHEN demand is soft (negative shock -> lower price). So price rises with the
+        # shock; this positive Cov(log_price, shock) biases the OLS elasticity TOWARD
+        # zero (the classic simultaneity bias), which partial pooling cannot fix.
+        log_price = np.log(15) - 0.05 * competitor_price / 20 + confounder_strength * demand_shock + rng.normal(0, 0.05, n_weeks)
         log_q = (
             2.5 + true_elasticity[r] * log_price + 0.4 * (competitor_price - 20) / 20
             + season + trend + demand_shock + rng.normal(0, 0.08, n_weeks)
