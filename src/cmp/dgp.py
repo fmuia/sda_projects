@@ -233,7 +233,16 @@ def dag_control_demo(n: int = 1500, seed: int = 17):
     opened_email = (rng.uniform(size=n) < _sigmoid(1.5 * email + 0.7 * engagement_trait)).astype(float)
     spend = 20 + 5 * loyalty + true_ate * email + 3 * engagement_trait + rng.normal(0, 4, n)
 
-    df = pd.DataFrame({"email": email, "loyalty": loyalty, "opened_email": opened_email, "spend": spend})
+    # `responded` is a clean COLLIDER: caused by BOTH the treatment (email) and the
+    # outcome (spend). email -> responded <- spend. Conditioning on it opens a
+    # non-causal path and biases the email->spend estimate. This is the
+    # "never control for a post-outcome variable" trap in its starkest form.
+    responded = (rng.uniform(size=n) < _sigmoid(1.2 * email + 0.05 * (spend - spend.mean()))).astype(float)
+
+    df = pd.DataFrame({
+        "email": email, "loyalty": loyalty, "opened_email": opened_email,
+        "responded": responded, "spend": spend,
+    })
     return df, true_ate
 
 
