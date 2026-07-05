@@ -133,16 +133,23 @@ def segment_customers(n: int = 1200, seed: int = 11):
     prior_value = rng.choice(["low", "high"], size=n, p=[0.6, 0.4])
     is_high = (prior_value == "high").astype(float)
     trend = rng.normal(50, 10, n)
+    # continuous moderator: recency-driven engagement in [0, 1]. The email effect
+    # grows smoothly with engagement, so CATE is a continuous function, not just a
+    # two-level step — lets the notebook show a proper moderation profile.
+    engagement = rng.beta(2, 2, n)
     email = rng.integers(0, 2, n).astype(float)
 
-    b0, b_email, b_val, b_interact = 5.0, 3.0, 18.0, 9.0  # true effect: 3 (low) vs 12 (high)
+    # true per-unit effect: 3 (low) vs 12 (high) baseline, PLUS a smooth +8*engagement slope
+    b0, b_email, b_val, b_interact, b_eng = 5.0, 3.0, 18.0, 9.0, 8.0
+    tau = b_email + b_interact * is_high + b_eng * engagement
     spend = (
-        b0 + b_email * email + b_val * is_high
-        + b_interact * email * is_high + 0.3 * trend
+        b0 + tau * email + b_val * is_high + 4.0 * engagement + 0.3 * trend
         + rng.normal(0, 6, n)
     )
-    df = pd.DataFrame({"email": email, "prior_value": prior_value, "trend": trend, "spend": spend})
-    true_effect = {"low": b_email, "high": b_email + b_interact}
+    df = pd.DataFrame({"email": email, "prior_value": prior_value, "engagement": engagement,
+                       "trend": trend, "spend": spend, "tau": tau})
+    # segment-average true effects (at mean engagement 0.5)
+    true_effect = {"low": b_email + b_eng * 0.5, "high": b_email + b_interact + b_eng * 0.5}
     return df, true_effect
 
 
