@@ -6,7 +6,7 @@
 CORE   = .venv/bin
 LEGACY = .venv-legacy/bin
 
-.PHONY: help env env-legacy kernels apps app-uplift app-confounding app-sc test test-fast clean
+.PHONY: help env env-legacy kernels apps app-uplift app-confounding app-sc test test-fast reports clean
 
 help:
 	@echo "make env          - create/refresh the core env (pymc>=6) with uv"
@@ -50,6 +50,9 @@ test:
 
 test-fast:
 	$(CORE)/python -m pytest tests/test_package.py -v
+
+reports:  ## render one PDF per notebook (narrative + plots) into reports/ ; needs xelatex on PATH
+	PATH="/Library/TeX/texbin:$$PATH" $(CORE)/python scripts/make_reports.py
 
 clean:
 	rm -rf .pytest_cache **/__pycache__ notebooks/*.html site/
