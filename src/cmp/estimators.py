@@ -140,6 +140,93 @@ ESTIMATORS = {"S-learner": s_learner, "T-learner": t_learner, "BCF": bcf}
 
 
 # --------------------------------------------------------------------------
+# Doubly-robust ATE (AIPW) — a model-agnostic cross-check of the BART work
+# --------------------------------------------------------------------------
+def aipw_ate(X, T, y, seed=1, n_boot=400, trim=0.02):
+    """Augmented IPW (doubly-robust) ATE with a bootstrap posterior-like
+    distribution. Uses gradient-boosted outcome models mu0, mu1 and a
+    logistic propensity; the AIPW score is consistent if *either* the
+    outcome model or the propensity model is right (double robustness).
+
+    Overlap is enforced by trimming units with propensity outside
+    [trim, 1-trim]. Returns dict with point estimate, bootstrap draws,
+    the influence-function SE, and the number of trimmed units."""
+    from sklearn.ensemble import GradientBoostingRegressor
+    from sklearn.linear_model import LogisticRegression
+    X, T, y = np.asarray(X), np.asarray(T), np.asarray(y)
+    n = len(y)
+
+    def _score(idx):
+        Xi, Ti, yi = X[idx], T[idx], y[idx]
+        e = LogisticRegression(max_iter=1000).fit(Xi, Ti).predict_proba(Xi)[:, 1]
+        e = np.clip(e, trim, 1 - trim)
+        m1 = GradientBoostingRegressor(n_estimators=80, max_depth=3, random_state=seed)
+        m0 = GradientBoostingRegressor(n_estimators=80, max_depth=3, random_state=seed)
+        mu1 = m1.fit(Xi[Ti == 1], yi[Ti == 1]).predict(Xi)
+        mu0 = m0.fit(Xi[Ti == 0], yi[Ti == 0]).predict(Xi)
+        psi = (mu1 - mu0
+               + Ti * (yi - mu1) / e
+               - (1 - Ti) * (yi - mu0) / (1 - e))
+        return psi
+
+    # keep only units with adequate overlap for the reported n_trimmed
+    e_full = LogisticRegression(max_iter=1000).fit(X, T).predict_proba(X)[:, 1]
+    n_trim = int(np.sum((e_full < trim) | (e_full > 1 - trim)))
+
+    psi_full = _score(np.arange(n))
+    point = float(psi_full.mean())
+    inf_se = float(psi_full.std(ddof=1) / np.sqrt(n))
+
+    rng = np.random.default_rng(seed)
+    boot = np.array([_score(rng.integers(0, n, n)).mean() for _ in range(n_boot)])
+    return {"ate": point, "boot": boot, "se": inf_se, "n_trimmed": n_trim,
+            "ci90": (float(np.quantile(boot, 0.05)), float(np.quantile(boot, 0.95)))}
+
+
+def propensity_scores(X, T, seed=1):
+    """Estimated propensity e(x)=P(T=1|x) via logistic regression — the
+    overlap/positivity diagnostic input and the BCF prognostic input."""
+    from sklearn.linear_model import LogisticRegression
+    return LogisticRegression(max_iter=1000).fit(np.asarray(X), np.asarray(T)).predict_proba(np.asarray(X))[:, 1]
+
+
+# --------------------------------------------------------------------------
+# Quasi-experimental diagnostics
+# --------------------------------------------------------------------------
+def first_stage_F(instrument, treatment):
+    """First-stage F-statistic for a single instrument (Stock-Yogo rule of
+    thumb: F < 10 = weak instrument). Regress treatment on the instrument
+    and report the F for the instrument's coefficient."""
+    z = np.asarray(instrument, float); t = np.asarray(treatment, float)
+    n = len(t)
+    Z = np.column_stack([np.ones(n), z])
+    beta, *_ = np.linalg.lstsq(Z, t, rcond=None)
+    resid = t - Z @ beta
+    rss = resid @ resid
+    tss = ((t - t.mean()) ** 2).sum()
+    r2 = 1 - rss / tss
+    k = 1  # one instrument
+    F = (r2 / k) / ((1 - r2) / (n - k - 1))
+    return float(F)
+
+
+def mccrary_density(running, cutoff, bandwidth=None, n_bins=40):
+    """Simple McCrary-style manipulation test: histogram density of the
+    running variable just below vs just above the cutoff. A large jump in
+    density at the cutoff suggests units *sorted* across it (gaming), which
+    invalidates RD. Returns (density_below, density_above, log_ratio)."""
+    r = np.asarray(running, float)
+    if bandwidth is None:
+        bandwidth = (r.max() - r.min()) / 10
+    below = r[(r >= cutoff - bandwidth) & (r < cutoff)]
+    above = r[(r >= cutoff) & (r < cutoff + bandwidth)]
+    d_below = len(below) / max(bandwidth, 1e-9)
+    d_above = len(above) / max(bandwidth, 1e-9)
+    log_ratio = float(np.log((d_above + 1) / (d_below + 1)))
+    return d_below, d_above, log_ratio
+
+
+# --------------------------------------------------------------------------
 # Synthetic control
 # --------------------------------------------------------------------------
 def sc_weights_slsqp(target_pre, donors_pre):

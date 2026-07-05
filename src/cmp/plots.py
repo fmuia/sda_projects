@@ -147,6 +147,80 @@ def sensitivity_plot(ax, strengths, estimates, true_ate, cost, tipping=None,
     ax.set_title(title); ax.legend(frameon=False, fontsize=8)
 
 
+def qini_plot(ax, frac, cum_model, cum_random, cum_oracle, auuc_val=None,
+              title="Uplift (Qini) curve: value captured by targeting"):
+    """Cumulative realised uplift vs fraction targeted — model, random
+    diagonal, and oracle ceiling."""
+    ax.plot(frac, cum_oracle, color=GREEN, ls="--", lw=1.3, label="oracle (knows truth)")
+    ax.plot(frac, cum_model, color=BLUE, lw=2.0, label="model policy")
+    ax.plot(frac, cum_random, color=GREY, lw=1.2, label="random targeting")
+    ax.fill_between(frac, cum_random, cum_model, color=BLUE, alpha=0.12)
+    ax.set_xlabel("fraction of base targeted"); ax.set_ylabel("cumulative true effect captured")
+    t = title + (f"  ·  AUUC {auuc_val:.2f}" if auuc_val is not None else "")
+    ax.set_title(t); ax.legend(frameon=False, fontsize=8)
+
+
+def uplift_decile_plot(ax, decile_df, title="Realised effect by predicted-CATE decile"):
+    """Staircase of true effect across deciles of predicted CATE — a good
+    ranker is monotone decreasing."""
+    ax.bar(decile_df["decile"], decile_df["true_effect"], color=BLUE, alpha=0.85, label="true effect")
+    ax.plot(decile_df["decile"], decile_df["pred_cate"], color=ORANGE, marker="o", lw=1.4, label="predicted CATE")
+    ax.axhline(0, color="k", lw=0.6)
+    ax.set_xlabel("predicted-CATE decile (1 = highest)"); ax.set_ylabel("effect")
+    ax.set_title(title); ax.legend(frameon=False, fontsize=8)
+
+
+def reliability_plot(ax, pred_binned, true_binned, title="Calibration of effect magnitude"):
+    """Binned predicted vs realised effect; on the 45-degree line = calibrated."""
+    lim = [min(pred_binned.min(), true_binned.min()), max(pred_binned.max(), true_binned.max())]
+    ax.plot(lim, lim, "k--", lw=1)
+    ax.plot(pred_binned, true_binned, color=BLUE, marker="o", lw=1.4)
+    ax.set_xlabel("mean predicted CATE (bin)"); ax.set_ylabel("mean true effect (bin)")
+    ax.set_title(title)
+
+
+def policy_bar(ax, policy_df, title="Realised profit by targeting policy"):
+    """Bar of realised profit per policy, oracle highlighted."""
+    colors = []
+    for p in policy_df["policy"]:
+        colors.append(GREEN if p == "oracle" else (GREY if p in ("random-50%", "treat-all") else BLUE))
+    ax.bar(policy_df["policy"], policy_df["profit"], color=colors, alpha=0.9)
+    ax.axhline(0, color="k", lw=0.6)
+    ax.set_ylabel("realised profit (€)"); ax.set_title(title)
+    for lbl in ax.get_xticklabels():
+        lbl.set_rotation(20); lbl.set_ha("right"); lbl.set_fontsize(8)
+
+
+def forest_plot(ax, labels, means, los, his, ref=None, title=None, xlabel="effect"):
+    """Horizontal forest plot of point estimates with credible intervals."""
+    yy = np.arange(len(labels))[::-1]
+    ax.errorbar(means, yy, xerr=[np.array(means) - np.array(los), np.array(his) - np.array(means)],
+                fmt="o", color=BLUE, ecolor="#9cc3dd", capsize=3)
+    if ref is not None:
+        ax.axvline(ref, color="k", ls="--", lw=1)
+    ax.set_yticks(yy); ax.set_yticklabels(labels, fontsize=8)
+    ax.set_xlabel(xlabel)
+    if title:
+        ax.set_title(title)
+
+
+def ppc_plot(ax, y_obs, y_rep, title="Posterior predictive check"):
+    """Observed outcome density vs several posterior-predictive replicates."""
+    for i in range(min(40, len(y_rep))):
+        ax.hist(y_rep[i], bins=40, histtype="step", color=BLUE, alpha=0.15, density=True)
+    ax.hist(y_obs, bins=40, histtype="step", color="k", lw=2, density=True, label="observed")
+    ax.set_xlabel("outcome"); ax.set_title(title); ax.legend(frameon=False, fontsize=8)
+
+
+def event_study_plot(ax, periods, effects, los, his, launch=0, title="Event study: effect by period relative to launch"):
+    """Dynamic treatment effect by event time, with pre-period placebo zeros."""
+    ax.errorbar(periods, effects, yerr=[np.array(effects) - np.array(los), np.array(his) - np.array(effects)],
+                fmt="o-", color=BLUE, ecolor="#9cc3dd", capsize=2)
+    ax.axhline(0, color="k", lw=0.6); ax.axvline(launch - 0.5, color=ORANGE, lw=1)
+    ax.set_xlabel("period relative to launch"); ax.set_ylabel("estimated effect")
+    ax.set_title(title)
+
+
 def decision_hist(ax, total_samples, cost, true_total=None, title=None):
     """Posterior of total incremental value with the cost line — the
     go/no-go picture."""

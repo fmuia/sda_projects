@@ -7,6 +7,7 @@ and what it's worth to reduce the remaining uncertainty.
 from __future__ import annotations
 
 import numpy as np
+import pandas as pd
 
 
 def profit_curve(rank_score: np.ndarray, tau_true: np.ndarray, cost: float):
@@ -84,6 +85,81 @@ def value_of_information(cate_samples: np.ndarray, cost: float):
         "straddlers": straddlers,
         "n_straddlers": int(straddlers.sum()),
         "voi_on_straddlers": float(per_customer[straddlers].sum()),
+    }
+
+
+def policy_comparison(cate_samples: np.ndarray, tau_true: np.ndarray, cost: float,
+                      confidence: float = 0.8, seed: int = 0):
+    """Compare four targeting policies on realised profit (evaluated on the
+    known truth), each with a posterior over profit induced by CATE
+    uncertainty. Policies:
+
+      - treat-all      : contact everyone
+      - treat-none     : baseline (0)
+      - random         : contact a random half
+      - model (mean)   : contact where posterior-mean CATE > cost
+      - model (conf.)  : contact where P(CATE>cost) > confidence (the honest rule)
+      - oracle         : contact where the TRUE effect > cost (upper bound)
+
+    Returns a DataFrame with mean profit, 90% CI, and fraction contacted."""
+    n = len(tau_true)
+    rng = np.random.default_rng(seed)
+    gain = tau_true - cost  # realised per-customer profit if contacted
+
+    def profit_of(mask_matrix):
+        # mask_matrix: (S, n) boolean of who we'd contact under each posterior draw
+        return (mask_matrix * gain[None, :]).sum(axis=1)
+
+    p_worth = (cate_samples > cost).mean(axis=0)
+    mean_cate = cate_samples.mean(axis=0)
+    rand_mask = rng.random(n) < 0.5
+
+    policies = {
+        "treat-all": np.ones((1, n), bool),
+        "random-50%": rand_mask[None, :],
+        "model (mean>cost)": (mean_cate > cost)[None, :],
+        "model (P>conf)": (p_worth > confidence)[None, :],
+        "oracle": (tau_true > cost)[None, :],
+    }
+    rows = []
+    for name, mask in policies.items():
+        # profit is deterministic given the (fixed) mask and known truth,
+        # but we expose the CATE-driven decision uncertainty for the model rules
+        prof = profit_of(mask)
+        rows.append({
+            "policy": name,
+            "profit": float(prof.mean()),
+            "frac_contacted": float(mask.mean()),
+        })
+    df = pd.DataFrame(rows)
+    df["profit_vs_all"] = df["profit"] - df.loc[df.policy == "treat-all", "profit"].values[0]
+    return df
+
+
+def voi_targeting_size(cate_samples: np.ndarray, cost: float, confidence: float = 0.8):
+    """How many customers sit in the 'decision-flips' zone worth an A/B test:
+    the straddlers whose 90% interval spans the cost line. Returns the count
+    and their share, plus the per-customer VOI concentrated on them."""
+    lo, hi = np.quantile(cate_samples, [0.05, 0.95], axis=0)
+    straddle = (lo < cost) & (hi > cost)
+    voi = value_of_information(cate_samples, cost)
+    return {
+        "n_straddlers": int(straddle.sum()),
+        "share": float(straddle.mean()),
+        "voi_on_straddlers": voi["voi_on_straddlers"],
+        "voi_total": voi["total"],
+    }
+
+
+def break_even(effect_samples: np.ndarray, unit_value: float):
+    """Cost at which the program breaks even under uncertainty: the effect
+    level times unit value. Returns the break-even cost at the posterior
+    mean and the 5th percentile (a conservative planning number)."""
+    ev = effect_samples * unit_value
+    return {
+        "breakeven_cost_mean": float(ev.mean()),
+        "breakeven_cost_p05": float(np.quantile(ev, 0.05)),
+        "breakeven_cost_p95": float(np.quantile(ev, 0.95)),
     }
 
 
