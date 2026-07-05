@@ -51,6 +51,23 @@ The two anchors additionally carry the full **three depths**: (a) estimator bake
 failure modes, (b) identification rigour & sensitivity, (c) euro policy with parameter
 sweeps and value-of-information.
 
+**Every notebook is deep on four axes**, not just the anchors:
+
+- **Technical diagnostics** — the signature check for each method: Qini/AUUC & uplift-by-decile
+  (01), AIPW doubly-robust cross-checks & posterior predictive checks (00, 01), event-study
+  pre-trends & a live staggered-adoption/TWFE-bias demo (08), McCrary density + bandwidth +
+  placebo-cutoff + polynomial-order robustness (09), placebo-in-time & residual autocorrelation
+  (10), first-stage F + reduced-form/Wald + exclusion-restriction stress test (11), Abadie
+  RMSE-ratio placebo & leave-one-out donor robustness (07).
+- **Business decision richness** — policy comparisons (treat-all/random/model/oracle) on realised
+  profit, multi-parameter sweeps, value-of-information test-sizing, break-even tables, budget
+  reallocation (06), the pooled<segment<individual<oracle targeting ladder (02).
+- **Conceptual narration** — estimand ladders, assumption-by-assumption tables, worked math, DAG
+  galleries, and cross-links between notebooks.
+- **Rigorous validation** — calibration by decile + reliability curves + interval sharpness,
+  multi-seed recovery stability, and sensitivity *ranges* (E-values, 2-D contours) rather than
+  single points.
+
 ---
 
 ## Technique index
@@ -73,9 +90,11 @@ sweeps and value-of-information.
 *(Numbering matches `docs/causal_marketing_cookbook.pdf` 1:1.)*
 
 The shared package **`src/cmp`** keeps notebooks thin: `dgp` (seeded simulators),
-`estimators` (S/T-learner, BCF, synthetic control, CausalPy wrappers — uniform
-interface), `metrics` (PEHE, interval coverage, Qini), `policy` (profit curve, sweeps,
-value-of-information), `plots` (shared styling), `data` (optional real-dataset loaders).
+`estimators` (S/T-learner, BCF, AIPW doubly-robust, synthetic control, CausalPy wrappers,
+first-stage F, McCrary density — uniform interface), `metrics` (PEHE, coverage, Qini/AUUC,
+uplift-by-decile, reliability, sharpness, E-value), `policy` (profit curve, sweeps, VOI,
+policy comparison, break-even), `plots` (shared styling incl. Qini/reliability/forest/PPC),
+`data` (optional real-dataset loaders).
 
 ---
 

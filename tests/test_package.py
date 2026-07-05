@@ -122,3 +122,56 @@ def test_go_no_go():
     d = policy.go_no_go(samples, cost=300.0)
     assert d["decision"] == "GO"
     assert d["P_value_gt_cost"] > 0.9
+
+
+# --------------------------------------------------------------------------
+# depth diagnostics
+# --------------------------------------------------------------------------
+def test_auuc_ranks_between_zero_and_one():
+    rng = np.random.default_rng(0)
+    tau = rng.normal(5, 5, 500)
+    good = tau + rng.normal(0, 1, 500)      # near-perfect ranker
+    bad = rng.normal(0, 1, 500)             # random ranker
+    assert metrics.auuc(good, tau) > metrics.auuc(bad, tau)
+    assert metrics.auuc(good, tau) <= 1.01
+
+
+def test_uplift_by_decile_is_monotone_for_good_ranker():
+    rng = np.random.default_rng(0)
+    tau = rng.normal(5, 5, 500)
+    dec = metrics.uplift_by_decile(tau + rng.normal(0, 0.5, 500), tau)
+    # top decile true effect should exceed bottom decile
+    assert dec.true_effect.iloc[0] > dec.true_effect.iloc[-1]
+
+
+def test_aipw_recovers_known_ate():
+    d, true_ate = dgp.dag_control_demo(n=1500, seed=3)
+    r = est.aipw_ate(d[["loyalty"]].values, d["email"].values, d["spend"].values, seed=1, n_boot=150)
+    assert abs(r["ate"] - true_ate) < 1.5
+    assert r["ci90"][0] < r["ate"] < r["ci90"][1]
+
+
+def test_first_stage_F_separates_strong_from_weak():
+    df, _ = dgp.iv_ad_exposure(n=1000, seed=1)
+    strong = est.first_stage_F(df["encouragement"], df["ad_exposure"])
+    weak = est.first_stage_F(np.random.default_rng(0).normal(size=1000), df["ad_exposure"])
+    assert strong > 10 and weak < strong
+
+
+def test_mccrary_flags_no_manipulation():
+    df, _ = dgp.rdd_perk(n=2000, seed=1)
+    _, _, log_ratio = est.mccrary_density(df["spend"].values, 100.0, bandwidth=15)
+    assert abs(log_ratio) < 0.5   # smooth density, no sorting
+
+
+def test_e_value_grows_with_effect():
+    assert metrics.e_value(10, cost=0, sd=5) > metrics.e_value(2, cost=0, sd=5)
+
+
+def test_policy_comparison_oracle_is_best():
+    rng = np.random.default_rng(0)
+    tau = rng.normal(5, 6, 400)
+    samples = tau[None, :] + rng.normal(0, 2, (200, 400))
+    comp = policy.policy_comparison(samples, tau, cost=5.0)
+    oracle = comp.loc[comp.policy == "oracle", "profit"].values[0]
+    assert oracle >= comp["profit"].max() - 1e-6
