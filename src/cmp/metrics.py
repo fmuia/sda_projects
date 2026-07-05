@@ -110,13 +110,23 @@ def sharpness(cate_samples: np.ndarray, level: float = 0.90) -> float:
     return float(np.mean(hi - lo))
 
 
-def e_value(estimate: float, cost: float = 0.0) -> float:
-    """VanderWeele-Ding E-value on a risk-ratio-like scale: the minimum
-    strength of association (on the RR scale) that an unmeasured confounder
-    would need with BOTH treatment and outcome to explain away the estimate
-    down to the `cost` threshold. Larger = more robust. We map an additive
-    effect to an approximate RR via (estimate/(estimate-cost)) guarded to >1."""
-    rr = max(abs(estimate) / max(abs(estimate - cost), 1e-6), 1.0 + 1e-6)
+def e_value(estimate: float, cost: float = 0.0, sd: float | None = None) -> float:
+    """VanderWeele-Ding E-value: the minimum strength of association (on the
+    risk-ratio scale) that an unmeasured confounder would need with BOTH
+    treatment and outcome to explain the estimate away down to the `cost`
+    threshold. Larger = more robust.
+
+    If `sd` (outcome standard deviation) is given, the additive effect above
+    the threshold is standardized and mapped to an approximate risk ratio via
+    VanderWeele's rule RR ≈ exp(0.91·d) — the recommended conversion for a
+    continuous outcome. Otherwise a cruder ratio mapping is used (fine when
+    `cost` is a meaningful non-zero break-even)."""
+    if sd is not None and sd > 0:
+        d = abs(estimate - cost) / sd
+        rr = float(np.exp(0.91 * d))
+    else:
+        rr = max(abs(estimate) / max(abs(estimate - cost), 1e-6), 1.0 + 1e-6)
+    rr = max(rr, 1.0 + 1e-9)
     return float(rr + np.sqrt(rr * (rr - 1)))
 
 
