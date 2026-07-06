@@ -13,8 +13,7 @@ import pandas as pd
 # --------------------------------------------------------------------------
 # Hillstrom / MineThatData email campaign (uplift; §1, §2)
 # --------------------------------------------------------------------------
-HILLSTROM_URL = "https://raw.githubusercontent.com/dmitrykazhdan/uplift-modelling-datasets/master/Hillstrom.csv"
-_HILLSTROM_ALT = "http://www.minethatdata.com/Kevin_Hillstrom_MineThatData_E-MailAnalytics_DataMiningChallenge_2008.03.20.csv"
+HILLSTROM_URL = "http://www.minethatdata.com/Kevin_Hillstrom_MineThatData_E-MailAnalytics_DataMiningChallenge_2008.03.20.csv"
 
 
 def load_hillstrom(url: str = HILLSTROM_URL) -> pd.DataFrame:
@@ -43,6 +42,31 @@ def hillstrom_binary_treatment(df: pd.DataFrame, treat_segment: str = "Womens E-
     keep = df[df[seg].isin([treat_segment, "No E-Mail"])].copy()
     keep["T"] = (keep[seg] == treat_segment).astype(float)
     return keep
+
+
+def hillstrom_uplift(treat_segment: str = "Womens E-Mail", outcome: str = "spend"):
+    """One-liner real-data swap for the uplift notebooks. Fetches Hillstrom,
+    reduces to a binary email/no-email treatment, numerically encodes the
+    pre-treatment covariates, and returns everything the uplift pipeline
+    needs — EXCEPT a ground-truth effect, because on real data the individual
+    treatment effect is unobservable (that is the whole point of the field).
+
+    Returns dict with X (n, p) float array, T (n,) 0/1, y (n,) outcome,
+    feature_names, and a note. Because the assignment was randomized, the ATE
+    is trustworthy without adjustment; there is simply no per-customer truth
+    to validate a CATE against — use `load_ihdp` for that.
+    """
+    df = hillstrom_binary_treatment(load_hillstrom(), treat_segment=treat_segment)
+    # pre-treatment covariates only (never post-treatment: visit/conversion are outcomes)
+    feats = ["recency", "history", "mens", "womens", "newbie"]
+    X = df[feats].astype(float).values
+    return {
+        "X": X, "T": df["T"].values.astype(float), "y": df[outcome].values.astype(float),
+        "feature_names": feats, "n": len(df),
+        "note": ("Real randomized email experiment (Hillstrom/MineThatData, 2008). "
+                 "Randomized, so the ATE is unbiased without adjustment; no ground-truth "
+                 "per-customer effect exists to validate CATE recovery."),
+    }
 
 
 # --------------------------------------------------------------------------
