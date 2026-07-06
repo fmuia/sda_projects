@@ -131,6 +131,28 @@ make test-fast     # package unit tests only (fast)
 
 ---
 
+## Running on real public data (you don't provide anything)
+
+Notebooks default to **simulated** data so we can *validate* each method against a known truth and so the
+repo runs offline. But three notebooks also fetch a **real public dataset** (over the network, from a
+public URL — nothing to download or supply) to show the same method on real numbers. They're **gated on an
+env var** so the offline test suite stays deterministic:
+
+```bash
+CMP_REAL=1 jupyter lab notebooks/01_uplift_targeting.ipynb   # then run the "6b" real-data cell
+```
+
+| notebook | real dataset (fetched via `cmp.data`) | what it shows |
+|---|---|---|
+| 01 uplift | **Hillstrom / MineThatData** — 64k customers, real *randomized* email A/B test | run the uplift pipeline on real data (no ground-truth CATE, since real customers have one future) |
+| 00 foundations · 05 control | **LaLonde / NSW** job-training benchmark | naive vs adjusted estimate — the canonical "wrong controls flip the sign" demo |
+| (CATE benchmark) | **IHDP** — semi-synthetic, *known* true effects (`cmp.data.load_ihdp`) | real covariates with a known truth, for grading CATE recovery |
+
+Every other notebook explains, in its intro, exactly **what real data would look like** for that technique
+and where to get it (your own CRM / sales panel / event logs; public analogues like Card–Krueger for DiD or
+California Prop 99 for synthetic control) — because for those setups there is no single clean public dataset
+that maps 1:1.
+
 ## Interactive apps (marimo)
 
 Reactive explorables — the expensive posterior is computed **once**, and the sliders
