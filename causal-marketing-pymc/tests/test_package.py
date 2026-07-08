@@ -168,6 +168,14 @@ def test_e_value_grows_with_effect():
     assert metrics.e_value(10, cost=0, sd=5) > metrics.e_value(2, cost=0, sd=5)
 
 
+def test_e_value_requires_sd():
+    # The E-value lives on the risk-ratio scale, so a raw euro effect must be
+    # standardized first. sd is mandatory — the old no-sd ratio fallback was
+    # directionally inverted (huge robustness for effects *near* the threshold).
+    with pytest.raises(ValueError):
+        metrics.e_value(6.0, cost=8.0)
+
+
 def test_policy_comparison_oracle_is_best():
     rng = np.random.default_rng(0)
     tau = rng.normal(5, 6, 400)
@@ -175,3 +183,21 @@ def test_policy_comparison_oracle_is_best():
     comp = policy.policy_comparison(samples, tau, cost=5.0)
     oracle = comp.loc[comp.policy == "oracle", "profit"].values[0]
     assert oracle >= comp["profit"].max() - 1e-6
+
+
+def test_random_baseline_is_independent():
+    # Regression guard for the RNG-coupling bug: if policy_comparison drew its
+    # random mask from default_rng(seed), it would replay whatever a DGP seeded
+    # on the same integer drew first. We make tau depend on that very stream so
+    # a coupled mask would cherry-pick the high-tau units and beat a fair coin.
+    seed, n = 7, 4000
+    u = np.random.default_rng(seed).random(n)        # the DGP's would-be first draw
+    tau = np.where(u < 0.5, 12.0, 2.0)               # coupled mask would grab the +12s
+    samples = tau[None, :]
+    comp = policy.policy_comparison(samples, tau, cost=5.0, seed=seed)
+    treat_all = comp.loc[comp.policy == "treat-all", "profit"].values[0]
+    rand = comp.loc[comp.policy == "random-50%", "profit"].values[0]
+    frac = comp.loc[comp.policy == "random-50%", "frac_contacted"].values[0]
+    assert 0.45 < frac < 0.55
+    # a fair random half earns ~0.5*treat_all; the coupled bug earned far more
+    assert abs(rand - 0.5 * treat_all) < 0.15 * abs(treat_all)

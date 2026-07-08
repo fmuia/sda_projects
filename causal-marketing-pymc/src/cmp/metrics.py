@@ -113,20 +113,28 @@ def sharpness(cate_samples: np.ndarray, level: float = 0.90) -> float:
 def e_value(estimate: float, cost: float = 0.0, sd: float | None = None) -> float:
     """VanderWeele-Ding E-value: the minimum strength of association (on the
     risk-ratio scale) that an unmeasured confounder would need with BOTH
-    treatment and outcome to explain the estimate away down to the `cost`
-    threshold. Larger = more robust.
+    treatment and outcome to move the estimate to the `cost` threshold
+    (`cost=0` = explain the effect away to the null). Larger = more robust.
 
-    If `sd` (outcome standard deviation) is given, the additive effect above
-    the threshold is standardized and mapped to an approximate risk ratio via
-    VanderWeele's rule RR ≈ exp(0.91·d) — the recommended conversion for a
-    continuous outcome. Otherwise a cruder ratio mapping is used (fine when
-    `cost` is a meaningful non-zero break-even)."""
-    if sd is not None and sd > 0:
-        d = abs(estimate - cost) / sd
-        rr = float(np.exp(0.91 * d))
-    else:
-        rr = max(abs(estimate) / max(abs(estimate - cost), 1e-6), 1.0 + 1e-6)
-    rr = max(rr, 1.0 + 1e-9)
+    The E-value is defined only on the risk-ratio scale, so a continuous
+    additive effect must be standardized first. The gap between the estimate
+    and the threshold, |estimate - cost|, is divided by the outcome SD `sd`
+    and mapped to an approximate risk ratio with VanderWeele's rule for a
+    continuous outcome, RR ≈ exp(0.91·d) (VanderWeele & Ding 2017, eq. for a
+    standardized mean difference d). `sd` is therefore **required**: there is
+    no principled conversion from a raw euro effect alone.
+
+    Pass an *estimated* effect (not a simulation ground truth), and — per
+    VanderWeele — consider also reporting the E-value at the confidence-limit
+    nearest the threshold, not just at the point estimate.
+    """
+    if sd is None or sd <= 0:
+        raise ValueError(
+            "e_value requires a positive outcome sd to standardize the effect "
+            "onto the risk-ratio scale (VanderWeele's continuous-outcome rule)."
+        )
+    d = abs(estimate - cost) / sd
+    rr = max(float(np.exp(0.91 * d)), 1.0 + 1e-9)
     return float(rr + np.sqrt(rr * (rr - 1)))
 
 

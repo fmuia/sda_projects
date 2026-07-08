@@ -60,8 +60,9 @@ sweeps and value-of-information.
   (10), first-stage F + reduced-form/Wald + exclusion-restriction stress test (11), Abadie
   RMSE-ratio placebo & leave-one-out donor robustness (07).
 - **Business decision richness** — policy comparisons (treat-all/random/model/oracle) on realised
-  profit, multi-parameter sweeps, value-of-information test-sizing, break-even tables, budget
-  reallocation (06), the pooled<segment<individual<oracle targeting ladder (02).
+  profit, multi-parameter sweeps, value-of-information test-sizing, break-even tables, a
+  posterior-gated budget-reallocation decision (06), the pooled<segment<individual<oracle
+  targeting ladder (02).
 - **Conceptual narration** — estimand ladders, assumption-by-assumption tables, worked math, DAG
   galleries, and cross-links between notebooks.
 - **Rigorous validation** — calibration by decile + reliability curves + interval sharpness,
@@ -213,11 +214,13 @@ bump the pins).
   cleanly. The identification framing (log-log demand, backdoor set) is unchanged; the
   shrinkage is fully visible. Endogenous price is shown biasing elasticity *toward zero*
   (classic simultaneity), which pooling can't fix — the bridge to IV (nb 11).
-- **Notebook 06 (MMM) is honest about MMM's weakness.** The causal MMM recovers TV well
-  and correctly gives brand_search a below-break-even ROI (the right budget call), but
-  its *absolute* contributions run high — so the notebook leads with the robust
-  naive-vs-adjusted confounding contrast (OLS) and explicitly says to **calibrate MMM
-  levels with a geo experiment (Anchor B)**. This mirrors real practice.
+- **Notebook 06 (MMM) is honest about MMM's weakness.** The causal MMM ranks the channels
+  correctly (brand_search below break-even, TV above) but its *absolute* contributions run
+  high, and — computed draw-wise — the posterior only backs "TV beats brand_search" with
+  **P ≈ 0.73**, below the 0.8 action bar, so the notebook's honest call is **test before
+  reallocating**, not "shift budget now." It leads with the robust naive-vs-adjusted
+  confounding contrast (OLS) and explicitly says to **calibrate MMM levels with a geo
+  experiment (Anchor B)**. This mirrors real practice.
 - **CausalPy APIs were pinned to 0.8.x reality**, which has drifted from the cookbook's
   0.5-era skeletons: DiD needs a `post_treatment` bool + a `unit` label and the 2×2
   (pre/post-collapsed) data form; RDD needs a dummy-coded `treated` column and a

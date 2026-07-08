@@ -93,6 +93,12 @@ def _(COST, drift, np, plots, plt, s_slider, strengths, tip, true_ate):
 
 
 @app.cell
+def _(fig):
+    fig      # display the drift plot (a cell's last expression is its marimo output)
+    return
+
+
+@app.cell
 def _(COST, est_here, flipped, mo, s, tip, true_ate):
     verdict = (
         f"**Decision flipped.** A hidden confounder of strength {s:.2f} pushes the "

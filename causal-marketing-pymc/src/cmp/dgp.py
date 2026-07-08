@@ -24,6 +24,8 @@ def uplift_customers(
     confounder_strength: float = 0.0,
     cost: float = 8.0,
     seed: int = 7,
+    conf_t: float | None = None,
+    conf_y: float | None = None,
 ):
     """Discount-email customers with a known heterogeneous €-effect.
 
@@ -32,10 +34,19 @@ def uplift_customers(
     engaged/recent customers (targeted selection) -> naive estimators are
     confounded. `confounder_strength` adds a further *unobserved* driver U
     of both treatment and outcome, for the sensitivity-to-hidden-confounding
-    analysis (0 = no hidden confounder).
+    analysis (0 = no hidden confounder). The single knob scales both channels:
+    U -> treatment enters the propensity logit with coefficient
+    ``0.9*confounder_strength`` and U -> outcome shifts spend by
+    ``confounder_strength`` € per SD of U.
+
+    `conf_t` / `conf_y` override those two channel coefficients *independently*
+    (each defaults to the single-knob value when None), so a caller can trace
+    the omitted-variable-bias surface over a 2-D grid of (U->treatment,
+    U->outcome) strengths. Leaving both None reproduces the single-knob
+    behaviour byte-for-byte.
 
     Returns a DataFrame with columns [recency, frequency, monetary, tenure,
-    engage, T, y, mu0, tau, propensity] and `cost` (the â‚¬ discount cost,
+    engage, T, y, mu0, tau, propensity] and `cost` (the € discount cost,
     for the euro-policy step).
     """
     rng = np.random.default_rng(seed)
@@ -50,14 +61,18 @@ def uplift_customers(
     sleeping = -24 * _sigmoid(9 * (0.22 - engage)) * _sigmoid(1.2 * (frequency - 6))
     tau = persuadable + sleeping
 
+    # Confounder channel coefficients (the single knob scales both by default).
+    a_t = 0.9 * confounder_strength if conf_t is None else conf_t   # U -> treatment (logit)
+    b_y = confounder_strength if conf_y is None else conf_y         # U -> outcome (€/SD)
+
     if regime == "randomized":
         propensity = np.full(n, 0.5)
         T = rng.integers(0, 2, n).astype(float)
     elif regime == "observational":
         lin = 1.8 * (engage - 0.4) + 1.2 * ((150 - recency) / 150) + 0.15 * (frequency - 5)
-        if confounder_strength > 0:
+        if a_t != 0 or b_y != 0:
             U = rng.normal(size=n)
-            propensity = _sigmoid(lin + 0.9 * confounder_strength * U)
+            propensity = _sigmoid(lin + a_t * U)
         else:
             U = np.zeros(n)
             propensity = _sigmoid(lin)
@@ -67,8 +82,8 @@ def uplift_customers(
 
     noise = rng.normal(0, 8, n)
     y = mu0 + tau * T + noise
-    if regime == "observational" and confounder_strength > 0:
-        y = y + confounder_strength * U  # hidden confounder also lifts spend directly
+    if regime == "observational" and b_y != 0:
+        y = y + b_y * U  # hidden confounder also lifts spend directly
 
     df = pd.DataFrame(
         {

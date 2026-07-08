@@ -91,6 +91,12 @@ def _(est, labels, launch, market, np, plots, plt, sales):
 
 
 @app.cell
+def _(fig):
+    fig      # display the fit + placebo-spaghetti plot (last expression = marimo output)
+    return
+
+
+@app.cell
 def _(L, market, mo, p_space, pre_rmse):
     sig = "**significant**" if p_space <= 0.1 else "**not significant**"
     mo.md(

@@ -103,7 +103,13 @@ def policy_comparison(cate_samples: np.ndarray, tau_true: np.ndarray, cost: floa
 
     Returns a DataFrame with mean profit, 90% CI, and fraction contacted."""
     n = len(tau_true)
-    rng = np.random.default_rng(seed)
+    # Draw the random baseline from a stream *decoupled* from `seed`: a notebook
+    # commonly passes the same integer it used to seed the DGP, and a scalar
+    # default_rng(seed) would then replay the identical uniforms the DGP already
+    # consumed (e.g. its first feature draw), turning "random 50%" into a feature
+    # rule. Spawning off a SeedSequence gives an independent, still-reproducible
+    # stream. See tests/test_package.py::test_random_baseline_is_independent.
+    rng = np.random.default_rng(np.random.SeedSequence(seed).spawn(1)[0])
     gain = tau_true - cost  # realised per-customer profit if contacted
 
     def profit_of(mask_matrix):
