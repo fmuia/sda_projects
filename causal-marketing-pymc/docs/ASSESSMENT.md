@@ -155,12 +155,33 @@ The engineering gaps that let a broken notebook reach the lecture without CI not
   env-split requires (the documented nbclient-rewrite incident) — runs in the fast lane, needs no kernels.
 - **`plots.py` / `dgp.py` mojibake fixed** (`â‚¬`→`€`, `Ï„`→`τ`, `â†'`→`→`); figure labels refresh on the next run.
 
-### Still open — the one remaining large job
+### Resolved — the FULL-mode reference run (and what it exposed)
 
-- **FAST-mode convergence suppression (pattern E).** `compute_convergence_checks=False` is still hard-set in the
-  fitters and every committed output is a FAST-mode run. The remaining work is a **FULL-mode reference run**
-  (`CMP_FAST=0`) across both environments with r-hat/ESS/divergences reported — deliberately deferred as the one
-  genuinely slow, dual-environment job. It also refreshes the `plots.py` mojibake fix into every committed figure.
+The deferred **FULL-mode reference run** (`CMP_FAST=0`, both environments) has now been executed and committed,
+with r-hat/ESS/divergences surfaced in-notebook via an explicit `estimators.convergence_report` readout —
+a deliberate stdout print, because PyMC's own convergence warnings go to stderr, which the PDF generator
+strips. Pure-NUTS fitters (`synthetic_control`, nb03) had `compute_convergence_checks=False` removed; the
+BART fitters keep it off by design (a blanket r-hat over hundreds of per-unit tree predictions is not a
+meaningful diagnostic) and report a scoped σ r-hat + divergence count instead. At FULL sampling the
+previously-flagged truth-recovery results hold and converge cleanly — **nb03 r-hat 1.000, nb07 r-hat 1.000 /
+ESS ~4,000, nb01 BCF r-hat 1.03** — and the `plots.py` mojibake fix is baked into every regenerated figure.
+
+**What the FULL run exposed in nb06 (a genuine, previously-masked defect).** The committed FAST result
+(TV ROI 2.81× > brand_search 0.82×, P(TV>bs)=0.73) was an **under-sampling artifact**. At a properly-converged
+posterior the pymc-marketing causal MMM **inverts the channel ranking** — it credits brand_search (36,007)
+far above TV (10,390) against a true 518, because brand_search's flexible saturation curve re-absorbs the
+seasonal demand the *linear* seasonality control was meant to remove (its fitted contribution correlates
++0.77 with season, offset by a large negative baseline — a non-identified level decomposition). **A DAG plus
+a linear confounder-control is necessary but not sufficient** when a channel's spend is collinear with the
+confounder and enters through a flexible functional form. nb06 was rewritten into a **"fail → fix" arc**:
+(1) OLS shows the confounding correction works (brand_search credit 6,401 naive → 222 with season → true
+518); (2) the default causal MMM inverts; (3) an **experiment-calibrated per-channel saturation prior**
+(brand_search's ceiling pinned small, as a geo experiment would tell you; TV left weakly-informative)
+recovers the ranking (TV 12,820 > brand_search 2,262; ROI TV 2.08× > bs 0.60×; P(TV>bs)=0.78) and converges
+cleanly (**r-hat 1.01, 0 divergences**). To make both fits converge while keeping the effect identifiable,
+`dgp.mmm_weekly`'s season→brand_search coupling was reduced from near-collinear (corr ~0.97, which would not
+converge — a posterior ridge) to a moderate corr ~0.78. This turns nb06's headline from a fragile positive
+claim into a deeper, honest lesson that directly motivates the geo-experiment calibration of Anchor B (nb 07).
 
 ---
 
@@ -823,6 +844,14 @@ The notebook's skeleton is excellent — identification cleanly separated from e
 ---
 
 ### Notebook 06 — Incrementality MMM
+
+> **FULL-run update (supersedes the FAST-era findings below).** After the P0 fixes, the FULL-mode run exposed
+> that the causal MMM *inverts the channel ranking* at a converged posterior (see "Resolved — the FULL-mode
+> reference run" above). nb06 was rewritten into a **fail → fix arc** (default MMM inverts → experiment-
+> calibrated per-channel priors recover TV > brand_search, r-hat 1.01 / 0 divergences), with the DGP coupling
+> moderated (corr ~0.97 → ~0.78) so both fits converge. The convergence, ROI-interval, and P(TV>bs) findings
+> in this section describe the *pre-rewrite FAST* notebook and are retained as history; the shipped notebook
+> now surfaces convergence explicitly and no longer makes the contradicted claims. **Watertight: 2 → 4.**
 
 **Grade: weak** · 3 critical · 7 major · 14 findings total
 

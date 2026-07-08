@@ -51,6 +51,10 @@ def _fit_bart(X, y, seed, m=50, draws=150, tune=150, chains=2, binary=False):
         idata = pm.sample(
             draws=draws, tune=tune, chains=chains, cores=chains,
             random_seed=seed, progressbar=False,
+            # BART is PGBART (particle sampler); a blanket r-hat over per-unit tree
+            # predictions is not a meaningful diagnostic and would warn on nearly
+            # every fit. Divergences are still recorded in sample_stats, and callers
+            # surface scoped r-hat/ESS on the continuous scalars via convergence_report.
             compute_convergence_checks=False,
         )
     return model, idata
@@ -71,6 +75,63 @@ def _bart_predict(model, idata, X_new, seed, binary=False):
                 progressbar=False, random_seed=seed,
             )
     return pp.posterior_predictive[var].values.reshape(-1, X_new.shape[0])
+
+
+# --------------------------------------------------------------------------
+# Convergence reporting (assessment "pattern E"): surface r-hat / ESS /
+# divergences in the notebook itself. This is an explicit stdout readout on
+# purpose — PyMC's own convergence warnings go to stderr, which the PDF report
+# generator strips, so an auto-warning would never reach the lecture artifact.
+# --------------------------------------------------------------------------
+def convergence_report(idata, var_names=None):
+    """Compact MCMC convergence readout: max r-hat and min bulk/tail ESS over
+    `var_names`, plus the sampler's divergence count, with a one-line `summary`
+    string ready to print.
+
+    Why `var_names` is scoped: for the BART meta-learners the posterior holds a
+    per-unit tree prediction of shape (draws, n), and PGBART is a non-gradient
+    particle sampler — a blanket r-hat over hundreds of per-unit predictions
+    almost always trips 'r-hat > 1.01' for *some* unit and is not the standard
+    BART diagnostic. We instead monitor the NUTS-sampled continuous scalars
+    (obs-noise `sd`, hyperparameters); the multi-seed truth-recovery cell is the
+    operational convergence check for the CATE surface itself. Divergences come
+    from sample_stats and are present whether or not pm.sample ran its own check.
+    """
+    import arviz as az
+    post = idata.posterior
+    n_chains = int(post.sizes.get("chain", 1))
+    ndiv = None
+    if hasattr(idata, "sample_stats") and "diverging" in idata.sample_stats:
+        ndiv = int(idata.sample_stats["diverging"].values.sum())
+    out = {"n_chains": n_chains, "n_divergences": ndiv,
+           "max_rhat": float("nan"), "min_ess_bulk": float("nan"),
+           "min_ess_tail": float("nan")}
+    if n_chains >= 2:
+        try:
+            if var_names is None:
+                # auto-scope: monitor scalars / small-vector params, skip per-observation
+                # deterministics (e.g. MMM per-week channel contributions), whose blanket
+                # r-hat is not the meaningful convergence target — same rationale as BART.
+                names = []
+                for nm, da in post.data_vars.items():
+                    sz = 1
+                    for dim in da.dims:
+                        if dim not in ("chain", "draw"):
+                            sz *= int(post.sizes[dim])
+                    if sz <= 50:
+                        names.append(nm)
+                var_names = names or None
+            d = az.summary(idata, var_names=var_names, kind="diagnostics")
+            out["max_rhat"] = float(d["r_hat"].max())
+            out["min_ess_bulk"] = float(d["ess_bulk"].min())
+            out["min_ess_tail"] = float(d["ess_tail"].min())
+        except Exception as e:                       # never let a diagnostic break a run
+            out["error"] = str(e)[:120]
+    rhat_s = f"{out['max_rhat']:.3f}" if out["max_rhat"] == out["max_rhat"] else "n/a (1 chain)"
+    ess_s = f"{out['min_ess_bulk']:.0f}" if out["min_ess_bulk"] == out["min_ess_bulk"] else "n/a"
+    div_s = "n/a" if ndiv is None else str(ndiv)
+    out["summary"] = f"max r-hat {rhat_s} - min ESS {ess_s} - divergences {div_s}"
+    return out
 
 
 # --------------------------------------------------------------------------
@@ -136,6 +197,8 @@ def bcf(X, T, y, propensity, seed=1, return_full=False, **kw):
         pm.Normal("y_obs", mu=mu, sigma=sd, observed=y, shape=mu.shape)
         idata = pm.sample(
             draws=p["draws"], tune=p["tune"], chains=p["chains"], cores=p["chains"],
+            # BART/PGBART: see _fit_bart — scoped convergence is reported below on the
+            # continuous `sd` scalar (plus divergences), not blanket per-unit r-hat.
             random_seed=seed, progressbar=False, compute_convergence_checks=False,
         )
     tau = idata.posterior["tau"].values.reshape(-1, n)
@@ -144,6 +207,8 @@ def bcf(X, T, y, propensity, seed=1, return_full=False, **kw):
             "cate": tau,
             "mu": idata.posterior["mu"].values.reshape(-1, n),
             "sd": idata.posterior["sd"].values.reshape(-1),
+            "idata": idata,
+            "convergence": convergence_report(idata, var_names=["sd"]),
         }
     return tau
 
@@ -312,8 +377,10 @@ def synthetic_control(target, donors, pre, post, seed=1, draws=1000, tune=1000, 
         pm.Normal("obs", mu=mu, sigma=sd, observed=target[pre])
         idata = pm.sample(
             draws=draws, tune=tune, chains=chains, cores=chains,
+            # Pure NUTS (Dirichlet weights + HalfNormal sd): standard r-hat/ESS
+            # apply to every parameter, so let pm.sample run its own checks and
+            # surface a scoped readout below via convergence_report.
             random_seed=seed, progressbar=False, target_accept=0.95,
-            compute_convergence_checks=False,
         )
     W_post = idata.posterior["w"].values.reshape(-1, J)     # (S, J)
     sd_post = idata.posterior["sd"].values.reshape(-1)      # (S,)
@@ -330,6 +397,7 @@ def synthetic_control(target, donors, pre, post, seed=1, draws=1000, tune=1000, 
         "weight_samples": W_post,
         "pre_rmse": pre_rmse,
         "idata": idata,
+        "convergence": convergence_report(idata, var_names=["w", "sd"]),
     }
 
 

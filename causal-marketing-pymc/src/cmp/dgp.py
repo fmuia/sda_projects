@@ -290,9 +290,14 @@ def mmm_weekly(n_weeks: int = 156, seed: int = 21):
     t = np.arange(n_weeks)
     season = np.sin(2 * np.pi * t / 52)               # yearly seasonality in [-1, 1]
 
-    # channel spend — both correlated with season; brand_search much more so
+    # channel spend — both correlated with season; brand_search more so. The
+    # season->brand_search coupling is deliberately MODERATE (corr ~0.75): strong
+    # enough that a naive attribution over-credits brand_search (the lesson), but not
+    # so collinear that its own small effect becomes unidentifiable — near-collinearity
+    # (the earlier 18*season + N(0,3), corr ~0.97) left the MMM's brand_search
+    # saturation on a posterior ridge that would not converge (r-hat >> 1.01).
     tv_spend = np.clip(40 + 8 * season + rng.normal(0, 8, n_weeks), 1, None)
-    brand_search_spend = np.clip(25 + 18 * season + rng.normal(0, 3, n_weeks), 1, None)
+    brand_search_spend = np.clip(25 + 11 * season + rng.normal(0, 7, n_weeks), 1, None)
 
     def adstock(x, lam):
         out = np.zeros_like(x, dtype=float)
