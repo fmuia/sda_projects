@@ -72,7 +72,7 @@ def recovery_scatter(ax, tau_true, estimates: dict, title="Does the method recov
     lim = [tau_true.min() - 3, tau_true.max() + 3]
     ax.plot(lim, lim, "k--", lw=1)
     ax.set_xlim(lim); ax.set_ylim(lim)
-    ax.set_xlabel("true effect  Ï„(x)"); ax.set_ylabel("estimated CATE")
+    ax.set_xlabel("true effect  τ(x)"); ax.set_ylabel("estimated CATE")
     ax.set_title(title); ax.legend(frameon=False, fontsize=8)
 
 
@@ -81,7 +81,7 @@ def calibration_by_decile(ax, by_decile_series, level=0.90, title="Is the uncert
     ax.bar(range(len(by_decile_series)), by_decile_series.values, color=BLUE, alpha=0.85)
     ax.axhline(level, color="k", ls="--", lw=1)
     ax.set_ylim(0, 1)
-    ax.set_xlabel("decile of true effect (low â†’ high)")
+    ax.set_xlabel("decile of true effect (low → high)")
     ax.set_ylabel(f"{int(level*100)}% CI coverage")
     ax.set_title(title)
 
@@ -95,8 +95,8 @@ def profit_plot(ax, frac, cum_profit, stop, oracle_profit=None, title=None):
     ax.axvline(frac[stop], color=BLUE, lw=0.7, alpha=0.5)
     ax.plot(frac[stop], cum_profit[stop], "o", color=BLUE)
     ax.set_xlabel("fraction of base contacted")
-    ax.set_ylabel("cumulative profit (â‚¬)")
-    ax.set_title(title or f"Stop at {frac[stop]*100:.0f}% of base â†’ â‚¬{cum_profit[stop]:.0f} profit")
+    ax.set_ylabel("cumulative profit (€)")
+    ax.set_title(title or f"Stop at {frac[stop]*100:.0f}% of base → €{cum_profit[stop]:.0f} profit")
     ax.legend(frameon=False, fontsize=8)
 
 
@@ -137,8 +137,8 @@ def sensitivity_plot(ax, strengths, estimates, true_ate, cost, tipping=None,
     """Estimated ATE (adjusting for observed X only) as an unobserved
     confounder strengthens, with the true ATE and the cost/decision line."""
     ax.plot(strengths, estimates, color=BLUE, lw=2)
-    ax.axhline(true_ate, color=GREEN, ls="--", label=f"true ATE â‚¬{true_ate:.1f}")
-    ax.axhline(cost, color="k", ls=":", label=f"cost â‚¬{cost:.0f}")
+    ax.axhline(true_ate, color=GREEN, ls="--", label=f"true ATE €{true_ate:.1f}")
+    ax.axhline(cost, color="k", ls=":", label=f"cost €{cost:.0f}")
     if tipping is not None and not np.isnan(tipping):
         ax.axvline(tipping, color=ORANGE, lw=1)
         ax.text(tipping, cost + 0.5, f" flips at s≈{tipping:.1f}", fontsize=8, color=ORANGE)
@@ -226,7 +226,7 @@ def decision_hist(ax, total_samples, cost, true_total=None, title=None):
     go/no-go picture."""
     ax.hist(total_samples, bins=40, color=BLUE, alpha=0.85)
     ax.axvline(cost, color=ORANGE, lw=1.4)
-    ax.text(cost, ax.get_ylim()[1] * 0.9, f" cost â‚¬{cost:.0f}", fontsize=8)
+    ax.text(cost, ax.get_ylim()[1] * 0.9, f" cost €{cost:.0f}", fontsize=8)
     if true_total is not None:
         ax.axvline(true_total, color="k", ls="--", lw=0.8)
         ax.text(true_total, ax.get_ylim()[1] * 0.75, " true", fontsize=8)

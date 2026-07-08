@@ -135,13 +135,32 @@ The third tier: the remaining statistical-watertightness gaps (patterns C/D) and
 *Deferred as minor:* nb02 / nb11 single-cost decisions could gain a cost sweep (low value). `estimators.bcf`
 gained a `return_full` option and `mccrary_density` now returns a z-stat (both backward-compatible defaults).
 
-### Still open after P0 + P1 + P2
+---
 
-- **FAST-mode convergence suppression (pattern E)** — the one remaining large job: `compute_convergence_checks=False`
-  is still hard-set and committed outputs are FAST-mode; a FULL-mode reference run with r-hat/ESS reported is
-  deliberately deferred as the slow dual-environment step.
-- **Infrastructure (pattern G, P3)** — CI still cannot run (wrong directory + `main` vs `master`), test deps not
-  installed by `uv sync`, notebook tests skip silently, no kernelspec-drift guard, `plots.py` mojibake.
+## P3 fixes applied — infrastructure (pattern G)
+
+The engineering gaps that let a broken notebook reach the lecture without CI noticing.
+
+- **CI relocated so it can actually run.** GitHub only reads workflows from the repo root (`fmuia/sda_projects`),
+  but the workflow sat in `causal-marketing-pymc/.github/` and triggered on `main` while the branch is `master`
+  — so it had *never executed*. Moved to `sda_projects/.github/workflows/ci.yml` with `working-directory:
+  causal-marketing-pymc`, a `master` trigger, and a `causal-marketing-pymc/**` paths filter; the old location is
+  a redirect stub.
+- **`uv sync` now installs the test tooling.** `pytest`/`nbmake` were under `[project.optional-dependencies]`,
+  which `uv sync` does not install — so CI's `uv run pytest` had no pytest. Moved to a PEP 735 `[dependency-groups]`
+  (installed by default), mirrored as an extra for `pip`.
+- **No more silent skips.** `CMP_STRICT_KERNELS=1` (set in CI) turns a missing-kernel *skip* into a *failure*, so a
+  broken legacy env can't silently pass 5 notebooks.
+- **Kernelspec-drift guard.** A new `test_notebook_kernelspec` asserts each notebook declares the kernel its
+  env-split requires (the documented nbclient-rewrite incident) — runs in the fast lane, needs no kernels.
+- **`plots.py` / `dgp.py` mojibake fixed** (`â‚¬`→`€`, `Ï„`→`τ`, `â†'`→`→`); figure labels refresh on the next run.
+
+### Still open — the one remaining large job
+
+- **FAST-mode convergence suppression (pattern E).** `compute_convergence_checks=False` is still hard-set in the
+  fitters and every committed output is a FAST-mode run. The remaining work is a **FULL-mode reference run**
+  (`CMP_FAST=0`) across both environments with r-hat/ESS/divergences reported — deliberately deferred as the one
+  genuinely slow, dual-environment job. It also refreshes the `plots.py` mojibake fix into every committed figure.
 
 ---
 

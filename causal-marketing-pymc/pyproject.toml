@@ -30,6 +30,16 @@ dependencies = [
     "ipykernel>=6.29,<7",
 ]
 
+# Test tooling lives in a PEP 735 dependency-group so plain `uv sync` installs it
+# (uv installs the default `dev` group automatically). It used to sit ONLY under
+# [project.optional-dependencies], which `uv sync` does NOT install — so CI's
+# `uv run pytest` had no pytest. Mirrored below as an optional extra for plain pip.
+[dependency-groups]
+dev = [
+    "nbmake>=1.5,<2",
+    "pytest>=8.3,<9",
+]
+
 [project.optional-dependencies]
 dev = [
     "nbmake>=1.5,<2",

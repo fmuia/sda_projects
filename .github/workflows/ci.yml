@@ -1,0 +1,69 @@
+name: causal-marketing-pymc CI
+
+# GitHub Actions only reads workflows from the repository root (this monorepo is
+# fmuia/sda_projects). The project lives in causal-marketing-pymc/, so every job
+# runs there via `defaults.run.working-directory`, and a `paths` filter keeps the
+# suite from running on changes elsewhere in the repo. Branch is `master`.
+on:
+  push:
+    branches: [master]
+    paths: ["causal-marketing-pymc/**"]
+  pull_request:
+    paths: ["causal-marketing-pymc/**"]
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: causal-marketing-pymc
+
+jobs:
+  # Fast lane: shared-package unit tests (incl. the pymc-bart CATE gotcha guard)
+  # plus the kernelspec-drift guard. `uv sync` now installs the `dev` dependency
+  # group (pytest/nbmake) automatically.
+  package-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - name: Sync core environment (pymc>=6, incl. dev group)
+        run: uv sync --python 3.12
+      - name: Package unit tests + kernelspec-drift guard
+        run: uv run --python 3.12 pytest tests/test_package.py tests/test_notebooks.py::test_notebook_kernelspec -q
+
+  # Full lane: execute every notebook headless in FAST mode, across both envs.
+  notebook-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: System deps for pymc-marketing[dag] (graphviz)
+        run: sudo apt-get update && sudo apt-get install -y graphviz graphviz-dev
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build core environment (pymc>=6)  ·  notebooks 00-05, 07
+        run: uv sync --python 3.12
+
+      - name: Build legacy environment (pymc<6)  ·  notebooks 06, 08-11
+        run: |
+          uv venv .venv-legacy --python 3.12
+          uv pip install --python .venv-legacy/bin/python -r requirements-legacy.txt
+          uv pip install --python .venv-legacy/bin/python "pymc-marketing[dag]"
+          uv pip install --python .venv-legacy/bin/python -e . --no-deps
+
+      - name: Register both Jupyter kernels
+        run: |
+          .venv/bin/python -m ipykernel install --user --name cmp-core --display-name "Python (cmp core, pymc6)"
+          .venv-legacy/bin/python -m ipykernel install --user --name cmp-legacy --display-name "Python (cmp legacy, pymc5)"
+
+      # CMP_STRICT_KERNELS=1 turns a missing-kernel skip into a failure, so a broken
+      # legacy env can't silently pass 5 notebooks.
+      - name: Execute all notebooks headless (FAST=1, strict kernels)
+        env:
+          CMP_FAST: "1"
+          CMP_STRICT_KERNELS: "1"
+        run: uv run --python 3.12 pytest tests/test_notebooks.py -q -p no:cacheprovider

@@ -360,7 +360,7 @@ def did_rollout(n_stores: int = 40, n_weeks: int = 24, launch_week: int = 12, tr
 # 09 — Gold-tier perk (RDD)
 # --------------------------------------------------------------------------
 def rdd_perk(n: int = 2000, cutoff: float = 100.0, true_jump: float = 0.14, seed: int = 29):
-    """Annual spend (running variable) crossing â‚¬100 grants Gold tier;
+    """Annual spend (running variable) crossing €100 grants Gold tier;
     retention is smoothly increasing in spend *plus* a true discontinuous
     jump at the cutoff from the perk itself.
     """
