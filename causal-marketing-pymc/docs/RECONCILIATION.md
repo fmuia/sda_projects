@@ -17,19 +17,26 @@ remaining scope is explicit. Built by hand from the applied-fix tables + current
 
 | Severity | Total | Closed | Open | Notes |
 |---|:--:|:--:|:--:|---|
-| 🔴 Critical | 27 | **23** | **4** (3 unique) | 4 are in *no* applied-fix record — need re-verification |
-| 🟠 Major | 95 | ~30 | ~65 | incl. ~12 convergence/FAST-mode majors closed by the FULL run |
-| 🟡 Minor | 69 | ~2 | ~67 | explicitly deferred ("deferred as minor") |
+| 🔴 Critical | 27 | **27** | **0** | the last 4 were re-verified + fixed in **P4** (all needed real fixes) |
+| 🟠 Major | 95 | ~32 | ~63 | incl. ~12 convergence/FAST majors (FULL run) + P4's marimo-oracle major |
+| 🟡 Minor | 69 | ~3 | ~66 | P4 fixed the dgp collider/mediator docstring; rest deferred |
 | ⚪ Polish | 19 | 0 | 19 | never scheduled |
-| **Total** | **210** | **~55** | **~155** | + the Workflow re-grade (process step) not run |
+| **Total** | **210** | **~62** | **~148** | + the Workflow re-grade (process step) not run |
+
+> **P4 done (all 3 open criticals were real, not false alarms):** (1) nb01 coverage caveat contradicted its own
+> FULL output (claimed "below nominal" at ~89% coverage) → rewritten to match; (2) nb05 pathmc green-lit a
+> biased set `{opened_email, loyalty}` → added a `test_implications()` falsification (1/4 violation, p≈1e-19)
+> turning it into the "falsify the DAG" lesson + fixed the dgp docstring; (3) marimo decision table conflated
+> the confidence-rule count with the rank-policy stop → split into 3 clearly-labelled policies (+ deployable
+> vs oracle stop). **Criticals now 27/27.**
 
 So: **the criticals are ~85% closed; the majors ~1/3; minors/polish untouched.** Calling the project "done"
 was wrong — roughly **three-quarters of the reviewed findings remain open.**
 
-## The 4 open criticals (not in any applied-fix record)
+## The 4 open criticals (not in any applied-fix record) — ✅ RESOLVED in P4
 
-These were never explicitly fixed by P0–P3. Current code looks *plausibly* correct in each case, but none
-was verified as resolved — they need a targeted re-check (or the re-grade Workflow):
+*(Retained for the record. All three unique issues below were re-verified and fixed in P4 — see the P4 note
+above. Each was a genuine defect, not a false alarm.)* These were never explicitly fixed by P0–P3:
 
 1. **nb01 / Anchor A — coverage-by-decile "90% coverage 76%"** (crit #4, #20; same issue). The calibration
    diagnostic catches a real under-coverage failure; the P2 roadmap listed "an honest reading" of it but the

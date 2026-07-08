@@ -241,10 +241,14 @@ def funnel(n: int = 1000, seed: int = 13):
 # 05 — what to control for (DAG demo: confounder + collider + mediator)
 # --------------------------------------------------------------------------
 def dag_control_demo(n: int = 1500, seed: int = 17):
-    """email -> spend, confounded by loyalty, mediated by opened_email
-    (a post-treatment collider trap: opened_email is a common effect of
-    email and an unobserved engagement trait, and also sits on the causal
-    path). True ATE of email on spend is known.
+    """email -> spend, confounded by loyalty. `opened_email` is a **collider
+    trap**: a common effect of email and an *unobserved* engagement trait that
+    ALSO drives spend, so conditioning on it opens the path
+    email -> opened_email <- engagement_trait -> spend and biases the estimate.
+    It is NOT a mediator — opened_email never enters the spend equation. The
+    DAG a user typically draws omits engagement_trait, so a graph-based tool
+    cannot see this collider (that is the notebook's falsification lesson).
+    `responded` is a clean collider of email and spend. True ATE is known.
     """
     rng = np.random.default_rng(seed)
     loyalty = rng.normal(0, 1, n)

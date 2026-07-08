@@ -75,9 +75,15 @@ def _(base_slider, c_slider, cate, cate_point, conf_slider, np, plots, plt, poli
     tau_s = tau[idx]
 
     mask, p_worth = policy.target_set(cate_s, c, confidence=conf)
-    frac, cum, stop = policy.profit_curve(point_s, tau_s, c)
+    frac, cum, stop = policy.profit_curve(point_s, tau_s, c)      # rank by prediction; stop = argmax of TRUTH-realised profit (oracle)
     _, oracle, _ = policy.profit_curve(tau_s, tau_s, c)
     voi = policy.value_of_information(cate_s, c)
+
+    # Two *deployable* policies (neither peeks at the truth to choose whom to contact):
+    conf_profit = float((tau_s[mask] - c).sum())                  # the confidence rule's OWN realised profit
+    _order = np.argsort(-point_s)                                 # rank by PREDICTED effect
+    deploy_stop = int(np.argmax(np.cumsum(point_s[_order] - c)))  # stop where the PREDICTED profit curve peaks
+    deploy_profit = float((tau_s[_order][:deploy_stop + 1] - c).sum())  # ...then realise that set against the truth
 
     fig, ax = plt.subplots(1, 2, figsize=(11, 4))
     plots.profit_plot(ax[0], frac, cum, stop, oracle_profit=oracle)
@@ -88,24 +94,27 @@ def _(base_slider, c_slider, cate, cate_point, conf_slider, np, plots, plt, poli
     ax[1].set_title(f"Target {int(mask.sum())} of {n}  ·  confidence bar {conf:.2f}")
     ax[1].legend(frameon=False, fontsize=8)
     fig.tight_layout()
-    return c, fig, mask, n, stop, cum, frac, voi
+    return c, conf, conf_profit, cum, deploy_profit, deploy_stop, fig, frac, mask, n, stop, voi
 
 
 @app.cell
-def _(c, cum, frac, mask, mo, n, stop, voi):
+def _(c, conf, conf_profit, cum, deploy_profit, deploy_stop, frac, mask, mo, n, stop, voi):
     mo.md(
         f"""
-        ### Decision at cost €{c:.0f}
+        ### Decision at cost €{c:.0f}  ·  confidence bar {conf:.2f}
 
-        | quantity | value |
-        |---|---|
-        | customers targeted | **{int(mask.sum())} / {n}** (top {frac[stop]:.0%} by rank) |
-        | profit at optimal stop | **€{cum[stop]:,.0f}** |
-        | value of information (total) | **€{voi['total']:,.0f}** |
-        | …on the {voi['n_straddlers']} "straddlers" | **€{voi['voi_on_straddlers']:,.0f}** |
+        | targeting policy | customers | realised profit vs truth |
+        |---|---|---|
+        | **confidence rule** — P(τ>c) > {conf:.2f} *(what the sliders drive)* | {int(mask.sum())} / {n}  ({mask.mean():.0%}) | €{conf_profit:,.0f} |
+        | **rank & stop** — model-chosen stop *(deployable)* | {deploy_stop + 1} / {n}  ({(deploy_stop + 1) / n:.0%}) | €{deploy_profit:,.0f} |
+        | **rank & stop** — oracle stop *(validation, knows τ)* | {frac[stop]:.0%} of base | €{cum[stop]:,.0f} |
+        | value of information (total) | — | €{voi['total']:,.0f} |
+        | …concentrated on {voi['n_straddlers']} "straddlers" | — | €{voi['voi_on_straddlers']:,.0f} |
 
-        The straddlers — whose interval crosses the cost line — are exactly the
-        customers to put into an A/B test rather than mail blind.
+        The **oracle stop** knows the true τ to pick where to stop, so its profit is an *upper bound* — a
+        validation check, not an achievable forecast. The **confidence rule** and the **model-chosen stop**
+        are what you could actually deploy (both choose whom to contact without peeking at τ). The straddlers
+        — whose interval crosses the cost line — are the ones to A/B test rather than mail blind.
         """
     )
     return
