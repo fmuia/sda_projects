@@ -25,31 +25,32 @@ that convergence is evidence the defects are real, not reviewer noise.
 
 ## Scorecard
 
-Arrows (`2 → 3`) show the axis after the P0 fixes. Unchanged cells are the original baseline scores.
+Arrows (`2 → 3`) show the axis after the applied fixes (P0 = pre-lecture number/narrative fixes;
+P1 = the truth-recovery statistics). Unchanged cells are the original baseline scores.
 
 | Piece | Grade | Diagnostics | Business | Narration | Validation | Watertight |
 |---|---|:--:|:--:|:--:|:--:|:--:|
-| Notebook 00 — Foundations | **good** | 2 | 2 | 5 | 2 | 3 |
+| Notebook 00 — Foundations | **good** | 2 | 2 | 5 | 2 → 3 | 3 → 4 |
 | Notebook 01 — Uplift targeting (Anchor A ⭐) | **adequate** | 3 | 4 | 4 | 3 | 2 → 3 |
 | Notebook 02 — Segment effects | **good** | 2 | 4 | 4 | 3 | 3 → 4 |
 | Notebook 03 — Price elasticity | **good** | 2 | 3 | 4 | 3 | 3 |
 | Notebook 04 — Funnel mediation | **adequate** | 2 | 2 | 4 | 3 | 2 |
 | Notebook 05 — What to control for | **adequate** | 3 | 2 | 4 | 2 | 2 |
 | Notebook 06 — Incrementality MMM | **weak → adequate** | 2 | 3 | 4 | 2 | 2 → 3 |
-| Notebook 07 — Geo-lift synthetic control (Anchor B ⭐) | **good** | 4 | 4 | 4 | 3 | 3 |
-| Notebook 08 — Rollout DiD | **adequate** | 3 | 3 | 4 | 2 | 2 |
+| Notebook 07 — Geo-lift synthetic control (Anchor B ⭐) | **good** | 4 | 4 | 4 | 3 → 4 | 3 → 4 |
+| Notebook 08 — Rollout DiD | **adequate** | 3 | 3 | 4 | 2 → 3 | 2 → 3 |
 | Notebook 09 — Threshold perk RDD | **adequate** | 3 | 2 | 4 | 2 | 3 → 4 |
 | Notebook 10 — Redesign ITS | **adequate** | 2 → 3 | 2 | 4 | 2 | 2 → 3 |
-| Notebook 11 — Endogenous exposure IV | **adequate** | 4 | 3 | 4 | 2 | 2 |
+| Notebook 11 — Endogenous exposure IV | **adequate** | 4 | 3 | 4 | 2 → 3 | 2 → 3 |
 | Anchor A — adversarial statistics lens | **adequate** | — | — | — | — | — |
-| Anchor B — adversarial statistics lens | **adequate** | — | — | — | — | — |
-| src/cmp — statistical core (estimators, metrics) | **adequate** | — | — | — | — | e_value fixed |
+| Anchor B — adversarial statistics lens | **adequate** | — | — | — | — | SC band fixed |
+| src/cmp — statistical core (estimators, metrics) | **adequate** | — | — | — | — | e_value · SC band · IV priors |
 | src/cmp — simulators, policy math, data loaders, plots | **adequate** | — | — | — | — | RNG fixed |
 | Tests, CI, build & reports infrastructure | **adequate** | — | — | — | — | +2 guards |
 | marimo apps (3) | **adequate** | — | — | — | — | 2 figs fixed |
 | README & repo claims | **good** | — | — | — | — | — |
 
-*Scores are 1–5 (5 = flagship-lecture grade). Code/infra artifacts are graded holistically, not on the five axes. Axis bumps reflect the specific criticals resolved in P0, re-verified by re-execution; grades other than nb06's are held pending a full workflow re-grade.*
+*Scores are 1–5 (5 = flagship-lecture grade). Code/infra artifacts are graded holistically, not on the five axes. Axis bumps reflect the specific findings resolved in P0 and P1, re-verified by re-execution; overall grades other than nb06's are held pending a full workflow re-grade.*
 
 ---
 
@@ -83,9 +84,46 @@ which is below the 0.8 action bar, so the honest call is now **"test before real
 nb02 3→4, nb06 2→3, nb09 3→4, nb10 2→3), nb10's diagnostics rises (2→3, the ACF is now a *real* check),
 and **nb06's grade moves weak→adequate** because its headline decision is now statistically correct.
 Two new regression guards (`test_e_value_requires_sd`, `test_random_baseline_is_independent`) lock in
-fixes 2 and 5. Everything else in this document — the P1 truth-recovery failures (00, 07, 08, 11), the
-FAST-mode convergence suppression, the thinner business steps, and the CI-can't-run infrastructure gaps —
-is **unchanged and still open**.
+fixes 2 and 5.
+
+---
+
+## P1 fixes applied — the truth-recovery failures
+
+The second tier — **pattern A, "recover the truth fails, unacknowledged"** — is done and re-verified by
+re-execution. In every case the committed run had the planted truth sitting *outside* a nominally-90%
+interval under a title claiming recovery; each is now honestly recovered, and the root cause was fixed in
+the estimator or the fit, not papered over in prose.
+
+| # | Notebook | Before (truth outside interval) | Root cause | After (truth recovered) |
+|---|---|:--:|---|:--:|
+| 1 | **00 Foundations** — estimator ladder | AIPW 90% CI [5.29, 5.89] excludes true €6 (seed 17); title says "converges on the truth" | single-seed figure sold as if it proved unbiasedness | **multi-seed** panel: naive stays biased (+3.4), regression/IPW/AIPW centre on €6 (bias ≈ −0.1), AIPW covers truth in ~80% of samples — the honest meaning of "unbiased." "Credible interval" relabelled a bootstrap CI. |
+| 2 | **07 Geo-lift (Anchor B ⭐)** | total €305k, 90% CI [279, 333] excludes true €339k; per-week band covers only ~45% | `effect = target − W_post@donors` used **weight uncertainty only**, dropping the counterfactual's observation noise | band is now a **posterior predictive** (adds `Normal(0, sd)`): truth inside [272, 342], **per-week coverage ~86%**. A multi-seed check honestly exposes that the *total* interval still covers only ~40% (SC's sample variance ≫ any single posterior), so the calibrated inference is the **placebo permutation test** — which *reinforces* "confirm with a second geo test." |
+| 3 | **08 Rollout DiD** | Bayesian €327, CI [302, 353] excludes true €400; labelled "priors mildly shrink it" | CausalPy 0.8.1 fixed priors `β~N(0,50), σ~HalfNormal(1)` mis-scaled for €1000 revenue → shrink + too-narrow | **standardize revenue** before the fit, back-transform → €389, CI [275, 515] covers €400 and now **agrees with the 2×2 (€390)**. |
+| 4 | **11 Endogenous IV** | Bayesian IV €16.6, CI [15.5, 17.8] excludes true €15 (~3.3× too narrow) | CausalPy centres IV priors on the 2SLS point with σ=1 (overconfident) | **weakly-informative priors** `{mus:[0,0], sigmas:[50,50]}` → €18.1, CI [14.8, 22.2] covers €15, and its **width matches the frequentist Wald SE**. |
+
+**Shared-code fixes:** `estimators.synthetic_control` now returns a posterior-predictive counterfactual
+(with `counterfactual_mean` exposed separately); `estimators.iv` gained `priors=`/`binary_treatment=`
+pass-through with a docstring warning about CausalPy's overconfident defaults. A `FAST` switch was added to
+nb00 (it previously had none) so the multi-seed loop scales for CI. All re-verified: **20/20 package tests
+green, the four notebooks re-execute clean, PDFs regenerated.**
+
+**What this changes in the scorecard:** validation rises on nb00/07/08/11 (multi-seed recovery + honest
+coverage now present), watertightness rises on the same four (the headline figures no longer contradict the
+truth). **Anchor B is now genuinely watertight** on its core recovery claim, with the total-interval
+limitation disclosed rather than hidden — arguably a stronger lecture than a clean pass.
+
+### Still open after P0 + P1
+
+- **FAST-mode convergence suppression (pattern E).** `compute_convergence_checks=False` is still hard-set in
+  the fitters and committed outputs are FAST-mode; a FULL-mode reference run with r-hat/ESS reported is the
+  remaining long step (deliberately deferred — it is the one genuinely slow, dual-environment job).
+- **Business-depth gaps (pattern F, P2):** VOI/test-sizing pricing in nb07, cost-to-move model in nb04,
+  profit computation in nb03/05, nb00's unused `COST`, nb11's single-cost decision.
+- **Sensitivity & diagnostics polish (P2):** nb04's incoherent ρ-sweep, nb05's impossible contour, nb09's
+  two-bin "McCrary", nb01's PPC-from-a-constant.
+- **Infrastructure (pattern G, P3):** CI still cannot run (wrong directory + `main` vs `master`), test deps
+  not installed by `uv sync`, notebook tests skip silently, no kernelspec-drift guard, `plots.py` mojibake.
 
 ---
 

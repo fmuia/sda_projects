@@ -262,14 +262,25 @@ def synthetic_control(target, donors, pre, post, seed=1, draws=1000, tune=1000, 
     Simplex (Dirichlet) weights — vs unconstrained regression — are what
     prevent extrapolation and negative weights (Abadie).
 
+    The counterfactual is returned as a **posterior predictive**, not just the
+    posterior-mean blend: the treated unit's own path carries the fitted
+    idiosyncratic noise ``sd`` on top of the weight uncertainty, so a band on
+    the counterfactual *outcome* — and hence on the gap/effect, which is what
+    the euro decision integrates — must include it. Using the weights-only
+    blend (``W_post @ donors``) understates the effect band and can leave the
+    true effect outside a nominally-90% interval; adding ``Normal(0, sd)`` per
+    period per draw restores near-nominal coverage.
+
     Parameters
     ----------
     target : (W,) observed treated series
     donors : (J, W) donor pool series
     pre, post : slices into the W time axis
 
-    Returns dict with counterfactual_samples (S, W), effect_samples (S, W),
-    weight_samples (S, J), and pre_rmse (fit quality on the pre-period).
+    Returns dict with counterfactual_samples (S, W, posterior-predictive incl.
+    obs noise), counterfactual_mean (S, W, the mean blend), effect_samples
+    (S, W, = target - predictive), weight_samples (S, J), and pre_rmse (fit
+    quality of the mean blend on the pre-period).
     """
     import pymc as pm
     J = donors.shape[0]
@@ -283,12 +294,17 @@ def synthetic_control(target, donors, pre, post, seed=1, draws=1000, tune=1000, 
             random_seed=seed, progressbar=False, target_accept=0.95,
             compute_convergence_checks=False,
         )
-    W_post = idata.posterior["w"].values.reshape(-1, J)
-    cf = W_post @ donors
-    effect = target[None, :] - cf
-    pre_rmse = float(np.sqrt(np.mean(effect.mean(0)[pre] ** 2)))
+    W_post = idata.posterior["w"].values.reshape(-1, J)     # (S, J)
+    sd_post = idata.posterior["sd"].values.reshape(-1)      # (S,)
+    cf_mean = W_post @ donors                               # (S, W) posterior mean blend
+    # posterior-predictive counterfactual outcome: mean blend + per-period obs noise
+    noise = np.random.default_rng(seed + 12345).standard_normal(cf_mean.shape)
+    cf_pred = cf_mean + noise * sd_post[:, None]
+    effect = target[None, :] - cf_pred
+    pre_rmse = float(np.sqrt(np.mean((target[None, :] - cf_mean).mean(0)[pre] ** 2)))
     return {
-        "counterfactual_samples": cf,
+        "counterfactual_samples": cf_pred,
+        "counterfactual_mean": cf_mean,
         "effect_samples": effect,
         "weight_samples": W_post,
         "pre_rmse": pre_rmse,
@@ -396,12 +412,23 @@ def its(df, treatment_time, formula="conversion ~ 1 + t + sin7 + cos7", fast=Tru
     )
 
 
-def iv(df, instruments_formula, formula, instrument_col, treatment_col, outcome_col, fast=True):
+def iv(df, instruments_formula, formula, instrument_col, treatment_col, outcome_col,
+       fast=True, priors=None, binary_treatment=False):
     cp = _require_causalpy()
+    # GOTCHA: CausalPy 0.8.1 defaults the IV beta priors to CENTER on the 2SLS
+    # point estimates with sigma=1 — very tight, so the posterior is overconfident
+    # and its 90% interval can exclude the truth (a ~3x too-narrow band). Pass
+    # weakly-informative priors, e.g. priors={"mus": [0, 0], "sigmas": [50, 50],
+    # "eta": 2, "lkj_sd": 2}, for an honest, ~frequentist-width interval.
+    # binary_treatment=True selects the logit control-function likelihood (the
+    # exposure is 0/1); on this DGP it barely moves the point and keeps the
+    # interval a touch tight, so the priors are the load-bearing fix.
     return cp.InstrumentalVariable(
         instruments_data=df[[treatment_col, instrument_col]],
         data=df[[outcome_col, treatment_col]],
         instruments_formula=instruments_formula,
         formula=formula,
         model=cp.pymc_models.InstrumentalVariableRegression(sample_kwargs=_sk(fast, cores=1)),
+        priors=priors,
+        binary_treatment=binary_treatment,
     )
