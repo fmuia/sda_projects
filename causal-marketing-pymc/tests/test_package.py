@@ -160,8 +160,16 @@ def test_first_stage_F_separates_strong_from_weak():
 
 def test_mccrary_flags_no_manipulation():
     df, _ = dgp.rdd_perk(n=2000, seed=1)
-    _, _, log_ratio = est.mccrary_density(df["spend"].values, 100.0, bandwidth=15)
-    assert abs(log_ratio) < 0.5   # smooth density, no sorting
+    _, _, _log_ratio, z = est.mccrary_density(df["spend"].values, 100.0, bandwidth=15)
+    assert abs(z) < 3.0           # smooth density -> continuity null not rejected
+
+
+def test_mccrary_flags_manipulation():
+    df, _ = dgp.rdd_perk(n=2000, seed=1)
+    r = df["spend"].values.copy()
+    r[(r > 92) & (r < 100)] = 100.5   # sort just-below units to just-above the cutoff
+    _, _, _lr, z = est.mccrary_density(r, 100.0, bandwidth=15)
+    assert z > 3.0                # a pile-up above -> strongly flagged
 
 
 def test_e_value_grows_with_effect():

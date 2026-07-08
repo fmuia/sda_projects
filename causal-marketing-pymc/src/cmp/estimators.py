@@ -102,7 +102,7 @@ def t_learner(X, T, y, seed=1, binary=False, **kw):
     return _bart_predict(m1, i1, X, seed + 90, binary) - _bart_predict(m0, i0, X, seed + 91, binary)
 
 
-def bcf(X, T, y, propensity, seed=1, **kw):
+def bcf(X, T, y, propensity, seed=1, return_full=False, **kw):
     """Bayesian Causal Forest (Hahn-Murray-Carvalho 2020): a prognostic
     BART with the estimated propensity fed in (to absorb targeted-selection
     confounding / RIC), plus a separate, tighter treatment BART (fewer
@@ -112,7 +112,12 @@ def bcf(X, T, y, propensity, seed=1, **kw):
 
     Note (honest caveat, cookbook): when confounders are fully observed,
     BCF ~= T-learner — the propensity trick earns its keep specifically
-    under targeted selection."""
+    under targeted selection.
+
+    With return_full=True, returns a dict {cate, mu, sd} where `mu` is the
+    fitted conditional-mean posterior (prognostic + tau*T, shape (S, n)) and
+    `sd` the observation-noise posterior (S,) — everything needed for a
+    genuine posterior-predictive check, y_rep = Normal(mu_draw, sd_draw)."""
     import pymc as pm
     import pymc_bart as pmb
     p = {**FAST, **kw}
@@ -133,7 +138,14 @@ def bcf(X, T, y, propensity, seed=1, **kw):
             draws=p["draws"], tune=p["tune"], chains=p["chains"], cores=p["chains"],
             random_seed=seed, progressbar=False, compute_convergence_checks=False,
         )
-    return idata.posterior["tau"].values.reshape(-1, n)
+    tau = idata.posterior["tau"].values.reshape(-1, n)
+    if return_full:
+        return {
+            "cate": tau,
+            "mu": idata.posterior["mu"].values.reshape(-1, n),
+            "sd": idata.posterior["sd"].values.reshape(-1),
+        }
+    return tau
 
 
 ESTIMATORS = {"S-learner": s_learner, "T-learner": t_learner, "BCF": bcf}
@@ -211,19 +223,28 @@ def first_stage_F(instrument, treatment):
 
 
 def mccrary_density(running, cutoff, bandwidth=None, n_bins=40):
-    """Simple McCrary-style manipulation test: histogram density of the
-    running variable just below vs just above the cutoff. A large jump in
-    density at the cutoff suggests units *sorted* across it (gaming), which
-    invalidates RD. Returns (density_below, density_above, log_ratio)."""
+    """McCrary (2008)-style manipulation test. Compares the running-variable
+    density just below vs just above the cutoff: local *sorting* across the
+    threshold (gaming) shows up as a pile-up on one side, which invalidates RD.
+    Within a narrow window each side we test the density-continuity null (≈ equal
+    mass just below and just above) with a **binomial z-test**, so "no
+    manipulation" is judged by significance (|z| < ~2), not an eyeballed ratio.
+    The log-ratio is now a ratio of properly normalized densities (scale-invariant
+    — no additive smoothing of density values, which was unit-dependent).
+
+    Returns (density_below, density_above, log_ratio, z_stat). `n_bins` is kept
+    for backward-compatible call sites but unused; the window is set by `bandwidth`."""
     r = np.asarray(running, float)
     if bandwidth is None:
-        bandwidth = (r.max() - r.min()) / 10
-    below = r[(r >= cutoff - bandwidth) & (r < cutoff)]
-    above = r[(r >= cutoff) & (r < cutoff + bandwidth)]
-    d_below = len(below) / max(bandwidth, 1e-9)
-    d_above = len(above) / max(bandwidth, 1e-9)
-    log_ratio = float(np.log((d_above + 1) / (d_below + 1)))
-    return d_below, d_above, log_ratio
+        bandwidth = (r.max() - r.min()) / 20      # a narrow window near the cutoff
+    n_below = int(np.sum((r >= cutoff - bandwidth) & (r < cutoff)))
+    n_above = int(np.sum((r >= cutoff) & (r < cutoff + bandwidth)))
+    d_below = n_below / max(bandwidth, 1e-9)
+    d_above = n_above / max(bandwidth, 1e-9)
+    log_ratio = float(np.log(max(d_above, 1e-9) / max(d_below, 1e-9)))
+    n = n_below + n_above
+    z = float((n_above / n - 0.5) / np.sqrt(0.25 / n)) if n > 0 else 0.0
+    return d_below, d_above, log_ratio, z
 
 
 # --------------------------------------------------------------------------

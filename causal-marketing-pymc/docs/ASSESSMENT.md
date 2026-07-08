@@ -113,17 +113,35 @@ coverage now present), watertightness rises on the same four (the headline figur
 truth). **Anchor B is now genuinely watertight** on its core recovery claim, with the total-interval
 limitation disclosed rather than hidden — arguably a stronger lecture than a clean pass.
 
-### Still open after P0 + P1
+---
 
-- **FAST-mode convergence suppression (pattern E).** `compute_convergence_checks=False` is still hard-set in
-  the fitters and committed outputs are FAST-mode; a FULL-mode reference run with r-hat/ESS reported is the
-  remaining long step (deliberately deferred — it is the one genuinely slow, dual-environment job).
-- **Business-depth gaps (pattern F, P2):** VOI/test-sizing pricing in nb07, cost-to-move model in nb04,
-  profit computation in nb03/05, nb00's unused `COST`, nb11's single-cost decision.
-- **Sensitivity & diagnostics polish (P2):** nb04's incoherent ρ-sweep, nb05's impossible contour, nb09's
-  two-bin "McCrary", nb01's PPC-from-a-constant.
-- **Infrastructure (pattern G, P3):** CI still cannot run (wrong directory + `main` vs `master`), test deps
-  not installed by `uv sync`, notebook tests skip silently, no kernelspec-drift guard, `plots.py` mojibake.
+## P2 fixes applied — sensitivity/diagnostics watertightness + business depth
+
+The third tier: the remaining statistical-watertightness gaps (patterns C/D) and the thin business steps
+(pattern F). Done and re-verified by re-execution (21/21 package tests, +1 new guard).
+
+| # | Finding (severity) | Notebook | Fix |
+|---|---|---|---|
+| 1 | Incoherent confounding ρ-sweep — code contradicts its comment, freezes one lever, bakes in "ROBUST" (**critical**) | nb04 | **Coherent** M–Y sweep: bias propagated through *both* levers that share the engagement→converted edge, per posterior draw. It now reveals a *real* fragility (engagement's lead over activation flips at ~55% of the edge) instead of a manufactured robustness. |
+| 2 | Lever ranking is unit-dependent, no cost model (**critical, business**) | nb04 | Show €/unit **and** €/SD (they *reverse*) and rank by **ROI on a stated cost-to-move**, with `P(ROI>1)`. |
+| 3 | "100% mediated" forced by omitting the direct edge (**major**) | nb04 | Include the direct onboarding→converted edge and **test it** — NDE = 0.06 [−0.03, 0.15] includes 0, so 100%-mediated is now *discovered*. Also corrected the false "simulates through the graph" claim (it's product-of-coefficients). |
+| 4 | Sensitivity contour can't cross zero (bias ≤ 1 vs a €6 effect) (**major**) | nb05 | Widen the γ·δ grid to (0,3)² so the zero-crossing line actually exists. |
+| 5 | E-value bar mixes a €6 effect and a 3.3× risk-ratio on one "RR-scale" axis (**major**) | nb05 | Plot only RR-scale quantities (E-value vs the 1.0 no-confounding baseline). |
+| 6 | "Decide in euros" had no euros (**major, business**) | nb05 | Price the control choice: budgeting on the naive €9.45 vs the correct €6.09 books **€168k** of phantom lift on a 50k campaign. |
+| 7 | "Posterior predictive check" drawn from a grand-mean constant, not the model (**major**) | nb01 | `bcf(return_full=True)` now returns the fitted `mu`/`sd`; the PPC draws genuine replicates `Normal(mu_draw, sd_draw)`. |
+| 8 | "McCrary test" is a two-bin count ratio with unit-dependent smoothing (**major**) | nb09 | Proper density-continuity **binomial z-test** (no-manip z=+0.2; injected sorting z≈+14), scale-invariant log-ratio; +2 tests. |
+| 9 | Business-depth gaps (**major, several**) | nb00, nb03, nb07 | nb00 now makes the €8-cost go/no-go the confounding flips; nb03 computes a scale-free **+21% profit uplift** [13,30] and fixes the conditional/unconditional posterior mix; nb07 prices the confirmatory test — **VOI + sizing (~27 markets, a lower bound)**. |
+
+*Deferred as minor:* nb02 / nb11 single-cost decisions could gain a cost sweep (low value). `estimators.bcf`
+gained a `return_full` option and `mccrary_density` now returns a z-stat (both backward-compatible defaults).
+
+### Still open after P0 + P1 + P2
+
+- **FAST-mode convergence suppression (pattern E)** — the one remaining large job: `compute_convergence_checks=False`
+  is still hard-set and committed outputs are FAST-mode; a FULL-mode reference run with r-hat/ESS reported is
+  deliberately deferred as the slow dual-environment step.
+- **Infrastructure (pattern G, P3)** — CI still cannot run (wrong directory + `main` vs `master`), test deps not
+  installed by `uv sync`, notebook tests skip silently, no kernelspec-drift guard, `plots.py` mojibake.
 
 ---
 
