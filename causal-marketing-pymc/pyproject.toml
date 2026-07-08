@@ -1,0 +1,47 @@
+[project]
+name = "causal-marketing-pymc"
+version = "0.1.0"
+description = "Causal inference for marketing — a runnable PyMC-ecosystem cookbook (SDA Bocconi guest lecture + internal toolkit)"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+dependencies = [
+    # --- "core" environment (pymc >=6) --------------------------------
+    # pymc-bart, bambi and pathmc all moved to pymc>=6 shortly before this
+    # repo was built; causalpy and pymc-marketing have NOT (still pymc<6
+    # as of 2026-07). The ecosystem is genuinely split right now, so this
+    # project uses two environments — see README "Environment split".
+    # This file pins the pymc>=6 ("core") stack: notebooks 00-05, 07 and
+    # all marimo apps. Notebooks 06/08-11 use the separate legacy env
+    # built by `make env-legacy` (pymc<6, causalpy, pymc-marketing).
+    "pymc>=6.0,<7",
+    "pymc-bart>=0.12,<0.13",
+    "pathmc>=0.1.1,<0.2",
+    "bambi>=0.15,<0.19",
+    "arviz>=1.0,<2",
+    "numpy>=2.0,<3",
+    "pandas>=2.2,<3",
+    "scipy>=1.13,<2",
+    "scikit-learn>=1.5,<2",
+    "matplotlib>=3.9,<4",
+    "networkx>=3.3,<4",
+    "marimo>=0.9,<1",
+    "jupyter>=1.1,<2",
+    "ipykernel>=6.29,<7",
+]
+
+[project.optional-dependencies]
+dev = [
+    "nbmake>=1.5,<2",
+    "pytest>=8.3,<9",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cmp"]
+
+[tool.uv]
+package = true

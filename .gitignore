@@ -1,0 +1,5 @@
+.DS_Store
+
+# Virtualenvs living inside the project (large, never commit)
+causal-marketing-pymc/.venv/
+causal-marketing-pymc/.venv-legacy/

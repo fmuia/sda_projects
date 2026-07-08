@@ -1,0 +1,87 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.23.13",
+    "script_metadata_hash": null
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "9e2918719f6a5c12cccac9107b25c132",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "6be7abe073969ca859115797dc4b56ab",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"synthetic-control-placebo-inference-explorer\">Synthetic control \u2014 placebo inference explorer</h1>\n<span class=\"paragraph\">Choose the treated market and the launch week. The app rebuilds the synthetic\ncounterfactual from the other markets, then runs the <strong>placebo-in-space</strong> test:\npretend each other market was treated and see whether the real market's gap is\nan outlier. The permutation p-value updates as you move the controls.</span>\n<blockquote>\n<span class=\"paragraph\">Note: only market <strong>dma_00</strong> actually carries a planted +12% campaign effect.\nPick any other market and you should see a <em>non-significant</em> p \u2014 the test's\nspecificity in action.</span>\n</blockquote></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "13e8e11a1e8ded8454fbf5487fb06229",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "ac621085980c7cd6c793ec5a46424c34",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<div style='display: flex;flex: 1;flex-direction: row;justify-content: space-between;align-items: normal;flex-wrap: nowrap;gap: 0.5rem'><marimo-ui-element object-id='bkHC-0' random-id='f0d7c6a0-6617-3a4f-084f-1c8ec78edf80'><marimo-dropdown data-initial-value='[&quot;dma_00&quot;]' data-label='&quot;&#92;u003cspan class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&#92;u003e&#92;u003cspan class=&#92;&quot;paragraph&#92;&quot;&#92;u003etreated market&#92;u003c/span&#92;u003e&#92;u003c/span&#92;u003e&quot;' data-options='[&quot;dma_00&quot;,&quot;dma_01&quot;,&quot;dma_02&quot;,&quot;dma_03&quot;,&quot;dma_04&quot;,&quot;dma_05&quot;,&quot;dma_06&quot;,&quot;dma_07&quot;,&quot;dma_08&quot;,&quot;dma_09&quot;,&quot;dma_10&quot;,&quot;dma_11&quot;,&quot;dma_12&quot;,&quot;dma_13&quot;,&quot;dma_14&quot;,&quot;dma_15&quot;,&quot;dma_16&quot;,&quot;dma_17&quot;,&quot;dma_18&quot;,&quot;dma_19&quot;,&quot;dma_20&quot;,&quot;dma_21&quot;,&quot;dma_22&quot;,&quot;dma_23&quot;,&quot;dma_24&quot;,&quot;dma_25&quot;,&quot;dma_26&quot;,&quot;dma_27&quot;,&quot;dma_28&quot;,&quot;dma_29&quot;]' data-allow-select-none='false' data-searchable='false' data-full-width='false' data-disabled='false'></marimo-dropdown></marimo-ui-element><marimo-ui-element object-id='bkHC-1' random-id='f81cabbf-79bc-a792-ec34-91763f1e13d2'><marimo-slider data-initial-value='40' data-label='&quot;&#92;u003cspan class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&#92;u003e&#92;u003cspan class=&#92;&quot;paragraph&#92;&quot;&#92;u003elaunch week&#92;u003c/span&#92;u003e&#92;u003c/span&#92;u003e&quot;' data-start='20' data-stop='50' data-step='2' data-steps='[]' data-debounce='false' data-disabled='false' data-orientation='&quot;horizontal&quot;' data-show-value='false' data-include-input='false' data-full-width='false'></marimo-slider></marimo-ui-element></div>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "5fbcdb2b1fe73d0bd36961b2cec7f0cd",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "e327230e2cfe51e0cb7a0c5e9eaaa082",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h3 id=\"dma_00-launch-week-40\">dma_00, launch week 40</h3>\n<ul>\n<li>pre-period fit RMSE: <strong>2.44</strong> (smaller = more trustworthy synthetic)</li>\n<li>placebo permutation <strong>p = 0.053</strong> \u2192 <strong>significant</strong> at the 0.1 level</li>\n</ul>\n<span class=\"paragraph\">If you picked a market with no real campaign, a low p here would be a <em>false\npositive</em> \u2014 which is why the placebo test, not the gap alone, is the evidence.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    }
+  ]
+}
