@@ -3,10 +3,10 @@ name: causal-marketing-pymc CI
 # GitHub Actions only reads workflows from the repository root (this monorepo is
 # fmuia/sda_projects). The project lives in causal-marketing-pymc/, so every job
 # runs there via `defaults.run.working-directory`, and a `paths` filter keeps the
-# suite from running on changes elsewhere in the repo. Branch is `master`.
+# suite from running on changes elsewhere in the repo. Branch is `main`.
 on:
   push:
-    branches: [master]
+    branches: [main]
     paths: ["causal-marketing-pymc/**"]
   pull_request:
     paths: ["causal-marketing-pymc/**"]

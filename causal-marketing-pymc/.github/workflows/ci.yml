@@ -5,6 +5,6 @@
 #     ../../.github/workflows/ci.yml   (i.e. sda_projects/.github/workflows/ci.yml)
 #
 # It runs both the package tests and the headless notebook suite with
-# `working-directory: causal-marketing-pymc`, triggers on `master`, and is scoped to
+# `working-directory: causal-marketing-pymc`, triggers on `main`, and is scoped to
 # `causal-marketing-pymc/**`. This stub is kept only so anyone who looks here is
 # redirected; it is inert (GitHub ignores workflows outside the repo root).
