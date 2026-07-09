@@ -51,8 +51,9 @@ jobs:
       - name: Build legacy environment (pymc<6)  ·  notebooks 06, 08-11
         run: |
           uv venv .venv-legacy --python 3.12
-          uv pip install --python .venv-legacy/bin/python -r requirements-legacy.txt
-          uv pip install --python .venv-legacy/bin/python "pymc-marketing[dag]"
+          # install from the LOCK (exact pins incl. pygraphviz, so pymc-marketing[dag]
+          # is covered) — identical to `make env-legacy`, matching committed outputs.
+          uv pip install --python .venv-legacy/bin/python -r requirements-legacy.lock
           uv pip install --python .venv-legacy/bin/python -e . --no-deps
 
       - name: Register both Jupyter kernels

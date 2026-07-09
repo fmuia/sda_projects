@@ -48,7 +48,13 @@ def _(LogisticRegression, dgp, est, np):
     _y = _df["y"].values
     tau = _df["tau"].values
     _phat = LogisticRegression(max_iter=1000).fit(_X, _T).predict_proba(_X)[:, 1]
-    cate = est.bcf(_X, _T, _y, _phat, seed=60, draws=200, tune=200, chains=2, m=40)
+    # A COARSE posterior by default so the app stays interactive; the straddler
+    # counts it reports are therefore slightly noisy and would tighten under full
+    # sampling. Set CMP_FAST=0 for a careful (slow) build with the full posterior.
+    import os
+    _full = os.environ.get("CMP_FAST") == "0"
+    _fit = dict(draws=600, tune=600, chains=4, m=100) if _full else dict(draws=200, tune=200, chains=2, m=40)
+    cate = est.bcf(_X, _T, _y, _phat, seed=60, **_fit)
     cate_point = cate.mean(0)
     return cate, cate_point, tau
 

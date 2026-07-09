@@ -18,10 +18,10 @@ remaining scope is explicit. Built by hand from the applied-fix tables + current
 | Severity | Total | Closed | Open | Notes |
 |---|:--:|:--:|:--:|---|
 | 🔴 Critical | 27 | **27** | **0** | the last 4 were re-verified + fixed in **P4** (all needed real fixes) |
-| 🟠 Major | 95 | ~63 | ~32 | + **P5** multi-seed recovery + coverage for nb02/05/08/09/10/11 + README overclaim (7); + **P9** infra/narrative; + **P8** business/euro (6 notebooks) |
+| 🟠 Major | 95 | **~87** | **~8** | **re-triaged against current code — the ~32 was stale.** P3 CI + FULL run + nb06 rewrite + P5/P8/P9 closed most; a dedicated **majors pass** (6-agent re-triage + fixes) then closed nb04 falsification+naive-OLS, nb02 test_implications, nb00 overlap/balance, nb09 placebo-cutoff contamination + perk-cost sweep, nb07 Depth-A read-out + launch-date benchmark, AIPW-independence & treat-none wording, legacy-lock/CI parity, RDD + fragile-stat tests. AIPW cross-fit / mccrary z-test / go_no_go ROI were already done. |
 | 🟡 Minor | 69 | **~62** | ~7 | + **P10** full notebook sweep (all 11 re-exec'd FULL): "90% CI"→credible-interval, pp-vs-%, estimand-vs-estimator (07), number-conditioned verdicts (01), ρ-extraction (11), pre-RMSE PASS/FAIL gate + DiD comparator (07), confounder reframes, LATE-at-cutoff footnotes |
 | ⚪ Polish | 19 | **~16** | ~3 | + **P10** notation/label/figure polish across the suite (𝔼[·] notation, DAG arrowheads, axis labels, band-level labels, legend precision, warnings scoping, stray-`Output()` strip) |
-| **Total** | **210** | **~168** | **~42** | remaining is a small minor/polish tail + ~32 majors; + the Workflow re-grade (process step) not run |
+| **Total** | **210** | **~192** | **~18** | remaining ≈ 8 majors (below) + a small minor/polish tail; + the Workflow re-grade (process step) not run |
 
 > **P5 done (validation depth — the biggest cluster).** Added a **"5b · Recovery across many seeds"** section
 > to **nb02, nb05, nb08, nb09, nb10, nb11** — each refits on many fresh samples (small fast per-seed fits, so
@@ -203,9 +203,36 @@ above. Each was a genuine defect, not a false alarm.)* These were never explicit
   axis, euro decision), nb09 (bandwidth honesty, McCrary z-test), nb00/03/07 (business depth), plots mojibake,
   CI deps + kernelspec guard + strict kernels.
 
-## Open majors — the actionable remaining work (~65)
+## Open majors — the actionable remaining work (~8)
 
-Grouped by theme (each item is a verified major; full text + verifier in ASSESSMENT.md under its artifact):
+> **Re-triaged against current code (6-agent majors pass).** The theme list below is
+> **superseded/historical** — most of A–G is now CLOSED, verified in-code. The genuinely
+> remaining majors are just these, each deferred for a stated reason:
+>
+> 1. **nb05 — mediator / M-bias never demonstrated empirically.** Needs a new DGP variable (a true
+>    email→spend mediator + an M-structure collider); deferred because it changes `dag_control_demo`,
+>    which nb00 also uses.
+> 2. **nb06 — no multi-seed MMM stability / PPC / adstock-param recovery.** Each extra seed is a full
+>    (minutes-long) MMM fit; deferred as too costly for the lecture notebook (ranking robustness is
+>    already argued from the calibrated fit + the true-ROAS comparison, and a per-draw Δsales P(Δ>0) was
+>    added in the majors pass).
+> 3. **nb11 / dgp — IV LATE = ATE only because the planted effect is homogeneous.** A heterogeneous-
+>    complier demo (returning true_ate ≠ true_late) needs a new DGP; the notebook now *discloses* this.
+> 4. **estimators.bcf — τ forest passed `Y=y`** (prior at the outcome level, not the ~0 effect scale). The
+>    docstring already caveats it; the code change (`Y = y - y.mean()`) is deferred as a risky core-BART
+>    change that would re-churn the flagship nb01.
+> 5. **nb03 — euro decision lacks a 3-policy comparison + VOI** (per-region profit-uplift % is present).
+> 6–7. **marimo apps** — (a) `synthetic_control_placebo`: the truly-treated dma_00 stays in the donor/
+>    placebo pool when a *different* market is selected; (b) `confounding_sensitivity`: the tipping point
+>    is a single-seed artifact with no Monte-Carlo band. Deferred pending a marimo-runtime session (they
+>    don't ship in the lecture PDFs and can't be verified headless here).
+>
+> Everything else in A–G below was closed by P3/P5/P8/P9 + the majors pass (AIPW cross-fitting, mccrary
+> z-test, go_no_go net-value/ROI split, placebo-loop treated-exclusion, SC observation-noise, event-study
+> CIs, convergence reporting, CI relocation + legacy lockfile parity, nb04 falsification, nb09 placebo
+> cutoffs + perk-cost sweep, …). The theme list is kept below for provenance only.
+
+Grouped by theme (each item is a verified major; full text + verifier in ASSESSMENT.md under its artifact) — **SUPERSEDED, historical:**
 
 **A. Validation depth — multi-seed recovery / calibration missing (the biggest gap).** P1/P2 added it to
 nb00/01/07 only. Still single-seed, no recovery/coverage check: **nb02, nb05, nb08, nb09, nb10, nb11**

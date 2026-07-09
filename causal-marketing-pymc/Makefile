@@ -23,7 +23,9 @@ env:
 
 env-legacy:
 	uv venv .venv-legacy --python 3.12
-	uv pip install --python $(LEGACY)/python -r requirements-legacy.txt
+	# install from the LOCK (exact pins incl. pygraphviz for pymc-marketing[dag]),
+	# not the range file, so this matches CI and the committed nb06/08-11 outputs.
+	uv pip install --python $(LEGACY)/python -r requirements-legacy.lock
 	uv pip install --python $(LEGACY)/python -e . --no-deps
 
 kernels:

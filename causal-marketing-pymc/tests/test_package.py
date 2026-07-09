@@ -235,3 +235,59 @@ def test_random_baseline_is_independent():
     assert 0.45 < frac < 0.55
     # a fair random half earns ~0.5*treat_all; the coupled bug earned far more
     assert abs(rand - 0.5 * treat_all) < 0.15 * abs(treat_all)
+
+
+# --------------------------------------------------------------------------
+# metrics / estimators — value (not just ordering) guards on the fragile stats
+# --------------------------------------------------------------------------
+def test_auuc_perfect_and_reversed():
+    """Oracle-normalized Qini coefficient has fixed endpoints: auuc(tau, tau) == 1
+    (perfect ranking) and a reversed ranker scores below 0."""
+    tau = np.random.default_rng(0).normal(5, 3, 500)
+    assert abs(metrics.auuc(tau, tau) - 1.0) < 1e-6
+    assert metrics.auuc(-tau, tau) < 0.0
+
+
+def test_qini_observed_endpoint_is_naive_uplift():
+    """The observable Qini (no tau_true) ends at n_treated*(mean_treated -
+    mean_control) — the naive randomized uplift scaled to the base."""
+    rng = np.random.default_rng(1)
+    n = 2000
+    T = rng.integers(0, 2, n).astype(float)
+    y = 2.0 * T + rng.normal(0, 1, n)
+    _, cum = metrics.qini_observed(rng.normal(0, 1, n), T, y)
+    approx = int(T.sum()) * (y[T == 1].mean() - y[T == 0].mean())
+    assert abs(cum[-1] - approx) < 1e-6
+
+
+def test_first_stage_F_matches_closed_form():
+    """first_stage_F equals the textbook R²-based homoskedastic F on fixed data."""
+    rng = np.random.default_rng(2)
+    z = rng.normal(0, 1, 400)
+    t = 0.8 * z + rng.normal(0, 1, 400)
+    F = est.first_stage_F(z, t)
+    n = len(t); Z = np.column_stack([np.ones(n), z])
+    b, *_ = np.linalg.lstsq(Z, t, rcond=None)
+    r2 = 1 - ((t - Z @ b) ** 2).sum() / ((t - t.mean()) ** 2).sum()
+    F_ref = (r2 / 1) / ((1 - r2) / (n - 2))
+    assert abs(F - F_ref) < 1e-6 and F > 10
+
+
+def test_sc_weights_slsqp_recovers_single_donor():
+    """Target == one donor exactly → SLSQP puts ~all weight on it, and the weights
+    are a valid simplex (non-negative, sum to 1) after the clip/renormalize guard."""
+    rng = np.random.default_rng(3)
+    donors_pre = rng.normal(0, 1, (5, 30))
+    target_pre = donors_pre[2].copy()
+    w = est.sc_weights_slsqp(target_pre, donors_pre)
+    assert abs(w.sum() - 1.0) < 1e-6 and (w >= -1e-9).all()
+    assert w[2] > 0.9
+
+
+def test_placebo_in_space_all_filtered_raises():
+    """When the RMSE gate discards every placebo, placebo_in_space raises rather
+    than silently returning a garbage p-value from an empty pool."""
+    sales = np.random.default_rng(4).normal(0, 1, (6, 40))
+    with pytest.raises(ValueError):
+        est.placebo_in_space(sales, treated_idx=0, pre=slice(0, 20), post=slice(20, 40),
+                             pre_rmse=1e-12, rmse_multiple=1.0)

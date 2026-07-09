@@ -34,6 +34,20 @@ def test_did_recovers_step():
     assert lo <= true_effect <= hi, f"€{true_effect} outside 90% CI [{lo:.0f}, {hi:.0f}]"
 
 
+def test_rdd_recovers_jump():
+    """nb09: the Bayesian regression discontinuity recovers the planted +0.14
+    retention jump at the €100 cutoff (the est.rdd wrapper was previously the one
+    legacy estimator with no truth-recovery guard)."""
+    df, true_jump = dgp.rdd_perk(n=4000, cutoff=100.0, seed=29)
+    df["treated"] = df["treated"].astype(int)   # CausalPy RD needs an int treated column (as nb09 does)
+    r = est.rdd(df[["spend", "retention", "treated"]],
+                formula="retention ~ 1 + spend + treated + spend:treated",
+                running_variable_name="spend", treatment_threshold=100.0, bandwidth=40.0, fast=True)
+    jump = np.asarray(r.discontinuity_at_threshold).ravel()
+    lo, hi = np.quantile(jump, [0.05, 0.95])
+    assert lo <= true_jump <= hi, f"{true_jump:.3f} outside 90% CI [{lo:.3f}, {hi:.3f}]"
+
+
 def test_its_recovers_step():
     """nb10: the interrupted time series recovers the planted +3pp step."""
     df, true_lift, rday = dgp.its_redesign(n_days=180, redesign_day=120, seed=31)

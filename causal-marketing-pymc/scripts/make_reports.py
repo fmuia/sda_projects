@@ -104,6 +104,21 @@ def clean(nb):
 
 def main():
     names = sorted(REPO.glob("notebooks/*.ipynb"))
+    # Staleness guard: a notebook with un-executed code cells would render a stale
+    # or blank-output PDF that ships silently. Warn loudly (per notebook) so a
+    # "regenerate reports without re-running" mistake is visible, not invisible.
+    stale = []
+    for nb_path in names:
+        nbk = nbformat.read(nb_path, as_version=4)
+        unrun = sum(1 for c in nbk.cells if c.cell_type == "code"
+                    and "".join(c.get("source", "")).strip()
+                    and c.get("execution_count") is None)
+        if unrun:
+            stale.append((nb_path.stem, unrun))
+    if stale:
+        print("WARNING — notebooks with UN-EXECUTED code cells (their PDF will be stale):")
+        for n, k in stale:
+            print(f"  - {n}: {k} un-run code cell(s); re-execute before shipping the report")
     c = Config()
     c.PDFExporter.exclude_input = True          # hide code, keep outputs (narrative report)
     c.PDFExporter.exclude_input_prompt = True
