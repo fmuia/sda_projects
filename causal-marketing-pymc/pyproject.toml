@@ -36,13 +36,23 @@ dependencies = [
 # `uv run pytest` had no pytest. Mirrored below as an optional extra for plain pip.
 [dependency-groups]
 dev = [
-    "nbmake>=1.5,<2",
+    # The notebook test suite (tests/test_notebooks.py) drives nbclient directly,
+    # so declare its real imports explicitly rather than leaning on the heavyweight
+    # `jupyter` metapackage transitively (nbmake was declared but never used).
+    "nbformat>=5.9,<6",
+    "nbclient>=0.9,<1",
+    "jupyter-client>=8,<9",
     "pytest>=8.3,<9",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "nbmake>=1.5,<2",
+    # The notebook test suite (tests/test_notebooks.py) drives nbclient directly,
+    # so declare its real imports explicitly rather than leaning on the heavyweight
+    # `jupyter` metapackage transitively (nbmake was declared but never used).
+    "nbformat>=5.9,<6",
+    "nbclient>=0.9,<1",
+    "jupyter-client>=8,<9",
     "pytest>=8.3,<9",
 ]
 

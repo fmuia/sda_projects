@@ -10,7 +10,7 @@ GOTCHA baked in (cookbook §1, "known gotchas" #1): pymc-bart counterfactual
 scoring silently returns FROZEN training predictions — every CATE exactly
 0 — unless you resample the BART node by passing `sample_vars=["mu"]` to
 `sample_posterior_predictive`. `_bart_predict` always does this; a test
-(tests/test_estimators.py) asserts non-zero CATE on a known-nonzero effect.
+(tests/test_package.py::test_bart_cate_is_nonzero) asserts non-zero CATE on a known-nonzero effect.
 """
 from __future__ import annotations
 
@@ -297,7 +297,11 @@ def propensity_scores(X, T, seed=1):
 def first_stage_F(instrument, treatment):
     """First-stage F-statistic for a single instrument (Stock-Yogo rule of
     thumb: F < 10 = weak instrument). Regress treatment on the instrument
-    and report the F for the instrument's coefficient."""
+    and report the F for the instrument's coefficient.
+
+    This is the classical **homoskedastic** F (derived from R²). On real,
+    heteroskedastic data prefer a robust/effective F (Montiel Olea–Pflueger);
+    an F > 10 here is *necessary, not sufficient* for a strong instrument."""
     z = np.asarray(instrument, float); t = np.asarray(treatment, float)
     n = len(t)
     Z = np.column_stack([np.ones(n), z])
@@ -432,14 +436,24 @@ def synthetic_control(target, donors, pre, post, seed=1, draws=1000, tune=1000, 
     }
 
 
-def placebo_in_space(sales, treated_idx, pre, post, pre_rmse, rmse_multiple=3.0):
+def placebo_in_space(sales, treated_idx, pre, post, pre_rmse=None, rmse_multiple=3.0):
     """Permutation inference: refit synthetic control treating each donor as
     if *it* were treated, and collect the placebo gaps. Following Abadie,
     discard placebos whose pre-fit RMSE is > `rmse_multiple` x the real
     treated unit's (a bad synthetic match makes a meaningless gap).
 
+    `pre_rmse` defaults to the real treated unit's own **SLSQP** pre-fit RMSE,
+    so the Abadie filter compares like with like — the same fitter used for the
+    placebos. Pass a value only to override with an external reference (e.g. a
+    Bayesian fit's RMSE); mixing fitters can over- or under-filter. Raises
+    ValueError if every placebo is discarded (widen `rmse_multiple`).
+
     Returns (placebo_gaps array (n_kept, W), real_gap (W,), p_value)."""
     n = sales.shape[0]
+    donors = np.delete(sales, treated_idx, axis=0)
+    real_gap, _ = sc_effect_slsqp(sales[treated_idx], donors, pre, post)
+    if pre_rmse is None:                       # same-fitter (SLSQP) reference — see docstring
+        pre_rmse = float(np.sqrt(np.mean(real_gap[pre] ** 2)))
     placebo_gaps = []
     for j in range(n):
         if j == treated_idx:
@@ -448,10 +462,12 @@ def placebo_in_space(sales, treated_idx, pre, post, pre_rmse, rmse_multiple=3.0)
         gap, _ = sc_effect_slsqp(sales[j], sales[others], pre, post)
         if np.sqrt(np.mean(gap[pre] ** 2)) < rmse_multiple * pre_rmse:
             placebo_gaps.append(gap)
+    if not placebo_gaps:
+        raise ValueError(
+            "all placebos were filtered out by the RMSE gate — raise rmse_multiple "
+            "or check the donor pool (too few comparable donors)."
+        )
     placebo_gaps = np.array(placebo_gaps)
-
-    donors = np.delete(sales, treated_idx, axis=0)
-    real_gap, _ = sc_effect_slsqp(sales[treated_idx], donors, pre, post)
     real_post = real_gap[post].mean()
     placebo_post = placebo_gaps[:, post].mean(1)
     p_value = float((np.sum(np.abs(placebo_post) >= abs(real_post)) + 1) / (len(placebo_post) + 1))

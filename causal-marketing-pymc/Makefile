@@ -59,4 +59,5 @@ reports:  ## render one PDF per notebook (narrative + plots) into reports/ ; nee
 	PATH="/Library/TeX/texbin:$$PATH" $(CORE)/python scripts/make_reports.py
 
 clean:
-	rm -rf .pytest_cache **/__pycache__ notebooks/*.html site/
+	rm -rf .pytest_cache notebooks/*.html site/
+	find . -path './.venv*' -prune -o -name __pycache__ -type d -exec rm -rf {} +

@@ -62,7 +62,14 @@ def auuc(cate_point: np.ndarray, tau_true: np.ndarray, normalized: bool = True) 
     """Area Under the Uplift Curve above the random line. If normalized,
     expressed as a fraction of the oracle's area (1.0 = perfect ranking,
     0.0 = no better than random). The single-number summary of how well the
-    model *ranks* customers by effect."""
+    model *ranks* customers by effect.
+
+    **Naming.** When `normalized` (the default) this is the oracle-normalized
+    **Qini coefficient** (Radcliffe's Q) — also exported as `qini_coefficient`.
+    Some libraries (scikit-uplift / causalml) reserve "AUUC" for the *raw*
+    (un-normalized) area, so a real-data AUUC sits on a different scale; both
+    of those are also computed from a treated/control *observed* curve, whereas
+    this one uses the known `tau_true` (so it is a simulation-only diagnostic)."""
     frac, cum_model, cum_random, cum_oracle = qini_curve(cate_point, tau_true)
     _trapz = getattr(np, "trapezoid", getattr(np, "trapz", None))  # numpy 2.x renamed trapz
     area_model = _trapz(cum_model - cum_random, frac)
@@ -70,6 +77,12 @@ def auuc(cate_point: np.ndarray, tau_true: np.ndarray, normalized: bool = True) 
     if normalized:
         return float(area_model / area_oracle) if area_oracle != 0 else float("nan")
     return float(area_model)
+
+
+def qini_coefficient(cate_point: np.ndarray, tau_true: np.ndarray) -> float:
+    """Oracle-normalized Qini coefficient (Radcliffe's Q) — a clearer-named
+    alias for `auuc(..., normalized=True)`, since "AUUC" is overloaded."""
+    return auuc(cate_point, tau_true, normalized=True)
 
 
 def uplift_by_decile(cate_point: np.ndarray, tau_true: np.ndarray, n_bins: int = 10):

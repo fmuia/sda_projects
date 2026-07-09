@@ -54,7 +54,7 @@ sweeps and value-of-information.
 **Every notebook is deep on four axes**, not just the anchors:
 
 - **Technical diagnostics** — the signature check for each method: Qini/AUUC & uplift-by-decile
-  (01), AIPW doubly-robust cross-checks & posterior predictive checks (00, 01), event-study
+  (01), AIPW doubly-robust cross-checks (00, 01) & posterior predictive checks (01), event-study
   pre-trends & a live staggered-adoption/TWFE-bias demo (08), McCrary-style density check + bandwidth +
   placebo-cutoff + polynomial-order robustness (09), placebo-in-time & residual autocorrelation
   (10), first-stage F + reduced-form/Wald + exclusion-restriction stress test (11), Abadie
@@ -65,9 +65,11 @@ sweeps and value-of-information.
   targeting ladder (02).
 - **Conceptual narration** — estimand ladders, assumption-by-assumption tables, worked math, DAG
   galleries, and cross-links between notebooks.
-- **Rigorous validation** — calibration by decile + reliability curves + interval sharpness,
-  multi-seed recovery stability, and sensitivity *ranges* (E-values, 2-D contours) rather than
-  single points.
+- **Rigorous validation** — calibration by decile + reliability curves + interval sharpness (01),
+  multi-seed recovery stability (00, 01, 07), and sensitivity *ranges* — E-values and 2-D contours
+  (01, 05) — rather than single points; the quasi-experimental notebooks (08–11) validate through
+  truth-recovery + placebo / falsification checks. *(Multi-seed recovery is being extended to the
+  remaining notebooks — see `docs/PLAN.md` P5.)*
 
 ---
 
@@ -147,7 +149,7 @@ CMP_REAL=1 jupyter lab notebooks/01_uplift_targeting.ipynb   # then run the "6b"
 |---|---|---|
 | 01 uplift | **Hillstrom / MineThatData** — 64k customers, real *randomized* email A/B test | run the uplift pipeline on real data (no ground-truth CATE, since real customers have one future) |
 | 00 foundations · 05 control | **LaLonde / NSW** job-training benchmark | naive vs adjusted estimate — the canonical "wrong controls flip the sign" demo |
-| (CATE benchmark) | **IHDP** — semi-synthetic, *known* true effects (`cmp.data.load_ihdp`) | real covariates with a known truth, for grading CATE recovery |
+| (loader only) | **IHDP** — semi-synthetic, *known* true effects (`cmp.data.load_ihdp`) | a loader is provided for grading CATE recovery on real covariates — **not** wired into a gated notebook cell (bring-your-own benchmark), unlike the two rows above |
 
 Every other notebook explains, in its intro, exactly **what real data would look like** for that technique
 and where to get it (your own CRM / sales panel / event logs; public analogues like Card–Krueger for DiD or
@@ -156,8 +158,10 @@ that maps 1:1.
 
 ## Interactive apps (marimo)
 
-Reactive explorables — the expensive posterior is computed **once**, and the sliders
-only re-derive the decision, so they respond instantly. Each also opens as a plain
+Reactive explorables. For the uplift and confounding apps the expensive posterior is computed
+**once** and the sliders only re-derive the decision, so they respond instantly; the synthetic-control
+app re-fits on each interaction, but that's a fast SLSQP point fit plus placebo refits (~0.2 s), not a
+posterior. Each also opens as a plain
 notebook (`marimo edit`), and can be exported to in-browser **WASM** for the live
 lecture (`marimo export html-wasm`).
 

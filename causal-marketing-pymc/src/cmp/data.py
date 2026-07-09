@@ -72,7 +72,12 @@ def hillstrom_uplift(treat_segment: str = "Womens E-Mail", outcome: str = "spend
 # --------------------------------------------------------------------------
 # LaLonde / NSW (classic observational-vs-experimental benchmark; §5)
 # --------------------------------------------------------------------------
-LALONDE_NSW_URL = "https://users.nber.org/~rdehejia/data/nsw_dw.dta"
+# The *randomized* NSW experimental file (Dehejia–Wahba .dta) lives at
+# https://users.nber.org/~rdehejia/data/nsw_dw.dta — deliberately NOT loaded
+# here (the notebooks use the observational CSV below). Kept as a note rather
+# than a dead constant, so nothing implies an experimental-benchmark loader that
+# doesn't exist; wire one up if you want the full experimental-vs-observational
+# comparison.
 LALONDE_CSV_URL = "https://raw.githubusercontent.com/robjellis/lalonde/master/lalonde_data.csv"
 
 
