@@ -87,7 +87,7 @@ def _(est, labels, launch, market, np, plots, plt, sales):
     ax[0].set_xlabel("week"); ax[0].set_ylabel("sales (€000)"); ax[0].legend(frameon=False, fontsize=8)
     plots.placebo_spaghetti(ax[1], t, placebo_gaps, real_gap, L, p_space)
     fig.tight_layout()
-    return L, fig, p_space, market, pre_rmse
+    return L, fig, p_space, pre_rmse
 
 
 @app.cell

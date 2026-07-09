@@ -43,12 +43,12 @@ def _(LogisticRegression, dgp, est, np):
     # ---- expensive step, runs ONCE (does not depend on any slider) ----
     _df = dgp.uplift_customers(n=1000, regime="observational", seed=7)
     _feat = _df.attrs["feature_cols"]
-    X = _df[_feat].values
-    T = _df["T"].values
-    y = _df["y"].values
+    _X = _df[_feat].values
+    _T = _df["T"].values
+    _y = _df["y"].values
     tau = _df["tau"].values
-    _phat = LogisticRegression(max_iter=1000).fit(X, T).predict_proba(X)[:, 1]
-    cate = est.bcf(X, T, y, _phat, seed=60, draws=200, tune=200, chains=2, m=40)
+    _phat = LogisticRegression(max_iter=1000).fit(_X, _T).predict_proba(_X)[:, 1]
+    cate = est.bcf(_X, _T, _y, _phat, seed=60, draws=200, tune=200, chains=2, m=40)
     cate_point = cate.mean(0)
     return cate, cate_point, tau
 
@@ -68,7 +68,8 @@ def _(base_slider, c_slider, cate, cate_point, conf_slider, np, plots, plt, poli
     conf = conf_slider.value
     n = int(base_slider.value)
 
-    # subset to the chosen base size (top-ranked mailable customers are the ones we score)
+    # subset to the chosen base size: the FIRST n rows — dgp rows are iid with no ordering, so this is a
+    # random mailable base (NOT ranked by any score). The app uses n=1000; notebook 01 uses N=900/1600.
     idx = np.arange(n)
     cate_s = cate[:, idx]
     point_s = cate_point[idx]

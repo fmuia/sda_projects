@@ -108,11 +108,12 @@ def _(COST, est_here, flipped, mo, s, tip, true_ate):
         f"**Decision holds.** At strength {s:.2f} the estimate is €{est_here:.1f}, still "
         f"below the €{COST:.0f} cost. True ATE €{true_ate:.1f}."
     )
+    tip_txt = f"strength ≈ **{tip:.1f}**" if tip == tip else "**not reached** within the tested range"
     mo.md(
         f"""
         {verdict}
 
-        The **tipping point** is strength ≈ **{tip:.1f}**. Ask the domain expert:
+        The **tipping point** is {tip_txt}. Ask the domain expert:
         *is a hidden confounder that strong plausible here?* If yes, the result is
         fragile and needs an experiment; if no, it's robust. That judgement — not a
         p-value — is what makes the conclusion defensible.
