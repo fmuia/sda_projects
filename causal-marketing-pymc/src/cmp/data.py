@@ -13,6 +13,9 @@ import pandas as pd
 # --------------------------------------------------------------------------
 # Hillstrom / MineThatData email campaign (uplift; §1, §2)
 # --------------------------------------------------------------------------
+# NB: plain http — the minethatdata.com host does not serve this file over TLS.
+# The data is a public teaching CSV (no credentials, integrity not security-
+# critical); pass your own https mirror as `url=` if your environment blocks http.
 HILLSTROM_URL = "http://www.minethatdata.com/Kevin_Hillstrom_MineThatData_E-MailAnalytics_DataMiningChallenge_2008.03.20.csv"
 
 

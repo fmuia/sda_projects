@@ -79,7 +79,7 @@ sweeps and value-of-information.
 
 | # | Notebook | Marketing decision | Library | Env |
 |---|----------|--------------------|---------|-----|
-| 00 | [Foundations](notebooks/00_foundations.ipynb) | — the vocabulary — | pymc | core |
+| 00 | [Foundations](notebooks/00_foundations.ipynb) | — the vocabulary — | numpy (no PyMC — on purpose) | core |
 | 01 | ⭐ [Uplift targeting](notebooks/01_uplift_targeting.ipynb) | Who should get the €10 discount? | pymc-bart (BART / BCF) | core |
 | 02 | [Segment effects](notebooks/02_segment_effects.ipynb) | Does the offer work better for some segments? | pathmc (do-operator, CATE) | core |
 | 03 | [Price elasticity](notebooks/03_price_elasticity.ipynb) | Region-by-region pricing | pathmc / hierarchical (random slopes) | core |
@@ -236,7 +236,8 @@ bump the pins).
   reflects this (the row reads `cmp.synthetic_control`, not CausalPy).
 - **CausalPy APIs were pinned to 0.8.x reality**, which has drifted from the cookbook's
   0.5-era skeletons: DiD needs a `post_treatment` bool + a `unit` label and the 2×2
-  (pre/post-collapsed) data form; RDD needs a dummy-coded `treated` column and a
+  (pre/post-collapsed) data form (collapsing to two periods is also the Bertrand–Duflo–
+  Mullainathan 2004 serial-correlation guard, not merely an API shape); RDD needs a dummy-coded `treated` column and a
   bandwidth; ITS needs numeric (not categorical) seasonality to survive the pre/post
   patsy split; IV runs with `cores=1` to dodge a multiprocessing `EOFError`. All baked
   into `cmp.estimators`.

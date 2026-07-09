@@ -87,7 +87,8 @@ def _(est, labels, launch, market, np, plots, plt, sales):
     ax[0].set_xlabel("week"); ax[0].set_ylabel("sales (€000)"); ax[0].legend(frameon=False, fontsize=8)
     plots.placebo_spaghetti(ax[1], t, placebo_gaps, real_gap, L, p_space)
     fig.tight_layout()
-    return L, fig, p_space, pre_rmse
+    n_placebo = len(placebo_gaps)   # donors surviving the pre-RMSE filter (p-value denominator)
+    return L, fig, p_space, pre_rmse, n_placebo
 
 
 @app.cell
@@ -97,14 +98,17 @@ def _(fig):
 
 
 @app.cell
-def _(L, market, mo, p_space, pre_rmse):
+def _(L, market, mo, n_placebo, p_space, pre_rmse):
     sig = "**significant**" if p_space <= 0.1 else "**not significant**"
+    floor = 1.0 / (n_placebo + 1)
     mo.md(
         f"""
         ### {market.value}, launch week {L}
 
         - pre-period fit RMSE: **{pre_rmse:.2f}** (smaller = more trustworthy synthetic)
         - placebo permutation **p = {p_space:.3f}** → {sig} at the 0.1 level
+          (rank of the treated gap among **{n_placebo}** donors that passed the 3× pre-RMSE
+          filter, +1 for the treated unit; the smallest attainable p is 1/({n_placebo}+1) ≈ **{floor:.3f}**)
 
         If you picked a market with no real campaign, a low p here would be a *false
         positive* — which is why the placebo test, not the gap alone, is the evidence.

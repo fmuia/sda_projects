@@ -149,7 +149,14 @@ def s_learner(X, T, y, seed=1, binary=False, **kw):
     model, idata = _fit_bart(Xa, y, seed, m=p["m"], draws=p["draws"], tune=p["tune"], chains=p["chains"], binary=binary)
     X1 = Xa.copy(); X1[:, -1] = 1.0
     X0 = Xa.copy(); X0[:, -1] = 0.0
-    return _bart_predict(model, idata, X1, seed + 90, binary) - _bart_predict(model, idata, X0, seed + 91, binary)
+    # Score both counterfactuals in ONE posterior-predictive call so each draw's
+    # tree ensemble hits X1 and X0 together — CATE is then a within-draw contrast.
+    # Two separate calls (different seeds) would add *independent* predictive
+    # noise to the two arms, inflating the variance of what is meant to be a
+    # paired difference. (t_learner can't do this — its arms are two models.)
+    n = X1.shape[0]
+    both = _bart_predict(model, idata, np.vstack([X1, X0]), seed + 90, binary)
+    return both[:, :n] - both[:, n:]
 
 
 def t_learner(X, T, y, seed=1, binary=False, **kw):
@@ -364,7 +371,17 @@ def sc_weights_slsqp(target_pre, donors_pre):
     bounds = [(0, 1)] * J
     w0 = np.full(J, 1 / J)
     res = minimize(loss, w0, bounds=bounds, constraints=cons, method="SLSQP")
-    return res.x
+    # SLSQP can return weights slightly outside [0,1] / not summing to 1, or fail
+    # to converge. These weights feed the placebo p-values, LOO and launch-date
+    # sensitivity, so clip to the simplex and fall back to equal weights rather
+    # than silently propagate an infeasible solution.
+    w = np.clip(res.x, 0.0, 1.0)
+    s = w.sum()
+    w = w / s if s > 0 else np.full(J, 1 / J)
+    if not res.success:
+        warnings.warn(f"sc_weights_slsqp did not converge ({res.message!r}); "
+                      "returning clipped/renormalized weights.", RuntimeWarning)
+    return w
 
 
 def sc_effect_slsqp(target, donors, pre, post):

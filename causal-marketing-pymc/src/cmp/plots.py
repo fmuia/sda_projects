@@ -44,8 +44,8 @@ def draw_dag(ax, pos: dict, edges, node_colors=None, title=None, curved=None):
         rad = 0.25 if (src, dst) in curved else 0.0
         ax.annotate(
             "", xy=(x1, y1), xytext=(x0, y0),
-            arrowprops=dict(arrowstyle="-|>", color="#555555", lw=1.4,
-                            shrinkA=16, shrinkB=16,
+            arrowprops=dict(arrowstyle="-|>", color="#555555", lw=2.2,
+                            mutation_scale=18, shrinkA=18, shrinkB=18,
                             connectionstyle=f"arc3,rad={rad}"),
         )
     for node, (x, y) in pos.items():
@@ -69,7 +69,13 @@ def recovery_scatter(ax, tau_true, estimates: dict, title="Does the method recov
         c = colors.get(label, BLUE)
         rmse = np.sqrt(np.mean((point - tau_true) ** 2))
         ax.scatter(tau_true, point, s=8, alpha=0.4, color=c, label=f"{label} (PEHE {rmse:.1f})")
-    lim = [tau_true.min() - 3, tau_true.max() + 3]
+    # Span the axes over BOTH truth and estimates so points outside the true
+    # range aren't silently cropped (an over-estimating learner would otherwise
+    # look better-behaved than it is).
+    all_est = np.concatenate([np.asarray(v).ravel() for v in estimates.values()])
+    lo = min(float(tau_true.min()), float(all_est.min())) - 3
+    hi = max(float(tau_true.max()), float(all_est.max())) + 3
+    lim = [lo, hi]
     ax.plot(lim, lim, "k--", lw=1)
     ax.set_xlim(lim); ax.set_ylim(lim)
     ax.set_xlabel("true effect  τ(x)"); ax.set_ylabel("estimated CATE")
@@ -108,19 +114,21 @@ def overlap_plot(ax, propensity, treated_mask, title="Overlap check: both groups
     ax.set_title(title); ax.legend(frameon=False)
 
 
-def placebo_spaghetti(ax, t, placebo_gaps, real_gap, launch, p_value, title=None):
+def placebo_spaghetti(ax, t, placebo_gaps, real_gap, launch, p_value, title=None,
+                      xlabel="period", ylabel="gap vs synthetic"):
     """Placebo-in-space plot: is the treated gap an outlier vs placebos?"""
     for g in placebo_gaps:
         ax.plot(t, g, color="#bbbbbb", lw=0.7, alpha=0.7)
     ax.plot(t, real_gap, color=GREEN, lw=2, label="treated unit")
     ax.axvline(launch, color=ORANGE, lw=1)
     ax.axhline(0, color="k", lw=0.6)
-    ax.set_xlabel("period"); ax.set_ylabel("gap vs synthetic")
+    ax.set_xlabel(xlabel); ax.set_ylabel(ylabel)
     ax.set_title(title or f"Placebo test: is the treated gap an outlier?  (p = {p_value:.3f})")
     ax.legend(frameon=False, fontsize=8)
 
 
-def sc_counterfactual_plot(ax, t, observed, cf_samples, launch, title="Treated unit vs its synthetic control"):
+def sc_counterfactual_plot(ax, t, observed, cf_samples, launch, title="Treated unit vs its synthetic control",
+                           xlabel="period", ylabel="outcome"):
     """Treated series vs synthetic counterfactual with credible band."""
     ax.plot(t, observed, color="#111111", lw=1.8, label="observed (treated)")
     ax.plot(t, cf_samples.mean(0), color=BLUE, lw=1.6, ls="--", label="synthetic counterfactual")
@@ -128,7 +136,7 @@ def sc_counterfactual_plot(ax, t, observed, cf_samples, launch, title="Treated u
     post = t >= launch
     ax.fill_between(t[post], observed[post], cf_samples.mean(0)[post], color=GREEN, alpha=0.25)
     ax.axvline(launch, color=ORANGE, lw=1)
-    ax.set_xlabel("period"); ax.set_ylabel("outcome")
+    ax.set_xlabel(xlabel); ax.set_ylabel(ylabel)
     ax.set_title(title); ax.legend(frameon=False, fontsize=8)
 
 
@@ -191,13 +199,27 @@ def policy_bar(ax, policy_df, title="Realised profit by targeting policy"):
         lbl.set_rotation(20); lbl.set_ha("right"); lbl.set_fontsize(8)
 
 
-def forest_plot(ax, labels, means, los, his, ref=None, title=None, xlabel="effect"):
-    """Horizontal forest plot of point estimates with credible intervals."""
+def forest_plot(ax, labels, means, los, his, ref=None, title=None, xlabel="effect",
+                logx=False, annot=None):
+    """Horizontal forest plot of point estimates with credible intervals.
+
+    `logx=True` puts the x-axis on a log scale — right for ratio quantities
+    like ROAS whose intervals span an order of magnitude and crowd together on
+    a linear axis. `annot` (one string per row, same order as `labels`) is
+    written just past each interval — e.g. a per-row P(effect > ref)."""
+    means, los, his = np.array(means, float), np.array(los, float), np.array(his, float)
     yy = np.arange(len(labels))[::-1]
-    ax.errorbar(means, yy, xerr=[np.array(means) - np.array(los), np.array(his) - np.array(means)],
+    ax.errorbar(means, yy, xerr=[means - los, his - means],
                 fmt="o", color=BLUE, ecolor="#9cc3dd", capsize=3)
     if ref is not None:
         ax.axvline(ref, color="k", ls="--", lw=1)
+    if logx:
+        ax.set_xscale("log")
+    if annot is not None:
+        xmax = float(his.max())
+        for y, a in zip(yy, annot):
+            ax.annotate(a, (xmax, y), textcoords="offset points", xytext=(6, 0),
+                        va="center", fontsize=7, color="#555555")
     ax.set_yticks(yy); ax.set_yticklabels(labels, fontsize=8)
     ax.set_xlabel(xlabel)
     if title:

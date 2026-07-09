@@ -85,6 +85,32 @@ def qini_coefficient(cate_point: np.ndarray, tau_true: np.ndarray) -> float:
     return auuc(cate_point, tau_true, normalized=True)
 
 
+def qini_observed(cate_point: np.ndarray, T: np.ndarray, y: np.ndarray):
+    """Observable Qini/uplift curve — the version computable on REAL data, where
+    the individual effect `tau_true` is unknown (unlike `qini_curve`, which needs
+    it and is therefore simulation-only).
+
+    Ranks units by estimated CATE, then at each targeted prefix estimates the
+    incremental outcome as Radcliffe's Qini statistic:
+        Q(k) = sum_treated(y) − sum_control(y) · n_treated / n_control
+    over the first k ranked units. This is causal only under randomized (or
+    otherwise unconfounded) treatment `T`, which is why the notebook uses it on
+    the Hillstrom RCT. Returns (frac, cum_uplift)."""
+    T = np.asarray(T).astype(bool)
+    y = np.asarray(y, dtype=float)
+    order = np.argsort(-np.asarray(cate_point))
+    T_o, y_o = T[order], y[order]
+    n = len(y_o)
+    frac = np.arange(1, n + 1) / n
+    n_t = np.cumsum(T_o)
+    n_c = np.cumsum(~T_o)
+    sum_t = np.cumsum(np.where(T_o, y_o, 0.0))
+    sum_c = np.cumsum(np.where(~T_o, y_o, 0.0))
+    with np.errstate(divide="ignore", invalid="ignore"):
+        cum = sum_t - sum_c * np.where(n_c > 0, n_t / np.where(n_c > 0, n_c, 1), 0.0)
+    return frac, cum
+
+
 def uplift_by_decile(cate_point: np.ndarray, tau_true: np.ndarray, n_bins: int = 10):
     """Average TRUE effect within each decile of predicted CATE (decile 1 =
     highest predicted). A well-ranking model shows a monotone staircase; the

@@ -40,10 +40,14 @@ def cost_sweep(cate_point: np.ndarray, tau_true: np.ndarray, costs):
     n = len(tau_true)
     opt_profit, opt_frac = [], []
     for c in costs:
-        cum = np.cumsum(tau_ordered - c)
-        k = int(np.argmax(cum))
+        # Prepend a 0 baseline (contact nobody). Without it argmax over an
+        # all-negative curve forces contacting the single least-bad customer at a
+        # loss; with it, a cost so high that nothing is worth contacting correctly
+        # reports frac 0 / profit 0.
+        cum = np.concatenate([[0.0], np.cumsum(tau_ordered - c)])
+        k = int(np.argmax(cum))                 # k in [0, n]; k == 0 -> contact nobody
         opt_profit.append(float(cum[k]))
-        opt_frac.append((k + 1) / n)
+        opt_frac.append(k / n)
     return {"costs": np.asarray(costs), "opt_profit": np.array(opt_profit), "opt_frac": np.array(opt_frac)}
 
 
@@ -90,18 +94,19 @@ def value_of_information(cate_samples: np.ndarray, cost: float):
 
 def policy_comparison(cate_samples: np.ndarray, tau_true: np.ndarray, cost: float,
                       confidence: float = 0.8, seed: int = 0):
-    """Compare four targeting policies on realised profit (evaluated on the
-    known truth), each with a posterior over profit induced by CATE
-    uncertainty. Policies:
+    """Compare five targeting policies on realised profit (evaluated on the
+    known truth). Policies (exactly the rows the function builds):
 
-      - treat-all      : contact everyone
-      - treat-none     : baseline (0)
-      - random         : contact a random half
-      - model (mean)   : contact where posterior-mean CATE > cost
-      - model (conf.)  : contact where P(CATE>cost) > confidence (the honest rule)
-      - oracle         : contact where the TRUE effect > cost (upper bound)
+      - treat-all         : contact everyone
+      - random-50%        : contact a random half
+      - model (mean>cost) : contact where posterior-mean CATE > cost
+      - model (P>conf)    : contact where P(CATE>cost) > confidence (the honest rule)
+      - oracle            : contact where the TRUE effect > cost (upper bound)
 
-    Returns a DataFrame with mean profit, 90% CI, and fraction contacted."""
+    Returns a DataFrame with columns policy, profit (realised euros on the
+    truth), frac_contacted, and profit_vs_all (profit minus the treat-all
+    profit). Profit is deterministic given each mask and the known truth, so no
+    interval column is returned."""
     n = len(tau_true)
     # Draw the random baseline from a stream *decoupled* from `seed`: a notebook
     # commonly passes the same integer it used to seed the DGP, and a scalar

@@ -117,6 +117,12 @@ def _(COST, est_here, flipped, mo, s, tip, true_ate):
         *is a hidden confounder that strong plausible here?* If yes, the result is
         fragile and needs an experiment; if no, it's robust. That judgement — not a
         p-value — is what makes the conclusion defensible.
+
+        *Note:* even with **no** hidden confounder (strength 0) the OLS coefficient
+        need not exactly equal the true ATE — under a heterogeneous effect it is a
+        variance-weighted average of unit-level effects, not the simple mean. The
+        small gap at strength 0 is that weighting; the **drift** as strength rises is
+        what the hidden confounder adds on top.
         """
     )
     return
