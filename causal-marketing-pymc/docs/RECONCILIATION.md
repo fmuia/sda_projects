@@ -18,10 +18,22 @@ remaining scope is explicit. Built by hand from the applied-fix tables + current
 | Severity | Total | Closed | Open | Notes |
 |---|:--:|:--:|:--:|---|
 | 🔴 Critical | 27 | **27** | **0** | the last 4 were re-verified + fixed in **P4** (all needed real fixes) |
-| 🟠 Major | 95 | ~44 | ~51 | + **P8.5** nb03 opt_price boundary/conditional-draw subtlety now surfaced |
+| 🟠 Major | 95 | ~46 | ~49 | + **P8.6** nb00 cell-6 error bars + noise-vs-bias framing; LaLonde payoff surfaced in the PDF |
 | 🟡 Minor | 69 | ~5 | ~64 | + P8.5 nb03 decision-figure "how to read this" cell; P7 LOO same-fitter baseline; P4 dgp docstring |
 | ⚪ Polish | 19 | 0 | 19 | never scheduled |
-| **Total** | **210** | **~76** | **~134** | + the Workflow re-grade (process step) not run |
+| **Total** | **210** | **~78** | **~132** | + the Workflow re-grade (process step) not run |
+
+> **P8.6 done (nb00 foundations depth):** cell 6's two naive-estimate bars now carry **±1 SE error bars** and
+> the print separates the two ways an estimate misses the truth — the randomized €4.8 is **1.2 SE** from the
+> €5.6 truth (pure sampling *noise*, unbiased, shrinks like 1/√n) while the observational €11.4 is **9.0 SE**
+> away (*bias*, does not shrink with n) — same SE (~€0.6), opposite cause; that contrast IS the lesson (was:
+> a bare "€4.8 (unbiased)" label under a bar sitting below the truth line). The **LaLonde payoff** is now
+> surfaced in the lecture PDF via a markdown result table (**naive −\$635 → adjusted +\$1,548**, toward the
+> ≈+\$1,800 experimental truth; verified against the live fetch, n=614/185 treated) — previously the committed
+> artifact showed only the `CMP_REAL=1` skip message, so the real-data punchline never appeared. Notebook
+> re-run at FULL (CMP_FAST=0, 13s, no BART → fully reproducible: cell-13 ladder unchanged, AIPW 87% coverage);
+> PDF regenerated. The AIPW "credible interval"→"bootstrap CI" relabel and the ladder-interval-excludes-truth
+> majors were already closed in an earlier pass (cell 12/13); the `aipw_ate` docstring was fixed in P6.
 
 > **P8.5 done (nb03 opt_price subtlety):** the naive `opt_price` column (a conditional-on-elastic median that
 > contradicted the row's own elasticity plugged into $P^\star=c\beta/(\beta+1)$) had already been reworked into a
