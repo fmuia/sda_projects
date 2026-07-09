@@ -19,9 +19,20 @@ remaining scope is explicit. Built by hand from the applied-fix tables + current
 |---|:--:|:--:|:--:|---|
 | 🔴 Critical | 27 | **27** | **0** | the last 4 were re-verified + fixed in **P4** (all needed real fixes) |
 | 🟠 Major | 95 | ~56 | ~39 | + **P9** make_reports fail-open filter, notebook-test content asserts, nb08 event-study CIs, nb11 LATE=ATE, README nb07/nb06; + **P8** business/euro depth (6 notebooks) |
-| 🟡 Minor | 69 | ~7 | ~62 | + P8.1 nb06 ROI-vs-ROAS naming; P8.4 nb08 break-even language qualified; P8.5 nb03 decision-figure cell; P7 LOO baseline; P4 dgp docstring |
-| ⚪ Polish | 19 | 0 | 19 | never scheduled |
-| **Total** | **210** | **~90** | **~120** | + the Workflow re-grade (process step) not run |
+| 🟡 Minor | 69 | ~18 | ~51 | + **P10** non-notebook cluster (src/cmp docstrings/robustness, README scoping, marimo app hygiene); rest ride P5 |
+| ⚪ Polish | 19 | ~3 | ~16 | + P10 estimators test-ref, pyproject nbmake, app return/underscore hygiene |
+| **Total** | **210** | **~102** | **~108** | + the Workflow re-grade (process step) not run |
+
+> **P10 in progress (minor + polish sweep) — non-notebook clusters done.** Strategy: the notebook-level
+> minor/polish nits (markdown *and* code/figure) are **folded into P5's per-notebook pass** — P5 re-runs every
+> notebook anyway, so fixing them now would regenerate PDFs twice. Done now (no notebook re-exec): **src/cmp** —
+> first_stage_F homoskedastic-F caveat, placebo_in_space same-fitter default + empty-guard, metrics
+> `qini_coefficient` alias + Qini-vs-AUUC docstring, estimators test-ref fix, dead `LALONDE_NSW_URL` removed;
+> **infra** — Makefile `clean` globstar bug (find-based), pyproject nbmake→explicit test deps; **README** —
+> PPC scoped to (01), IHDP row relabeled "loader only", app "computed once" claim scoped, validation bullet
+> per-notebook-scoped; **marimo apps** — uplift `idx` comment + X/T/y underscore, SC return hygiene,
+> confounding tip NaN guard. ~14 items. **Deferred:** 2 app-content fixes (need a session-snapshot regen) +
+> all notebook nits (→ P5). Commits `dafe8e3`, `c22184a`.
 
 > **P9 done (DGP / narrative / infrastructure majors).** (9.2) The `make_reports` NOISE filter no longer
 > **fails open** — it keyed on bare tokens (`Only`/`Chain`/`Computing`/`>`/`took`/`tree depth`/`jitter`) that
