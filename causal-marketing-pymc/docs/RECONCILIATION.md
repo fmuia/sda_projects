@@ -18,10 +18,23 @@ remaining scope is explicit. Built by hand from the applied-fix tables + current
 | Severity | Total | Closed | Open | Notes |
 |---|:--:|:--:|:--:|---|
 | 🔴 Critical | 27 | **27** | **0** | the last 4 were re-verified + fixed in **P4** (all needed real fixes) |
-| 🟠 Major | 95 | ~50 | ~45 | + **P8.4** nb08 transfer×cost sweep + ATT scope; nb10 persistence-decay sweep + break-even; + **P8.3** nb02 cost sweep + break-even engagement; + **P8.2** nb11 break-even cost sweep; + **P8.6** nb00 error bars, LaLonde surfaced |
-| 🟡 Minor | 69 | ~6 | ~63 | + P8.4 nb08 break-even language qualified (95% posterior prob, not a hard ceiling); P8.5 nb03 decision-figure cell; P7 LOO baseline; P4 dgp docstring |
+| 🟠 Major | 95 | ~51 | ~44 | + **P8.1** nb06 ROI→ROAS + margin break-even + saturation-aware shift sweep + true-ROAS level tension; + **P8.4** nb08/nb10 sweeps; + **P8.3** nb02 cost sweep; + **P8.2** nb11 break-even sweep; + **P8.6** nb00 error bars, LaLonde |
+| 🟡 Minor | 69 | ~7 | ~62 | + P8.1 nb06 ROI-vs-ROAS naming; P8.4 nb08 break-even language qualified; P8.5 nb03 decision-figure cell; P7 LOO baseline; P4 dgp docstring |
 | ⚪ Polish | 19 | 0 | 19 | never scheduled |
-| **Total** | **210** | **~83** | **~127** | + the Workflow re-grade (process step) not run |
+| **Total** | **210** | **~85** | **~125** | + the Workflow re-grade (process step) not run |
+
+> **P8.1 done (nb06 MMM euro-decision depth) — completes P8.** The decide step was a single 15% shift on
+> *average* ROAS with an implicit-100%-margin break-even. Now: (1) **ROI→ROAS relabel** (what the MMM gives is
+> revenue-per-euro, not profit ROI) with a **margin break-even** panel — break-even ROAS = 1/margin (30% margin
+> → 3.3×); (2) a **saturation-aware marginal ROAS** (Michaelis-Menten fit to the fitted weekly
+> spend/contribution — marginal **0.23×** vs average 2.08×, steep saturation); (3) a **shift-size sweep** (0–40%)
+> with a genuine **interior peak near 22%** — beyond that, over-investing in TV *loses*, the diminishing-returns
+> story working; (4) the watertight **ranking-vs-levels** conclusion: **TRUE ROAS is TV 0.85× / bs 0.14×, both
+> below 1×**, so the MMM recovers the RANKING (TV≫bs, reallocate toward TV) but overstates LEVELS ~2.4× — even
+> TV's estimated 2.08× fails a 30%-margin break-even, so the absolute "is TV worth it?" belongs to nb07's geo
+> test, not this MMM. Re-run at FULL (legacy env, **2284s** — the two MMM fits are the repo's slowest; fully
+> reproducible: default TV 10,390/bs 36,007 and calibrated 12,820/2,262 reproduced to the digit). **P8 complete
+> (6/6).**
 
 > **P8.4 done (nb08 + nb10 euro-decision depth):** both single-scenario decide steps now carry a decision
 > *surface*, not a foregone P=1.00. **nb08 (DiD):** step 3 now states β₃ identifies the **ATT — the effect on
