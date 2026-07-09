@@ -19,9 +19,9 @@ remaining scope is explicit. Built by hand from the applied-fix tables + current
 |---|:--:|:--:|:--:|---|
 | 🔴 Critical | 27 | **27** | **0** | the last 4 were re-verified + fixed in **P4** (all needed real fixes) |
 | 🟠 Major | 95 | ~63 | ~32 | + **P5** multi-seed recovery + coverage for nb02/05/08/09/10/11 + README overclaim (7); + **P9** infra/narrative; + **P8** business/euro (6 notebooks) |
-| 🟡 Minor | 69 | ~22 | ~47 | + P5 validation-axis minors (nb10 placebo-date sweep, nb11 multi-seed calibration); + P10 non-notebook cluster |
-| ⚪ Polish | 19 | ~3 | ~16 | + P10 estimators test-ref, pyproject nbmake, app return/underscore hygiene |
-| **Total** | **210** | **~113** | **~97** | + the Workflow re-grade (process step) not run |
+| 🟡 Minor | 69 | **~62** | ~7 | + **P10** full notebook sweep (all 11 re-exec'd FULL): "90% CI"→credible-interval, pp-vs-%, estimand-vs-estimator (07), number-conditioned verdicts (01), ρ-extraction (11), pre-RMSE PASS/FAIL gate + DiD comparator (07), confounder reframes, LATE-at-cutoff footnotes |
+| ⚪ Polish | 19 | **~16** | ~3 | + **P10** notation/label/figure polish across the suite (𝔼[·] notation, DAG arrowheads, axis labels, band-level labels, legend precision, warnings scoping, stray-`Output()` strip) |
+| **Total** | **210** | **~168** | **~42** | remaining is a small minor/polish tail + ~32 majors; + the Workflow re-grade (process step) not run |
 
 > **P5 done (validation depth — the biggest cluster).** Added a **"5b · Recovery across many seeds"** section
 > to **nb02, nb05, nb08, nb09, nb10, nb11** — each refits on many fresh samples (small fast per-seed fits, so
@@ -37,16 +37,30 @@ remaining scope is explicit. Built by hand from the applied-fix tables + current
 > fail-safe) NOISE filter, so PDFs show only the clean summaries. **Closes ~7 majors + validation-axis minors;
 > lifts the Validation axis off "2" across the suite.**
 
-> **P10 in progress (minor + polish sweep) — non-notebook clusters done.** Strategy: the notebook-level
-> minor/polish nits (markdown *and* code/figure) are **folded into P5's per-notebook pass** — P5 re-runs every
-> notebook anyway, so fixing them now would regenerate PDFs twice. Done now (no notebook re-exec): **src/cmp** —
-> first_stage_F homoskedastic-F caveat, placebo_in_space same-fitter default + empty-guard, metrics
-> `qini_coefficient` alias + Qini-vs-AUUC docstring, estimators test-ref fix, dead `LALONDE_NSW_URL` removed;
-> **infra** — Makefile `clean` globstar bug (find-based), pyproject nbmake→explicit test deps; **README** —
-> PPC scoped to (01), IHDP row relabeled "loader only", app "computed once" claim scoped, validation bullet
-> per-notebook-scoped; **marimo apps** — uplift `idx` comment + X/T/y underscore, SC return hygiene,
-> confounding tip NaN guard. ~14 items. **Deferred:** 2 app-content fixes (need a session-snapshot regen) +
-> all notebook nits (→ P5). Commits `dafe8e3`, `c22184a`.
+> **P10 DONE (minor + polish sweep — the whole tail).** Triaged all 88 minor/polish items against current
+> state (16 non-notebook already closed by earlier phases), then closed the rest in three batches.
+> **Batch 3 (`b09dc1a`, code side, no re-exec):** `src/cmp` — S-learner scores both counterfactuals in ONE
+> posterior-predictive call (within-draw paired CATE), `sc_weights_slsqp` clips to simplex + warns on
+> non-convergence, `cost_sweep` 0-baseline so a high cost reports "contact nobody", `policy_comparison`
+> docstring four→five, `recovery_scatter` spans truth+estimates (no silent crop), `draw_dag` bigger
+> arrowheads, `placebo_spaghetti`/`sc_counterfactual_plot` axis-label params, `forest_plot` log-x + annot,
+> **new `metrics.qini_observed`** (Radcliffe Qini on real RCT data, no τ); `make_reports` anchor-star →
+> "" (was duplicating "ANCHOR"); confounding app notes OLS≠ATE at zero confounding; SC app surfaces the
+> p-value denominator (kept donors + 1/(N+1) floor); README nb00 label + DiD-2×2 reframe. Earlier
+> batches (`dafe8e3`, `c22184a`, `8411fdd`) covered the rest of the non-notebook cluster.
+> **Batch 4 (notebooks, FULL re-exec):** all 11 notebooks (00–05, 07 via .venv; 08–11 via .venv-legacy;
+> 06 markdown/output-only, no re-exec) — the "90% CI"→**credible interval** family (08/09/10/11), pp-vs-%
+> (10/11), **estimand-vs-estimator** split + two assumption rows + a materialized **pre-RMSE PASS/FAIL gate**
+> + a **DiD-vs-avg-control comparator bar** + same-fitter placebo reference + a filter-cutoff sensitivity
+> sweep (07), **number-conditioned verdicts** replacing hardcoded ones (01: BCF∈AIPW-CI check, PPC 90%
+> coverage, seed-bias vs 2·sd), behavioural-vs-profitable **persuadable** cut + decile-midpoint x-axis +
+> observable-Qini wiring (01), **endogeneity ρ extracted** from the LKJ covariance (11: ρ=+0.22, explains
+> OLS>IV), cross-world→treatment-induced-confounding rename (04), E-value risk-ratio conversion (05),
+> confounder-vs-precision-covariate reframes (03), LATE-at-cutoff footnotes (09), how-to-read cells
+> (09/10), plus notation/label/figure polish throughout. Re-exec: core + legacy in parallel, all 11 clean;
+> convergence readouts confirm r-hat ≤ 1.010; PDFs regenerated with **0 sampler-noise leaks**.
+> **Deferred (2, documented):** nb06's saturation-curve-panel M-M rework + ROAS-forest log-scale — both need
+> the ~38-min FULL MMM re-run; low-value polish, not worth the cost now.
 
 > **P9 done (DGP / narrative / infrastructure majors).** (9.2) The `make_reports` NOISE filter no longer
 > **fails open** — it keyed on bare tokens (`Only`/`Chain`/`Computing`/`>`/`took`/`tree depth`/`jitter`) that
