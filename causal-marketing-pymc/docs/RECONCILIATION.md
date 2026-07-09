@@ -18,10 +18,22 @@ remaining scope is explicit. Built by hand from the applied-fix tables + current
 | Severity | Total | Closed | Open | Notes |
 |---|:--:|:--:|:--:|---|
 | 🔴 Critical | 27 | **27** | **0** | the last 4 were re-verified + fixed in **P4** (all needed real fixes) |
-| 🟠 Major | 95 | ~47 | ~48 | + **P8.2** nb11 break-even cost sweep (saturated P(pays)=1.00 now explained + max viable cost); + **P8.6** nb00 cell-6 error bars + noise-vs-bias; LaLonde payoff surfaced |
+| 🟠 Major | 95 | ~48 | ~47 | + **P8.3** nb02 cost sweep + break-even engagement (HDI); + **P8.2** nb11 break-even cost sweep; + **P8.6** nb00 cell-6 error bars + noise-vs-bias, LaLonde payoff surfaced |
 | 🟡 Minor | 69 | ~5 | ~64 | + P8.5 nb03 decision-figure "how to read this" cell; P7 LOO same-fitter baseline; P4 dgp docstring |
 | ⚪ Polish | 19 | 0 | 19 | never scheduled |
-| **Total** | **210** | **~79** | **~131** | + the Workflow re-grade (process step) not run |
+| **Total** | **210** | **~80** | **~130** | + the Workflow re-grade (process step) not run |
+
+> **P8.3 done (nb02 segment euro-decision depth):** the decision lived at a single COST=8. Added (1) a **cost
+> sweep** of the four-policy ladder (€5–€12) whose punchline is that the **pooled rule collapses first** — it
+> mails everyone until cost passes the ATE (€10.8) then flips to mailing *no-one*, forfeiting the high-value
+> profit that segment/individual targeting keep earning; and (2) the **break-even engagement** send rule as a
+> posterior functional g\* = (COST − be − bev·is_high)/beg with a 94% HDI. **Watertight caveat:** the fitted
+> low-value crossing is g\*≈0.53, HDI [0.46, 0.61], which sits just *below* the true 0.625 — I framed this
+> honestly (not as clean recovery) as error propagation: it echoes the same ~€0.7 low-value CATE overshoot
+> already visible as the solid-vs-dashed gap in the moderation panel, amplified because a break-even is a
+> **ratio** of two estimated coefficients — the reason to carry the HDI. Re-run at FULL (core env, 16s, pathmc
+> reproducible: ATE 10.80 / CATE 7.69·15.82 / r-hat 1.000 all unchanged). VOI (a lesser sub-item of the same
+> finding) not added — nb02 already has the four-policy realised-profit ladder.
 
 > **P8.2 done (nb11 IV euro-decision depth):** the single fixed COST=10 with a **saturated P(pays)=1.00** is
 > now a **break-even cost sweep** — cell 11 gained a middle panel plotting P(effect > c) across a cost grid
