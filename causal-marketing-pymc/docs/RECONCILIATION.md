@@ -18,10 +18,19 @@ remaining scope is explicit. Built by hand from the applied-fix tables + current
 | Severity | Total | Closed | Open | Notes |
 |---|:--:|:--:|:--:|---|
 | 🔴 Critical | 27 | **27** | **0** | the last 4 were re-verified + fixed in **P4** (all needed real fixes) |
-| 🟠 Major | 95 | ~40 | ~55 | + **P6** src/cmp: go_no_go net/ROI (×3 artifacts), AIPW cross-fitting (×3), McCrary naming, bcf tau-prior |
-| 🟡 Minor | 69 | ~3 | ~66 | P4 fixed the dgp collider/mediator docstring; rest deferred |
+| 🟠 Major | 95 | ~43 | ~52 | + **P7** Anchor-B: placebo loop excludes treated (×2), p-value reporting, launch-date narrative |
+| 🟡 Minor | 69 | ~4 | ~65 | + P7 LOO same-fitter baseline; P4 dgp docstring; rest deferred |
 | ⚪ Polish | 19 | 0 | 19 | never scheduled |
-| **Total** | **210** | **~70** | **~140** | + the Workflow re-grade (process step) not run |
+| **Total** | **210** | **~74** | **~136** | + the Workflow re-grade (process step) not run |
+
+> **P7 done (Anchor-B method bugs):** the inline RMSE-ratio placebo loop now **excludes the treated unit**
+> from every placebo's donor pool (`np.delete(..., [treated_idx, j])`, mirroring `placebo_in_space`) — its
+> post-period carried the real lift and contaminated placebo counterfactuals; the treated still ranks 1/30
+> (p=0.033), so the fix is mechanically correct without changing the call. Added the discard count (kept
+> 20/29) and labeled the two p-value conventions (add-one permutation vs Abadie rank). LOO bars now use a
+> **same-fitter SLSQP baseline** (€318k) instead of the Bayesian one (€305k), so the range measures donor
+> sensitivity, not fitter mismatch. Rewrote the "estimate barely moves" launch-date claim (it shifts ~18% at
+> ±3 weeks) as a *mechanical dilution* — the peak at the true launch week is itself a diagnostic.
 
 > **P6 done (src/cmp statistical fixes):** `go_no_go` now reports `expected_net_value` (€) and a true
 > `expected_roi` ratio (was a euro amount mislabeled "ROI" — misread as ~499%; surfaced in policy.py + nb07 +
