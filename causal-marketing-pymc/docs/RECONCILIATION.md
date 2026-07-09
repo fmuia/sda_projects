@@ -18,10 +18,21 @@ remaining scope is explicit. Built by hand from the applied-fix tables + current
 | Severity | Total | Closed | Open | Notes |
 |---|:--:|:--:|:--:|---|
 | 🔴 Critical | 27 | **27** | **0** | the last 4 were re-verified + fixed in **P4** (all needed real fixes) |
-| 🟠 Major | 95 | ~46 | ~49 | + **P8.6** nb00 cell-6 error bars + noise-vs-bias framing; LaLonde payoff surfaced in the PDF |
+| 🟠 Major | 95 | ~47 | ~48 | + **P8.2** nb11 break-even cost sweep (saturated P(pays)=1.00 now explained + max viable cost); + **P8.6** nb00 cell-6 error bars + noise-vs-bias; LaLonde payoff surfaced |
 | 🟡 Minor | 69 | ~5 | ~64 | + P8.5 nb03 decision-figure "how to read this" cell; P7 LOO same-fitter baseline; P4 dgp docstring |
 | ⚪ Polish | 19 | 0 | 19 | never scheduled |
-| **Total** | **210** | **~78** | **~132** | + the Workflow re-grade (process step) not run |
+| **Total** | **210** | **~79** | **~131** | + the Workflow re-grade (process step) not run |
+
+> **P8.2 done (nb11 IV euro-decision depth):** the single fixed COST=10 with a **saturated P(pays)=1.00** is
+> now a **break-even cost sweep** — cell 11 gained a middle panel plotting P(effect > c) across a cost grid
+> and the print (a) *explains* the 1.00 ("saturated, not assumed: the whole posterior [€14.3, €21.1] sits
+> above €10"), (b) reads off the **max viable cost-per-exposure at 90% confidence = €15.0** (the posterior's
+> 10th percentile — the budget cap the opening promised, ~€5 headroom), and (c) marks the €17.8 coin-flip.
+> The opening's unfulfilled **"frequency caps"** promise (the DGP has no frequency structure) is reframed to
+> the budget/cost-per-exposure the sweep actually delivers, and every "frequency cap" reference is removed
+> (cells 0, 9, 11). Bonus: the orphaned "7-step contract." line (a polish item) is dropped. Re-run at FULL in
+> the legacy env (CausalPy, 74s; reproducible — IV €17.7, CI [14.3, 21.1] covers €15, r-hat 1.010/ESS 903/0
+> div, all unchanged). The overconfident-CI **critical** + weak-prior fix were already applied in an earlier pass.
 
 > **P8.6 done (nb00 foundations depth):** cell 6's two naive-estimate bars now carry **±1 SE error bars** and
 > the print separates the two ways an estimate misses the truth — the randomized €4.8 is **1.2 SE** from the
