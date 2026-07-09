@@ -31,9 +31,28 @@ GLYPHS = {
     # marks
     "✓": "[ok]", "✗": "[x]", "⚠": "[!]",
 }
-NOISE = re.compile(r"(Sampling|Multiprocess|Sequential|Only|We recommend|The rhat|The effective|"
-                   r"There were|Chain|Auto-assigning|CompoundStep|PGBART|NUTS|Initializing|"
-                   r"Computing|The acceptance|>|jitter|took|tree depth|Sampling:)")
+# Sampler-progress noise to strip from stdout/stderr. Each alternative is anchored on a
+# FULL PyMC/BART message prefix (with `.match`, i.e. line-start), NOT a bare token: an
+# earlier version keyed on generic words (`Only`, `Chain`, `Computing`, `>`, `took`,
+# `tree depth`, `jitter`) that also matched legitimate result lines — e.g. "Only 3 of 30
+# markets cleared the bar", "took €5 per customer", "> a note", "Chain retailers saw…" —
+# and silently deleted them from the PDF (a fail-open leak of real content). The optional
+# leading `>*` catches PyMC's nested sub-sampler lines (">NUTS: […]", ">>PGBART: […]").
+# Verified against all 48 sampler lines in the committed notebooks (all still stripped)
+# and 11 look-alike result lines (none stripped).
+NOISE = re.compile(
+    r">*\s*("
+    r"Sampling \d|Sampling: \[|"
+    r"Multiprocess sampling|Sequential sampling|"
+    r"Auto-assigning NUTS|Initializing NUTS|"
+    r"NUTS: \[|PGBART: \[|CompoundStep|BinaryGibbsMetropolis|Metropolis|Slice: \[|"
+    r"Only \d+ samples per chain|"
+    r"We recommend running at least|"
+    r"The rhat statistic is|The effective sample size|The acceptance probability|"
+    r"The number of (effective )?samples|"
+    r"There (were|was) \d+ divergence|"
+    r"Chain \d+ reached the maximum|Chain \d+ failed"
+    r")")
 
 
 _KEYS = sorted(GLYPHS, key=len, reverse=True)   # multi-codepoint keys (τ̂) before single (τ)

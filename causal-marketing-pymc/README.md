@@ -82,7 +82,7 @@ sweeps and value-of-information.
 | 04 | [Funnel mediation](notebooks/04_funnel_mediation.ipynb) | Which funnel stage to invest in? | pathmc (mediation / path effects) | core |
 | 05 | [What to control for](notebooks/05_what_to_control_for.ipynb) | Which variables belong in the model? | pathmc (DAG, colliders, sensitivity) | core |
 | 06 | [Incrementality MMM](notebooks/06_incrementality_mmm.ipynb) | Is spend *causing* sales? Budget allocation | pymc-marketing (causal MMM) | legacy |
-| 07 | ⭐ [Geo-lift synthetic control](notebooks/07_geo_lift_synthetic_control.ipynb) | Did the regional campaign work? | CausalPy / manual SC | core |
+| 07 | ⭐ [Geo-lift synthetic control](notebooks/07_geo_lift_synthetic_control.ipynb) | Did the regional campaign work? | cmp.synthetic_control (Dirichlet-simplex SC, **not** CausalPy) | core |
 | 08 | [Rollout DiD](notebooks/08_rollout_did.ipynb) | Did the loyalty rollout work? | CausalPy (difference-in-differences) | legacy |
 | 09 | [Threshold perk RDD](notebooks/09_threshold_perk_rdd.ipynb) | Does the "€100 → Gold" perk retain people? | CausalPy (regression discontinuity) | legacy |
 | 10 | [Redesign ITS](notebooks/10_redesign_its.ipynb) | Did the site redesign help? (no control group) | CausalPy (interrupted time series) | legacy |
@@ -215,12 +215,19 @@ bump the pins).
   shrinkage is fully visible. Endogenous price is shown biasing elasticity *toward zero*
   (classic simultaneity), which pooling can't fix — the bridge to IV (nb 11).
 - **Notebook 06 (MMM) is honest about MMM's weakness.** The causal MMM ranks the channels
-  correctly (brand_search below break-even, TV above) but its *absolute* contributions run
-  high, and — computed draw-wise — the posterior only backs "TV beats brand_search" with
-  **P ≈ 0.73**, below the 0.8 action bar, so the notebook's honest call is **test before
-  reallocating**, not "shift budget now." It leads with the robust naive-vs-adjusted
-  confounding contrast (OLS) and explicitly says to **calibrate MMM levels with a geo
-  experiment (Anchor B)**. This mirrors real practice.
+  correctly (TV above brand_search) but its *absolute* levels run high: the **true ROAS of
+  both channels is below the 1× break-even** (TV ≈ 0.85×, brand_search ≈ 0.14×) while the
+  MMM reports TV at ≈ 2.08×, so the notebook trusts the **ranking, not the levels**. Computed
+  draw-wise, the posterior backs "TV beats brand_search" with only **P ≈ 0.78**, below the 0.8
+  action bar, so the honest call is **test before reallocating**, not "shift budget now." It
+  leads with the robust naive-vs-adjusted confounding contrast (OLS), reports **ROAS**
+  (revenue-per-euro, with a margin break-even — 30% margin needs 3.3×, which even TV's estimate
+  fails), and says to **calibrate MMM levels with a geo experiment (Anchor B)**. Real practice.
+- **Notebook 07 (Anchor B) is a manual Bayesian synthetic control, not CausalPy.** CausalPy
+  0.8.x cannot install in the core (pymc ≥ 6) env, so Anchor B uses `cmp.synthetic_control` —
+  a Dirichlet-simplex donor-weight model fit in raw PyMC — rather than a library wrapper. The
+  `cmp.estimators` CausalPy SC wrapper exists but is unused here; the technique-index table
+  reflects this (the row reads `cmp.synthetic_control`, not CausalPy).
 - **CausalPy APIs were pinned to 0.8.x reality**, which has drifted from the cookbook's
   0.5-era skeletons: DiD needs a `post_treatment` bool + a `unit` label and the 2×2
   (pre/post-collapsed) data form; RDD needs a dummy-coded `treated` column and a

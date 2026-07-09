@@ -4,6 +4,10 @@
 # DiD, RDD, ITS, IV). Built into .venv-legacy by `make env-legacy`, kept
 # out of pyproject.toml on purpose so `uv sync` never has to resolve both
 # pymc majors at once.
+#
+# These are RANGES (human spec). For a byte-for-byte reproducible rebuild that
+# matches the versions the committed notebooks were run against, install from
+# the pinned lock instead:  requirements-legacy.lock  (169 exact pins).
 pymc>=5.15.1,<6
 causalpy>=0.8,<0.9
 pymc-marketing>=0.15,<0.20
