@@ -18,10 +18,20 @@ remaining scope is explicit. Built by hand from the applied-fix tables + current
 | Severity | Total | Closed | Open | Notes |
 |---|:--:|:--:|:--:|---|
 | 🔴 Critical | 27 | **27** | **0** | the last 4 were re-verified + fixed in **P4** (all needed real fixes) |
-| 🟠 Major | 95 | ~43 | ~52 | + **P7** Anchor-B: placebo loop excludes treated (×2), p-value reporting, launch-date narrative |
-| 🟡 Minor | 69 | ~4 | ~65 | + P7 LOO same-fitter baseline; P4 dgp docstring; rest deferred |
+| 🟠 Major | 95 | ~44 | ~51 | + **P8.5** nb03 opt_price boundary/conditional-draw subtlety now surfaced |
+| 🟡 Minor | 69 | ~5 | ~64 | + P8.5 nb03 decision-figure "how to read this" cell; P7 LOO same-fitter baseline; P4 dgp docstring |
 | ⚪ Polish | 19 | 0 | 19 | never scheduled |
-| **Total** | **210** | **~74** | **~136** | + the Workflow re-grade (process step) not run |
+| **Total** | **210** | **~76** | **~134** | + the Workflow re-grade (process step) not run |
+
+> **P8.5 done (nb03 opt_price subtlety):** the naive `opt_price` column (a conditional-on-elastic median that
+> contradicted the row's own elasticity plugged into $P^\star=c\beta/(\beta+1)$) had already been reworked into a
+> per-draw scale-free **profit uplift %**; P8.5 adds the missing interpretation cell that (1) states the uplift is a
+> posterior mean **over every draw with non-elastic draws zeroed** — an expected uplift discounted by P(elastic), not
+> "the uplift once we act" (region_00: printed 34% ≈ 53% conditional on being elastic), and (2) explains the
+> **boundary blow-up** ($P^\star\to\infty$ as $\beta\to-1^-$; at region_00's β=−1.07, P\*≈€122) so the per-draw mean
+> ≠ the closed form at the mean elasticity (Jensen), which is itself why low-confidence regions are routed to a
+> **controlled test**. Markdown-only (no re-exec; nb03 is reproducible); PDF regenerated. Also closes the related
+> minor (decision figure had no "how to read this" cell).
 
 > **P7 done (Anchor-B method bugs):** the inline RMSE-ratio placebo loop now **excludes the treated unit**
 > from every placebo's donor pool (`np.delete(..., [treated_idx, j])`, mirroring `placebo_in_space`) — its
