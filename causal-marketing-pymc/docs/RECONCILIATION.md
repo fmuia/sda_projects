@@ -18,10 +18,24 @@ remaining scope is explicit. Built by hand from the applied-fix tables + current
 | Severity | Total | Closed | Open | Notes |
 |---|:--:|:--:|:--:|---|
 | 🔴 Critical | 27 | **27** | **0** | the last 4 were re-verified + fixed in **P4** (all needed real fixes) |
-| 🟠 Major | 95 | ~51 | ~44 | + **P8.1** nb06 ROI→ROAS + margin break-even + saturation-aware shift sweep + true-ROAS level tension; + **P8.4** nb08/nb10 sweeps; + **P8.3** nb02 cost sweep; + **P8.2** nb11 break-even sweep; + **P8.6** nb00 error bars, LaLonde |
+| 🟠 Major | 95 | ~56 | ~39 | + **P9** make_reports fail-open filter, notebook-test content asserts, nb08 event-study CIs, nb11 LATE=ATE, README nb07/nb06; + **P8** business/euro depth (6 notebooks) |
 | 🟡 Minor | 69 | ~7 | ~62 | + P8.1 nb06 ROI-vs-ROAS naming; P8.4 nb08 break-even language qualified; P8.5 nb03 decision-figure cell; P7 LOO baseline; P4 dgp docstring |
 | ⚪ Polish | 19 | 0 | 19 | never scheduled |
-| **Total** | **210** | **~85** | **~125** | + the Workflow re-grade (process step) not run |
+| **Total** | **210** | **~90** | **~120** | + the Workflow re-grade (process step) not run |
+
+> **P9 done (DGP / narrative / infrastructure majors).** (9.2) The `make_reports` NOISE filter no longer
+> **fails open** — it keyed on bare tokens (`Only`/`Chain`/`Computing`/`>`/`took`/`tree depth`/`jitter`) that
+> also matched real result lines and silently deleted them from PDFs; re-anchored on full sampler-message
+> prefixes, verified to strip all 48 committed sampler lines and 0 of 11 look-alike result lines (old filter
+> stripped all 11). (9.3) Added truth-recovery **content tests** (nb02 pathmc segment CATE in the core suite;
+> DiD/ITS/IV in a new legacy suite `test_estimators_legacy.py` + `make test-legacy`, pytest added to the legacy
+> env) so the notebooks are guarded on *recovery*, not just *executes-clean*; and **lockfiled** the legacy env
+> (`requirements-legacy.lock`, 172 pins). (9.1) nb08's event study is no longer sold as a "formal check" while
+> being descriptive — added **per-week 90% CI bands** (0/12 pre-launch leads exclude 0) and fixed the "€22
+> average" (it's the mean *absolute* deviation; centred leads average 0 by construction) with a noise
+> benchmark; nb11's **LATE-vs-ATE** seam is closed (homogeneous DGP → LATE=ATE stated, +21pp first stage
+> labeled the complier share). (9.4) README nb07 relabeled `cmp.synthetic_control` (not CausalPy) + stale nb06
+> bullet refreshed. (9.1a dag_control_demo docstring was already fixed in an earlier pass.) **P9 complete.**
 
 > **P8.1 done (nb06 MMM euro-decision depth) — completes P8.** The decide step was a single 15% shift on
 > *average* ROAS with an implicit-100%-margin break-even. Now: (1) **ROI→ROAS relabel** (what the MMM gives is
