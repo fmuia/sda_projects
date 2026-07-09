@@ -172,13 +172,21 @@ def break_even(effect_samples: np.ndarray, unit_value: float):
 def go_no_go(total_effect_samples: np.ndarray, cost: float):
     """Program-evaluation decision (Anchor B style): given a posterior over
     the *total* incremental value and a fixed campaign cost, report
-    P(value > cost), expected ROI, and the credible interval."""
+    P(value > cost), the expected **net value** (E[value] − cost, in the same
+    units as value), the expected **ROI as a ratio** ((E[value] − cost) / cost,
+    so break-even is 0), and the 90% credible interval on value.
+
+    `expected_net_value` is a euro amount; `expected_roi` is a unitless return
+    ratio — different quantities, both reported explicitly. (An earlier version
+    mislabeled the net-value euro amount as 'expected_roi', which misreads as a
+    huge percentage return.)"""
     p_beats = float((total_effect_samples > cost).mean())
-    roi = total_effect_samples - cost
+    mean_value = float(total_effect_samples.mean())
     return {
         "P_value_gt_cost": p_beats,
-        "expected_value": float(total_effect_samples.mean()),
-        "expected_roi": float(roi.mean()),
+        "expected_value": mean_value,
+        "expected_net_value": mean_value - cost,                               # euros of net value
+        "expected_roi": (mean_value - cost) / cost if cost else float("nan"),  # ratio; break-even = 0
         "value_lo": float(np.quantile(total_effect_samples, 0.05)),
         "value_hi": float(np.quantile(total_effect_samples, 0.95)),
         "cost": float(cost),

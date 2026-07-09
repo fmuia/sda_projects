@@ -122,6 +122,11 @@ def test_go_no_go():
     d = policy.go_no_go(samples, cost=300.0)
     assert d["decision"] == "GO"
     assert d["P_value_gt_cost"] > 0.9
+    # net value is euros (mean - cost); ROI is a ratio (net / cost) — must not be conflated.
+    mean_v = float(samples.mean())
+    assert abs(d["expected_net_value"] - (mean_v - 300.0)) < 1e-6
+    assert abs(d["expected_roi"] - (mean_v - 300.0) / 300.0) < 1e-9
+    assert d["expected_roi"] < 1.0          # a ratio (~0.67), not the ~200-euro net amount
 
 
 # --------------------------------------------------------------------------
@@ -149,6 +154,7 @@ def test_aipw_recovers_known_ate():
     r = est.aipw_ate(d[["loyalty"]].values, d["email"].values, d["spend"].values, seed=1, n_boot=150)
     assert abs(r["ate"] - true_ate) < 1.5
     assert r["ci90"][0] < r["ate"] < r["ci90"][1]
+    assert "n_clipped" in r                  # cross-fit version reports clipped (not dropped) units
 
 
 def test_first_stage_F_separates_strong_from_weak():

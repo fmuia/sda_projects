@@ -18,10 +18,20 @@ remaining scope is explicit. Built by hand from the applied-fix tables + current
 | Severity | Total | Closed | Open | Notes |
 |---|:--:|:--:|:--:|---|
 | 🔴 Critical | 27 | **27** | **0** | the last 4 were re-verified + fixed in **P4** (all needed real fixes) |
-| 🟠 Major | 95 | ~32 | ~63 | incl. ~12 convergence/FAST majors (FULL run) + P4's marimo-oracle major |
+| 🟠 Major | 95 | ~40 | ~55 | + **P6** src/cmp: go_no_go net/ROI (×3 artifacts), AIPW cross-fitting (×3), McCrary naming, bcf tau-prior |
 | 🟡 Minor | 69 | ~3 | ~66 | P4 fixed the dgp collider/mediator docstring; rest deferred |
 | ⚪ Polish | 19 | 0 | 19 | never scheduled |
-| **Total** | **210** | **~62** | **~148** | + the Workflow re-grade (process step) not run |
+| **Total** | **210** | **~70** | **~140** | + the Workflow re-grade (process step) not run |
+
+> **P6 done (src/cmp statistical fixes):** `go_no_go` now reports `expected_net_value` (€) and a true
+> `expected_roi` ratio (was a euro amount mislabeled "ROI" — misread as ~499%; surfaced in policy.py + nb07 +
+> Anchor B). `aipw_ate` now **cross-fits** the nuisances (K-fold out-of-fold scoring — removes own-observation
+> bias, licenses the IF SE) and the docstring says "clips" not "trims"; verified it still recovers + covers
+> truth (nb00 bias −0.10, 87% coverage; nb01 CI covers). McCrary relabeled a *simplified* binomial check
+> (nb09 + README + docstring); bcf's `Y=y` tau-prior caveat + stale coverage claim documented. nb07's cell-22
+> `roi = lift/cost` relabeled **ROAS** (distinct from the net-ROI ratio). **Also re-fixed a P4.1 regression:**
+> the nb01 coverage caveat had hard-coded "89%/near-nominal", which the fresh (non-reproducible pymc-bart)
+> run contradicted at 76% — rewritten to be **run-stable** (acknowledges under-coverage, cites no fixed %).
 
 > **P4 done (all 3 open criticals were real, not false alarms):** (1) nb01 coverage caveat contradicted its own
 > FULL output (claimed "below nominal" at ~89% coverage) → rewritten to match; (2) nb05 pathmc green-lit a

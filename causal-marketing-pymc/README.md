@@ -55,7 +55,7 @@ sweeps and value-of-information.
 
 - **Technical diagnostics** — the signature check for each method: Qini/AUUC & uplift-by-decile
   (01), AIPW doubly-robust cross-checks & posterior predictive checks (00, 01), event-study
-  pre-trends & a live staggered-adoption/TWFE-bias demo (08), McCrary density + bandwidth +
+  pre-trends & a live staggered-adoption/TWFE-bias demo (08), McCrary-style density check + bandwidth +
   placebo-cutoff + polynomial-order robustness (09), placebo-in-time & residual autocorrelation
   (10), first-stage F + reduced-form/Wald + exclusion-restriction stress test (11), Abadie
   RMSE-ratio placebo & leave-one-out donor robustness (07).
@@ -92,7 +92,7 @@ sweeps and value-of-information.
 
 The shared package **`src/cmp`** keeps notebooks thin: `dgp` (seeded simulators),
 `estimators` (S/T-learner, BCF, AIPW doubly-robust, synthetic control, CausalPy wrappers,
-first-stage F, McCrary density — uniform interface), `metrics` (PEHE, coverage, Qini/AUUC,
+first-stage F, simplified McCrary-style density — uniform interface), `metrics` (PEHE, coverage, Qini/AUUC,
 uplift-by-decile, reliability, sharpness, E-value), `policy` (profit curve, sweeps, VOI,
 policy comparison, break-even), `plots` (shared styling incl. Qini/reliability/forest/PPC),
 `data` (optional real-dataset loaders).

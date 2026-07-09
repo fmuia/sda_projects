@@ -168,17 +168,25 @@ def bcf(X, T, y, propensity, seed=1, return_full=False, **kw):
     BART with the estimated propensity fed in (to absorb targeted-selection
     confounding / RIC), plus a separate, tighter treatment BART (fewer
     trees) so heterogeneity can shrink to homogeneity rather than be read
-    out of noise. Near-nominal CATE interval coverage under observational
-    selection where a naive forest overfits.
+    out of noise. Under observational selection this regularises the CATE
+    where a naive forest overfits; the evidence for calibration is the
+    multi-seed recovery + coverage-by-decile check in nb01 (near-nominal at
+    full sampling), not an a-priori guarantee.
+
+    Parameterisation caveat: pymc-bart centres each forest's prior at the mean
+    of its `Y`. Here the treatment forest is passed `Y=y`, so its prior sits at
+    the outcome level rather than on the ~0 effect scale; the data dominate at
+    these sample sizes (multi-seed ATE bias ≈ 0), but a 0-centred tau prior is
+    the cleaner BCF form and would tighten regularisation further.
 
     Note (honest caveat, cookbook): when confounders are fully observed,
     BCF ~= T-learner — the propensity trick earns its keep specifically
     under targeted selection.
 
-    With return_full=True, returns a dict {cate, mu, sd} where `mu` is the
-    fitted conditional-mean posterior (prognostic + tau*T, shape (S, n)) and
-    `sd` the observation-noise posterior (S,) — everything needed for a
-    genuine posterior-predictive check, y_rep = Normal(mu_draw, sd_draw)."""
+    With return_full=True, returns a dict {cate, mu, sd, idata, convergence}
+    where `mu` is the fitted conditional-mean posterior (prognostic + tau*T,
+    shape (S, n)) and `sd` the observation-noise posterior (S,) — everything
+    needed for a genuine posterior-predictive check, y_rep = Normal(mu, sd)."""
     import pymc as pm
     import pymc_bart as pmb
     p = {**FAST, **kw}
@@ -191,7 +199,7 @@ def bcf(X, T, y, propensity, seed=1, return_full=False, **kw):
         Xtd = pm.Data("Xt", X)
         z = pm.Data("z", T)
         prog = pmb.BART("prog", X=Xpd, Y=y, m=p["m"])
-        tau_b = pmb.BART("tau", X=Xtd, Y=y, m=m_tau)
+        tau_b = pmb.BART("tau", X=Xtd, Y=y, m=m_tau)   # Y=y sets the response scale; prior centres on outcome, not 0 (docstring caveat)
         mu = pm.Deterministic("mu", prog + tau_b * z)
         sd = pm.HalfNormal("sd", 15)
         pm.Normal("y_obs", mu=mu, sigma=sd, observed=y, shape=mu.shape)
@@ -219,44 +227,60 @@ ESTIMATORS = {"S-learner": s_learner, "T-learner": t_learner, "BCF": bcf}
 # --------------------------------------------------------------------------
 # Doubly-robust ATE (AIPW) — a model-agnostic cross-check of the BART work
 # --------------------------------------------------------------------------
-def aipw_ate(X, T, y, seed=1, n_boot=400, trim=0.02):
-    """Augmented IPW (doubly-robust) ATE with a bootstrap posterior-like
-    distribution. Uses gradient-boosted outcome models mu0, mu1 and a
-    logistic propensity; the AIPW score is consistent if *either* the
-    outcome model or the propensity model is right (double robustness).
+def aipw_ate(X, T, y, seed=1, n_boot=400, trim=0.02, n_folds=5):
+    """Augmented IPW (doubly-robust) ATE via **cross-fitting** (Chernozhukov et
+    al., double ML). The gradient-boosted outcome models mu0, mu1 and the
+    logistic propensity are fit on K−1 folds and evaluated *out-of-fold*, so an
+    adaptive learner never scores the observations it was trained on — this is
+    what removes the own-observation plug-in bias and licenses the
+    influence-function SE with boosted-tree nuisances. The AIPW score is
+    consistent if *either* the outcome or the propensity model is right.
 
-    Overlap is enforced by trimming units with propensity outside
-    [trim, 1-trim]. Returns dict with point estimate, bootstrap draws,
-    the influence-function SE, and the number of trimmed units."""
+    Propensities are **clipped** to [trim, 1−trim] for a stable IPW correction:
+    this winsorizes the weights, it does NOT drop units, so the estimand remains
+    the full-population ATE. `n_clipped` reports how many units sit at the clip
+    boundary (diagnostic only; kept in the estimate).
+
+    The propensity is a logistic-in-raw-features fit — the same specification
+    family the BART notebooks feed to BCF — so AIPW is a *methodologically*
+    different cross-check (doubly-robust, boosted-tree outcomes), not a fully
+    independent one. Returns a dict with the point estimate, a bootstrap
+    distribution of the influence-function mean, the IF SE, n_clipped, and ci90."""
     from sklearn.ensemble import GradientBoostingRegressor
     from sklearn.linear_model import LogisticRegression
     X, T, y = np.asarray(X), np.asarray(T), np.asarray(y)
     n = len(y)
 
-    def _score(idx):
-        Xi, Ti, yi = X[idx], T[idx], y[idx]
-        e = LogisticRegression(max_iter=1000).fit(Xi, Ti).predict_proba(Xi)[:, 1]
-        e = np.clip(e, trim, 1 - trim)
-        m1 = GradientBoostingRegressor(n_estimators=80, max_depth=3, random_state=seed)
-        m0 = GradientBoostingRegressor(n_estimators=80, max_depth=3, random_state=seed)
-        mu1 = m1.fit(Xi[Ti == 1], yi[Ti == 1]).predict(Xi)
-        mu0 = m0.fit(Xi[Ti == 0], yi[Ti == 0]).predict(Xi)
-        psi = (mu1 - mu0
-               + Ti * (yi - mu1) / e
-               - (1 - Ti) * (yi - mu0) / (1 - e))
+    def _crossfit_psi():
+        """Out-of-fold AIPW scores: for each fold, nuisances are fit on the
+        complement and evaluated on the held-out fold."""
+        order = np.random.default_rng(seed).permutation(n)
+        psi = np.empty(n)
+        for te in np.array_split(order, min(n_folds, n)):
+            tr = np.setdiff1d(np.arange(n), te)
+            e = LogisticRegression(max_iter=1000).fit(X[tr], T[tr]).predict_proba(X[te])[:, 1]
+            e = np.clip(e, trim, 1 - trim)
+            m1 = GradientBoostingRegressor(n_estimators=80, max_depth=3, random_state=seed)
+            m0 = GradientBoostingRegressor(n_estimators=80, max_depth=3, random_state=seed)
+            mu1 = m1.fit(X[tr][T[tr] == 1], y[tr][T[tr] == 1]).predict(X[te])
+            mu0 = m0.fit(X[tr][T[tr] == 0], y[tr][T[tr] == 0]).predict(X[te])
+            Tt, yt = T[te], y[te]
+            psi[te] = (mu1 - mu0 + Tt * (yt - mu1) / e - (1 - Tt) * (yt - mu0) / (1 - e))
         return psi
 
-    # keep only units with adequate overlap for the reported n_trimmed
+    psi = _crossfit_psi()
+    point = float(psi.mean())
+    inf_se = float(psi.std(ddof=1) / np.sqrt(n))
+
+    # diagnostic: units whose full-sample propensity is at the clip boundary (kept, not dropped)
     e_full = LogisticRegression(max_iter=1000).fit(X, T).predict_proba(X)[:, 1]
-    n_trim = int(np.sum((e_full < trim) | (e_full > 1 - trim)))
+    n_clipped = int(np.sum((e_full < trim) | (e_full > 1 - trim)))
 
-    psi_full = _score(np.arange(n))
-    point = float(psi_full.mean())
-    inf_se = float(psi_full.std(ddof=1) / np.sqrt(n))
-
-    rng = np.random.default_rng(seed)
-    boot = np.array([_score(rng.integers(0, n, n)).mean() for _ in range(n_boot)])
-    return {"ate": point, "boot": boot, "se": inf_se, "n_trimmed": n_trim,
+    # bootstrap the influence-function mean (resample the out-of-fold scores)
+    rng = np.random.default_rng(seed + 1)
+    boot = np.array([psi[rng.integers(0, n, n)].mean() for _ in range(n_boot)])
+    return {"ate": point, "boot": boot, "se": inf_se,
+            "n_clipped": n_clipped, "n_trimmed": n_clipped,   # n_trimmed kept as a back-compat alias
             "ci90": (float(np.quantile(boot, 0.05)), float(np.quantile(boot, 0.95)))}
 
 
@@ -288,14 +312,21 @@ def first_stage_F(instrument, treatment):
 
 
 def mccrary_density(running, cutoff, bandwidth=None, n_bins=40):
-    """McCrary (2008)-style manipulation test. Compares the running-variable
-    density just below vs just above the cutoff: local *sorting* across the
-    threshold (gaming) shows up as a pile-up on one side, which invalidates RD.
-    Within a narrow window each side we test the density-continuity null (≈ equal
-    mass just below and just above) with a **binomial z-test**, so "no
-    manipulation" is judged by significance (|z| < ~2), not an eyeballed ratio.
-    The log-ratio is now a ratio of properly normalized densities (scale-invariant
-    — no additive smoothing of density values, which was unit-dependent).
+    """**Simplified** McCrary-style manipulation check (a symmetric-window
+    binomial test, not the full McCrary 2008 estimator). Compares the
+    running-variable density just below vs just above the cutoff: local
+    *sorting* across the threshold (gaming) shows up as a pile-up on one side,
+    which invalidates RD. Within a narrow window each side we test the
+    density-continuity null (≈ equal mass just below and just above) with a
+    **binomial z-test**, so "no manipulation" is judged by significance
+    (|z| < ~2), not an eyeballed ratio. The log-ratio is a ratio of properly
+    normalized densities (scale-invariant — no additive smoothing).
+
+    The full McCrary (2008) test fits a *local-linear* density on each side of
+    the cutoff and reports the log-difference of the two intercepts with a Wald
+    SE; this binomial version is the Cattaneo-style local-constant approximation
+    — adequate for a "did anyone pile up at the threshold?" screen, but cite it
+    as a simplified check, not the local-linear estimator.
 
     Returns (density_below, density_above, log_ratio, z_stat). `n_bins` is kept
     for backward-compatible call sites but unused; the window is set by `bandwidth`."""
