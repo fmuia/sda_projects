@@ -6,7 +6,7 @@
 CORE   = .venv/bin
 LEGACY = .venv-legacy/bin
 
-.PHONY: help env env-legacy kernels apps app-uplift app-confounding app-sc test test-fast reports clean
+.PHONY: help env env-legacy kernels apps app-uplift app-confounding app-sc test test-fast test-legacy reports clean
 
 help:
 	@echo "make env          - create/refresh the core env (pymc>=6) with uv"
@@ -16,6 +16,7 @@ help:
 	@echo "make app-uplift / app-confounding / app-sc  - serve one marimo app"
 	@echo "make test         - execute every notebook headless in FAST mode + run pytest"
 	@echo "make test-fast    - pytest smoke tests on the shared package only"
+	@echo "make test-legacy  - truth-recovery tests for the CausalPy DiD/ITS/IV estimators (legacy env)"
 
 env:
 	uv sync --python 3.12
@@ -50,6 +51,9 @@ test:
 
 test-fast:
 	$(CORE)/python -m pytest tests/test_package.py -v
+
+test-legacy:  ## truth-recovery guards for the CausalPy DiD/ITS/IV estimators (legacy env)
+	CMP_FAST=1 $(LEGACY)/python -m pytest tests/test_estimators_legacy.py -v
 
 reports:  ## render one PDF per notebook (narrative + plots) into reports/ ; needs xelatex on PATH
 	PATH="/Library/TeX/texbin:$$PATH" $(CORE)/python scripts/make_reports.py

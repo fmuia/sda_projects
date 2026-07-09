@@ -149,6 +149,26 @@ def test_uplift_by_decile_is_monotone_for_good_ranker():
     assert dec.true_effect.iloc[0] > dec.true_effect.iloc[-1]
 
 
+def test_pathmc_segment_cate_recovers():
+    """nb02's headline claim, as a content guard (not just 'the notebook runs'):
+    the structural model recovers the planted per-segment email effects (€7 low /
+    €16 high at mean engagement) with each truth inside its HDI, and the segments
+    separate. Small fast fit; pathmc is a core-env dependency."""
+    pathmc = pytest.importorskip("pathmc")
+    df, true = dgp.segment_customers(n=1200, seed=3)
+    df["is_high"] = (df["prior_value"] == "high").astype(float)
+    spec = ("spend ~ b_e*email + b_v*is_high + b_ev*email:is_high "
+            "+ b_eg*email:engagement + b_g*engagement + b_tr*trend")
+    m = pathmc.model(spec, data=df)
+    m.fit(random_seed=1, progressbar=False, draws=300, tune=300, chains=2, cores=1)
+    hi = m.cate("spend", "email", condition={"is_high": 1.0, "engagement": 0.5}, values=(0, 1))
+    lo = m.cate("spend", "email", condition={"is_high": 0.0, "engagement": 0.5}, values=(0, 1))
+    assert hi.mean() > lo.mean()                       # the two segments separate
+    hlo, hhi = hi.hdi(); llo, lhi = lo.hdi()
+    assert hlo <= true["high"] <= hhi                  # €16 recovered (truth in HDI)
+    assert llo <= true["low"] <= lhi                   # €7 recovered (truth in HDI)
+
+
 def test_aipw_recovers_known_ate():
     d, true_ate = dgp.dag_control_demo(n=1500, seed=3)
     r = est.aipw_ate(d[["loyalty"]].values, d["email"].values, d["spend"].values, seed=1, n_boot=150)

@@ -20,3 +20,4 @@ matplotlib>=3.9,<4
 networkx>=3.3,<4
 jupyter>=1.1,<2
 ipykernel>=6.29,<7
+pytest>=8,<9        # runs tests/test_estimators_legacy.py (DiD/ITS/IV truth-recovery) in this env
