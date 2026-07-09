@@ -66,10 +66,12 @@ sweeps and value-of-information.
 - **Conceptual narration** — estimand ladders, assumption-by-assumption tables, worked math, DAG
   galleries, and cross-links between notebooks.
 - **Rigorous validation** — calibration by decile + reliability curves + interval sharpness (01),
-  multi-seed recovery stability (00, 01, 07), and sensitivity *ranges* — E-values and 2-D contours
-  (01, 05) — rather than single points; the quasi-experimental notebooks (08–11) validate through
-  truth-recovery + placebo / falsification checks. *(Multi-seed recovery is being extended to the
-  remaining notebooks — see `docs/PLAN.md` P5.)*
+  **multi-seed recovery + interval-coverage** across fresh samples (00, 01, 02, 05, 07, 08, 09, 10, 11 —
+  each reports recovery bias and how often its interval covers the truth), and sensitivity *ranges* —
+  E-values and 2-D contours (01, 05) — rather than single points; the quasi-experimental notebooks add
+  placebo / falsification checks. (03 validates via shrinkage + a failed-calibration honesty note, 04 via
+  path-effect recovery, 06 via the naive-vs-adjusted confounding contrast — the MMM is too costly to
+  multi-seed — so those three carry method-appropriate validation instead of the seed loop.)
 
 ---
 

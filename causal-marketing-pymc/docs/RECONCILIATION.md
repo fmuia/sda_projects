@@ -18,10 +18,24 @@ remaining scope is explicit. Built by hand from the applied-fix tables + current
 | Severity | Total | Closed | Open | Notes |
 |---|:--:|:--:|:--:|---|
 | 🔴 Critical | 27 | **27** | **0** | the last 4 were re-verified + fixed in **P4** (all needed real fixes) |
-| 🟠 Major | 95 | ~56 | ~39 | + **P9** make_reports fail-open filter, notebook-test content asserts, nb08 event-study CIs, nb11 LATE=ATE, README nb07/nb06; + **P8** business/euro depth (6 notebooks) |
-| 🟡 Minor | 69 | ~18 | ~51 | + **P10** non-notebook cluster (src/cmp docstrings/robustness, README scoping, marimo app hygiene); rest ride P5 |
+| 🟠 Major | 95 | ~63 | ~32 | + **P5** multi-seed recovery + coverage for nb02/05/08/09/10/11 + README overclaim (7); + **P9** infra/narrative; + **P8** business/euro (6 notebooks) |
+| 🟡 Minor | 69 | ~22 | ~47 | + P5 validation-axis minors (nb10 placebo-date sweep, nb11 multi-seed calibration); + P10 non-notebook cluster |
 | ⚪ Polish | 19 | ~3 | ~16 | + P10 estimators test-ref, pyproject nbmake, app return/underscore hygiene |
-| **Total** | **210** | **~102** | **~108** | + the Workflow re-grade (process step) not run |
+| **Total** | **210** | **~113** | **~97** | + the Workflow re-grade (process step) not run |
+
+> **P5 done (validation depth — the biggest cluster).** Added a **"5b · Recovery across many seeds"** section
+> to **nb02, nb05, nb08, nb09, nb10, nb11** — each refits on many fresh samples (small fast per-seed fits, so
+> the loops stay cheap even at FULL) and reports **recovery bias + how often its interval covers the truth**.
+> Results (FULL): nb02 CATE **19/20** coverage (bias ±0.05); nb05 the DAG-endorsed `{loyalty}` is the only
+> **unbiased** set (−0.08) while collider/over-control sets carry a *persistent* bias (−0.49 to −1.04, with ±2sd
+> bars now on the five-bar chart); nb08 DiD **20/20** (€403, bias +3); nb09 RDD **23/25 ≈ 92%** (near-nominal);
+> nb10 ITS **17/20** (+3.00pp, bias −0.00) **plus a placebo-DATE sweep** (4 pre-period fakes, all ≈0); nb11 IV
+> **16/20** (mean €16.5 across seeds — the honest calibration view showing the committed seed-37 €18 is one
+> draw, the estimator is unbiased on average). README's multi-seed claim broadened to the 9 notebooks that now
+> carry it (03/04/06 use method-appropriate validation instead, stated honestly). Batched FULL run: core
+> (nb02/05) + legacy (nb08/09/10/11), ~7 min; sampler noise from the loops is stripped by the (now
+> fail-safe) NOISE filter, so PDFs show only the clean summaries. **Closes ~7 majors + validation-axis minors;
+> lifts the Validation axis off "2" across the suite.**
 
 > **P10 in progress (minor + polish sweep) — non-notebook clusters done.** Strategy: the notebook-level
 > minor/polish nits (markdown *and* code/figure) are **folded into P5's per-notebook pass** — P5 re-runs every
