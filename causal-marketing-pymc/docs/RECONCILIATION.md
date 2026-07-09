@@ -18,10 +18,25 @@ remaining scope is explicit. Built by hand from the applied-fix tables + current
 | Severity | Total | Closed | Open | Notes |
 |---|:--:|:--:|:--:|---|
 | 🔴 Critical | 27 | **27** | **0** | the last 4 were re-verified + fixed in **P4** (all needed real fixes) |
-| 🟠 Major | 95 | ~48 | ~47 | + **P8.3** nb02 cost sweep + break-even engagement (HDI); + **P8.2** nb11 break-even cost sweep; + **P8.6** nb00 cell-6 error bars + noise-vs-bias, LaLonde payoff surfaced |
-| 🟡 Minor | 69 | ~5 | ~64 | + P8.5 nb03 decision-figure "how to read this" cell; P7 LOO same-fitter baseline; P4 dgp docstring |
+| 🟠 Major | 95 | ~50 | ~45 | + **P8.4** nb08 transfer×cost sweep + ATT scope; nb10 persistence-decay sweep + break-even; + **P8.3** nb02 cost sweep + break-even engagement; + **P8.2** nb11 break-even cost sweep; + **P8.6** nb00 error bars, LaLonde surfaced |
+| 🟡 Minor | 69 | ~6 | ~63 | + P8.4 nb08 break-even language qualified (95% posterior prob, not a hard ceiling); P8.5 nb03 decision-figure cell; P7 LOO baseline; P4 dgp docstring |
 | ⚪ Polish | 19 | 0 | 19 | never scheduled |
-| **Total** | **210** | **~80** | **~130** | + the Workflow re-grade (process step) not run |
+| **Total** | **210** | **~83** | **~127** | + the Workflow re-grade (process step) not run |
+
+> **P8.4 done (nb08 + nb10 euro-decision depth):** both single-scenario decide steps now carry a decision
+> *surface*, not a foregone P=1.00. **nb08 (DiD):** step 3 now states β₃ identifies the **ATT — the effect on
+> the pilot stores**; the decide step adds a **transfer-discount × cost sweep** (P(app pays) as the non-pilot
+> stores realise 100/75/50% of the pilot lift, across running costs €80–€300) that genuinely flips — at 50%
+> transfer the roll-out becomes *pilot-further* once cost passes ~€150 — plus the max bearable cost at 90%
+> confidence per scenario, and the break-even sentence is re-qualified as a 95%-posterior-probability claim
+> (not a hard ceiling). The DiD posterior (€393, CI [274,515]) already covered truth €400 from an earlier
+> standardization fix. **nb10 (ITS):** the naive "60-day lift × 365 days flat" is replaced by a **novelty
+> persistence-decay sweep** (half-life ∈ {∞,180,90,30} days; effective days = Σ 0.5^(t/h)) against an explicit
+> €600k amortized redesign cost — KEEP under any realistic persistence, but a harsh **1-month novelty half-life
+> (€426k < €600k) flips to roll-back/renew (P=0.00)**, so the decision-relevant uncertainty is now persistence,
+> not "did it work". Added the break-even lift (0.51pp vs estimated 3.0pp) and printed P(helped) as ">0.99
+> (4000 draws)". Both re-run at FULL (legacy env, ~10-12s, CausalPy reproducible). Not added: nb08/nb10
+> multi-seed & sensitivity (P5) and nb08's event-study "formal check" overclaim (P9.1).
 
 > **P8.3 done (nb02 segment euro-decision depth):** the decision lived at a single COST=8. Added (1) a **cost
 > sweep** of the four-policy ladder (€5–€12) whose punchline is that the **pooled rule collapses first** — it
