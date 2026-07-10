@@ -6,10 +6,13 @@ fix work (P0–P3 + the FULL-mode run + convergence reporting + the nb06 rewrite
 remaining scope is explicit. Built by hand from the applied-fix tables + current code/notebook state.
 
 > **Two structural gaps up front:**
-> 1. **The Workflow re-grade was never run.** The assessment explicitly holds grades "pending a full
->    workflow re-grade" ([line 53](ASSESSMENT.md#L53)) / "a full re-grade awaits a workflow re-run"
->    ([line 22](ASSESSMENT.md#L22)). Re-running the comprehensive review to re-verify + re-score is a
->    named deliverable that has not been done. (It's a 100+-agent Workflow.)
+> 1. **The Workflow re-grade — ✅ DONE (P11, 2026-07-10).** The named deliverable is complete: a **77-agent**
+>    independent re-grade (17 artifacts re-scored on the 5 axes + 5 cross-cutting deep audits; every material
+>    finding adversarially re-verified by re-running the DGP+estimator). **Verdict: lecture-ready and
+>    statistically watertight** — mean watertight **4.0/5** (was ~3.1), **27/27 criticals re-verified closed**,
+>    every artifact ≥ "good", nb07 near-flagship. Full report + reconciled scorecard: **[REGRADE.md](REGRADE.md)**.
+>    It surfaced a short punch-list (4 fix-introduced majors + a minor/polish tail); the majors + the recommended
+>    minors are now closed — see **P11 fixes** below.
 > 2. **The roadmap (P0–P3) was a *prioritized subset*, not the whole plan.** It targeted the criticals and
 >    a slice of majors. Most majors + nearly all minors/polish were never scheduled.
 
@@ -22,6 +25,29 @@ remaining scope is explicit. Built by hand from the applied-fix tables + current
 | 🟡 Minor | 69 | **~62** | ~7 | + **P10** full notebook sweep (all 11 re-exec'd FULL): "90% CI"→credible-interval, pp-vs-%, estimand-vs-estimator (07), number-conditioned verdicts (01), ρ-extraction (11), pre-RMSE PASS/FAIL gate + DiD comparator (07), confounder reframes, LATE-at-cutoff footnotes |
 | ⚪ Polish | 19 | **~16** | ~3 | + **P10** notation/label/figure polish across the suite (𝔼[·] notation, DAG arrowheads, axis labels, band-level labels, legend precision, warnings scoping, stray-`Output()` strip) |
 | **Total** | **210** | **~192** | **~18** | remaining ≈ 8 majors (below) + a small minor/polish tail; + the Workflow re-grade (process step) not run |
+
+> **P11 done (independent re-grade + punch-list closure — the final deliverable).** The 77-agent regrade
+> ([REGRADE.md](REGRADE.md)) confirmed the statistics are watertight and reproducible — the estimator-core,
+> FULL-mode-reproducibility, and ledger-verification deep audits all **PASS**, and 27/27 criticals re-verified —
+> but caught a cluster of **narration-vs-output contradictions the fix work itself introduced** (the
+> *slide-refutes-speaker* class). Closed all **4 majors + 5 recommended minors + 2 companions**; re-executed the
+> 4 affected notebooks FULL (nbclient, kernelspec preserved), regenerated all 12 PDFs (0 fail), tests green
+> (core 39 · legacy 4 · kernelspec 12). **Majors:** nb04 falsification now reads its 1-of-3 violation against a
+> Binomial(k, 0.05) false-positive budget → *"graph **survives** falsification"* (was *"contradicted by the
+> data"* on a lone chance rejection — a false positive under the true DGP); nb10 "how to read" rewritten to the
+> real **2-panel** figure (was narrating a removed cumulative-impact 3rd panel with Left/Middle/Right); nb11
+> *"UNBIASED on average"* → honest, number-conditioned *"small upward finite-sample bias +€1.5 (~10%) toward
+> OLS, covers €15 in 16/20 — near-nominal"*; **ci.yml** now gates the legacy DiD/RDD/ITS/IV truth-recovery suite
+> (was `make test-legacy`-only, ran in **no** CI job). **Minors:** nb03 shrinkage `τ_β → τ_β²` (dimensional
+> fix — SD added to a variance); nb01 tipping *≈1.5 → 2.0* (matched its own Depth-B cell) + de-staled the "FAST
+> mode" caveat (now cites the coverage-by-decile diagnostic, no hard-coded pymc-bart number); nb02 a **true 90%
+> HDI** (`c.hdi(prob=0.90)`; was the 94% default mislabeled "90%"); nb05 break-even moved into the estimate
+> spread (**€2 → €5**) so *"opposite decision"* is now literally demonstrated — over-controlling flips the
+> kitchen-sink set to **NO-GO** while the DAG-endorsed `{loyalty}` set stays GO; nb09 placebo-cutoff list *4 → 2*
+> (matched the code, which runs `[70, 130]`). **Companions:** nb04 `effects_summary()` table now renders (a
+> trailing `print` had shadowed it). The remaining **minor/polish tail** (fast recovery-loop sampler-noise in
+> committed `.ipynb`s — stripped from the PDFs; single-seed validation deferrals; 2 marimo-app items) stays
+> documented in [REGRADE.md](REGRADE.md) §4–§5, not silently dropped.
 
 > **P5 done (validation depth — the biggest cluster).** Added a **"5b · Recovery across many seeds"** section
 > to **nb02, nb05, nb08, nb09, nb10, nb11** — each refits on many fresh samples (small fast per-seed fits, so

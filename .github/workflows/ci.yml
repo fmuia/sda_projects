@@ -56,6 +56,15 @@ jobs:
           uv pip install --python .venv-legacy/bin/python -r requirements-legacy.lock
           uv pip install --python .venv-legacy/bin/python -e . --no-deps
 
+      # Truth-recovery guards for the CausalPy DiD/RDD/ITS/IV wrappers (nb08-11).
+      # This is the one job that builds .venv-legacy, so the legacy suite gates here
+      # (import-skipped under the core env) — a wrapper returning a fitted-but-wrong
+      # object now fails CI instead of passing silently.
+      - name: Legacy estimator truth-recovery guards (pymc<6)
+        env:
+          CMP_FAST: "1"
+        run: .venv-legacy/bin/python -m pytest tests/test_estimators_legacy.py -q
+
       - name: Register both Jupyter kernels
         run: |
           .venv/bin/python -m ipykernel install --user --name cmp-core --display-name "Python (cmp core, pymc6)"
