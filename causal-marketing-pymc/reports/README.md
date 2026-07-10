@@ -2,8 +2,8 @@
 
 One self-contained PDF per notebook — the **full narrative + plots + printed results**,
 with code inputs and sampler-progress noise stripped out, so a non-technical reader can
-follow the story end to end. Generated in **FAST mode** (coarse posteriors); regenerate
-from a full-quality run for the reference figures.
+follow the story end to end. Generated from the committed **FULL-mode** runs (full-quality
+posteriors: 4 chains, 1500/1500 draws on the headline fits) — these are the reference figures.
 
 | report | technique |
 |--------|-----------|

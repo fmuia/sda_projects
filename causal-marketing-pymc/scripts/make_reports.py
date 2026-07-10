@@ -13,8 +13,8 @@ OUT = REPO / "reports"; OUT.mkdir(exist_ok=True)
 # output). We map them to LaTeX-safe text so the report never loses characters.
 # Real $...$ math blocks use LaTeX commands (\tau, \mu, ...) and are unaffected.
 GLYPHS = {
-    # decorative star in the two anchor titles ("… ⭐ ANCHOR A"); the word ANCHOR
-    # is already in the text, so drop the glyph rather than inject a second "ANCHOR".
+    # decorative star in the two anchor titles ("… ⭐ (Anchor A)"); the "(Anchor A)"
+    # label is already in the text, so drop the glyph rather than inject a duplicate.
     "⭐": "", "\U0001f7e1": "(yellow) ", "\U0001f534": "(red) ",
     "\U0001f7e2": "(green) ", "⚪": "(white) ",
     # greek (as used in code spans / prose / printed output)
