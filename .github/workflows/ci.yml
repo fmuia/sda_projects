@@ -70,6 +70,15 @@ jobs:
           .venv/bin/python -m ipykernel install --user --name cmp-core --display-name "Python (cmp core, pymc6)"
           .venv-legacy/bin/python -m ipykernel install --user --name cmp-legacy --display-name "Python (cmp legacy, pymc5)"
 
+      # Real-data cache for notebooks 07b/11b (cmp.data loaders): the Criteo file is a
+      # 311 MB one-time download + one full parse, so cache ~/.cache/cmp across runs.
+      # Bump the key suffix if a dataset version in src/cmp/data.py ever changes.
+      - name: Cache real datasets for notebooks 07b/11b
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/cmp
+          key: cmp-real-data-v1
+
       # CMP_STRICT_KERNELS=1 turns a missing-kernel skip into a failure, so a broken
       # legacy env can't silently pass 5 notebooks.
       - name: Execute all notebooks headless (FAST=1, strict kernels)

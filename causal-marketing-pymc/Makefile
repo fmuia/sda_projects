@@ -1,7 +1,7 @@
 # causal-marketing-pymc — common tasks
 # Two environments (see README "Environment split"):
-#   .venv         core, pymc>=6  (notebooks 00-05, 07; all marimo apps)
-#   .venv-legacy  legacy, pymc<6 (notebooks 06, 08-11; causalpy + pymc-marketing)
+#   .venv         core, pymc>=6  (notebooks 00-05, 07, 07b; all marimo apps)
+#   .venv-legacy  legacy, pymc<6 (notebooks 06, 08-11, 11b; causalpy + pymc-marketing)
 
 CORE   = .venv/bin
 LEGACY = .venv-legacy/bin

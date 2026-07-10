@@ -27,6 +27,11 @@ Read in this order — each step assumes the previous one:
    — the program-evaluation spine. Did the regional campaign work, full depth: naive
    estimators failing, placebo inference, euro rollout decision.
 5. **The rest** — techniques 02–06 and 08–11, each a self-contained decision.
+6. **Real-data companions** — [07b](notebooks/07b_geo_lift_real_data.ipynb) and
+   [11b](notebooks/11b_endogenous_exposure_real_data.ipynb) rerun the two
+   quasi-experimental workhorses on public real datasets (Google's geo experiment,
+   Criteo's 13.98M-user incrementality tests), replacing the planted truth with
+   real-data anchors: a randomized benchmark and a full-file Wald estimate.
 
 Prefer to poke at it live? The three **[interactive apps](#interactive-apps-marimo)**
 (marimo) let you drag sliders and watch the decision move.
@@ -39,7 +44,9 @@ A fixed pedagogical contract, so once you've read one you can read any of them:
 
 1. **Business question** — a concrete marketing decision, in plain language.
 2. **Simulate a ground truth** — a seeded process with a *known* effect (the core
-   teaching device; there's a hook to swap in real data).
+   teaching device; there's a hook to swap in real data — and notebooks 07b/11b take it,
+   replacing this step with public real datasets plus an honest account of what can still
+   be validated).
 3. **Identify** — the estimand and the identification assumptions; DAG where relevant.
    *Kept separate from estimation.*
 4. **Estimate** — fit with the mapped PyMC-ecosystem library; get a posterior.
@@ -71,7 +78,11 @@ sweeps and value-of-information.
   E-values and 2-D contours (01, 05) — rather than single points; the quasi-experimental notebooks add
   placebo / falsification checks. (03 validates via shrinkage + a failed-calibration honesty note, 04 via
   path-effect recovery, 06 via the naive-vs-adjusted confounding contrast — the MMM is too costly to
-  multi-seed — so those three carry method-appropriate validation instead of the seed loop.)
+  multi-seed — so those three carry method-appropriate validation instead of the seed loop. The
+  real-data companions validate against what real data offers instead of a planted truth: 07b grades
+  synthetic control against the experiment's own matched-pairs randomization plus pseudo-cell placebo
+  permutation, 11b grades the subsample IV against the 13.98M-row Wald anchor plus disjoint-fold
+  stability.)
 
 ---
 
@@ -87,12 +98,17 @@ sweeps and value-of-information.
 | 05 | [What to control for](notebooks/05_what_to_control_for.ipynb) | Which variables belong in the model? | pathmc (DAG, colliders, sensitivity) | core |
 | 06 | [Incrementality MMM](notebooks/06_incrementality_mmm.ipynb) | Is spend *causing* sales? Budget allocation | pymc-marketing (causal MMM) | legacy |
 | 07 | ⭐ [Geo-lift synthetic control](notebooks/07_geo_lift_synthetic_control.ipynb) | Did the regional campaign work? | cmp.synthetic_control (Dirichlet-simplex SC, **not** CausalPy) | core |
+| 07b | ⭐ [Geo-lift on real data](notebooks/07b_geo_lift_real_data.ipynb) | 07's question on **Google's real geo experiment** ($50k, 100 geos) — SC graded against the randomized answer | cmp.synthetic_control + `cmp.data.load_google_geo` | core |
 | 08 | [Rollout DiD](notebooks/08_rollout_did.ipynb) | Did the loyalty rollout work? | CausalPy (difference-in-differences) | legacy |
 | 09 | [Threshold perk RDD](notebooks/09_threshold_perk_rdd.ipynb) | Does the "€100 → Gold" perk retain people? | CausalPy (regression discontinuity) | legacy |
 | 10 | [Redesign ITS](notebooks/10_redesign_its.ipynb) | Did the site redesign help? (no control group) | CausalPy (interrupted time series) | legacy |
 | 11 | [Endogenous exposure IV](notebooks/11_endogenous_exposure_iv.ipynb) | Ad exposure is self-selected — the true effect | CausalPy (instrumental variables) | legacy |
+| 11b | [Endogenous exposure on real data](notebooks/11b_endogenous_exposure_real_data.ipynb) | 11's question on **Criteo's 13.98M-user experiment** — IV graded against the full-file Wald anchor | CausalPy IV + `cmp.data.load_criteo_uplift` | legacy |
 
-*(Numbering matches `docs/causal_marketing_cookbook.pdf` 1:1.)*
+*(Numbering matches `docs/causal_marketing_cookbook.pdf` 1:1; the `b` notebooks are real-data
+companions to the two quasi-experimental workhorses. They fetch public datasets on first run —
+07b two ~230 KB CSVs, 11b a one-time 311 MB download — cached under `~/.cache/cmp`; every other
+notebook stays fully offline.)*
 
 The shared package **`src/cmp`** keeps notebooks thin: `dgp` (seeded simulators),
 `estimators` (S/T-learner, BCF, AIPW doubly-robust, synthetic control, CausalPy wrappers,
@@ -109,7 +125,7 @@ policy comparison, break-even), `plots` (shared styling incl. Qini/reliability/f
 # 1. core environment (pymc>=6): foundations, uplift, pathmc, synthetic control, apps
 uv sync
 
-# 2. legacy environment (pymc<6): causalpy + pymc-marketing notebooks (06, 08-11)
+# 2. legacy environment (pymc<6): causalpy + pymc-marketing notebooks (06, 08-11, 11b)
 make env-legacy
 
 # 3. register both as Jupyter kernels
@@ -190,8 +206,8 @@ environments**:
 
 | Env | pymc | Built by | Powers |
 |-----|------|----------|--------|
-| **core** (`.venv`) | ≥ 6 | `uv sync` (from `pyproject.toml`) | notebooks 00–05, 07 · all apps · package tests |
-| **legacy** (`.venv-legacy`) | < 6 | `make env-legacy` (from `requirements-legacy.txt`) | notebooks 06, 08–11 |
+| **core** (`.venv`) | ≥ 6 | `uv sync` (from `pyproject.toml`) | notebooks 00–05, 07, 07b · all apps · package tests |
+| **legacy** (`.venv-legacy`) | < 6 | `make env-legacy` (from `requirements-legacy.txt`) | notebooks 06, 08–11, 11b |
 
 `cmp.estimators` imports pymc/pymc-bart **lazily** so the package imports cleanly in
 both. Each notebook declares its kernel, and the test suite routes each to the right one

@@ -67,5 +67,8 @@ def test_notebook_runs(nb_path):
         if STRICT:
             pytest.fail(msg + "  [CMP_STRICT_KERNELS=1 — skips are failures in CI]")
         pytest.skip(msg)
-    client = NotebookClient(nb, timeout=300, kernel_name=kernel)
+    # 600s per cell (not 300): on a cold ~/.cache/cmp, 07b/11b's first loader cell
+    # does a one-time dataset download (11b: the 311 MB Criteo file + one full parse).
+    # Warm-cache runs stay well under the old 300s budget.
+    client = NotebookClient(nb, timeout=600, kernel_name=kernel)
     client.execute()  # raises CellExecutionError on any cell failure
