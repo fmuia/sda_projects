@@ -254,12 +254,17 @@ def criteo_full_anchor() -> dict:
                    ignore_index=True)
     z = df["treatment"].values.astype(bool)
     d = df["exposure"].values.astype(float)
+    dexp = d.astype(bool)                     # actually-exposed mask, for the as-treated (naive) gap
     first = float(d[z].mean() - d[~z].mean())
     out = {"n": int(len(df)), "first_stage": first,
            "p_exposed_treated": float(d[z].mean()), "p_exposed_control": float(d[~z].mean())}
     for y_col in ("visit", "conversion"):
         y = df[y_col].values.astype(float)
         itt = float(y[z].mean() - y[~z].mean())
-        out[y_col] = {"base_control": float(y[~z].mean()), "itt": itt, "wald_late": itt / first}
+        # naive = the as-treated exposed-vs-unexposed gap (what an attribution dashboard reports),
+        # computed on the same full-file pass so the self-selection bias is grade-able, not hard-coded.
+        naive = float(y[dexp].mean() - y[~dexp].mean())
+        out[y_col] = {"base_control": float(y[~z].mean()), "itt": itt, "wald_late": itt / first,
+                      "naive": naive}
     cache.write_text(json.dumps(out, indent=2))
     return out
