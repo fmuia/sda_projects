@@ -32,6 +32,10 @@ GLYPHS = {
     "⁰": "0", "¹": "1", "²": "^2", "³": "^3",
     # marks
     "✓": "[ok]", "✗": "[x]", "⚠": "[!]",
+    # relations xelatex's text fonts drop silently (independence in prose/output)
+    "⊥": "_||_", "⟂": "_||_",
+    # curly quotes (default fonts render them inconsistently in titles)
+    "“": '"', "”": '"', "‘": "'", "’": "'",
 }
 # Sampler-progress noise to strip from stdout/stderr. Each alternative is anchored on a
 # FULL PyMC/BART message prefix (with `.match`, i.e. line-start), NOT a bare token: an
@@ -79,6 +83,16 @@ def clean(nb):
     nb = copy.deepcopy(nb)
     nb.metadata["title"] = first_title(nb)
     nb.metadata.pop("authors", None)
+    # The template renders metadata["title"] via \maketitle, so the notebook's own
+    # H1 would print the title twice on page 1 — drop the first H1 line only.
+    for cell in nb.cells:
+        if cell.cell_type == "markdown":
+            lines = cell.source.splitlines()
+            for i, ln in enumerate(lines):
+                if ln.startswith("# "):
+                    cell.source = "\n".join(lines[:i] + lines[i + 1:]).lstrip("\n")
+                    break
+            break
     for cell in nb.cells:
         if cell.cell_type == "markdown":
             cell.source = sanitize(cell.source)
@@ -95,6 +109,13 @@ def clean(nb):
                 # sanitize text in execute_result / display_data plain-text reprs too
                 if o.get("output_type") in ("execute_result", "display_data"):
                     data = o.get("data", {})
+                    # ipywidgets progress containers render as a literal "Output()"
+                    # line in the PDF — drop them (and any widget-view payload).
+                    data.pop("application/vnd.jupyter.widget-view+json", None)
+                    if data.get("text/plain", "").strip() in ("Output()", "HBox()", "VBox()"):
+                        continue
+                    if not data:
+                        continue
                     if "text/plain" in data:
                         data["text/plain"] = sanitize(data["text/plain"])
                 outs.append(o)
