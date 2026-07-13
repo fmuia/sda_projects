@@ -56,7 +56,19 @@ def macro_name(key: str) -> str:
         raise ValueError(f"unknown notebook number {num!r}")
     head = "nb" + words[num] + ("B" if suffix else "")
     tail = "".join(p.capitalize() for p in re.split(r"[_\W]+", rest) if p)
-    return "\\" + head + tail
+    name = head + tail
+    if not name.isalpha():
+        # A LaTeX macro name may contain letters ONLY. A key like "nb10.cl_r2" would produce
+        # \nbTenClR2, which TeX parses as \nbTenClR followed by the digit 2 — so the build fails
+        # with "Undefined control sequence \nbTenClR", pointing nowhere near the key that caused
+        # it, and it fails for the WHOLE book. Catch it here, at the emit site, where the fix is
+        # obvious: spell the digit out ("cl_r_two", "cl_rsq").
+        raise ValueError(
+            f"key {key!r} makes the macro \\{name}, which is not a legal LaTeX macro name "
+            f"(letters only — digits are not allowed). Spell the digits out: e.g. 'cl_r2' -> "
+            f"'cl_rsq' or 'cl_r_two'."
+        )
+    return "\\" + name
 
 
 SHARDS = BUILD / "results"
@@ -91,6 +103,15 @@ def _write(nb: str, store: dict) -> None:
     tmp = _shard_path(nb).with_suffix(".json.tmp")
     tmp.write_text(json.dumps(store, indent=2, sort_keys=True))
     tmp.replace(_shard_path(nb))
+
+
+def _latex_escape(s: str) -> str:
+    """pandas' own escaping, reproduced so `math_headers` can invert it on the header row."""
+    for a, b in (("\\", r"\textbackslash "), ("_", r"\_"), ("^", r"\textasciicircum "),
+                 ("&", r"\&"), ("%", r"\%"), ("$", r"\$"), ("#", r"\#"),
+                 ("{", r"\{"), ("}", r"\}"), ("~", r"\textasciitilde ")):
+        s = s.replace(a, b)
+    return s
 
 
 def _check_kind(store: dict, key: str, kind: str | None) -> None:
@@ -133,8 +154,15 @@ def value(key: str, val, *, unit: str = "", fmt: str | None = None, note: str = 
 
 
 def table(df, key: str, *, caption: str, label: str | None = None, fmt: str = "%.2f",
-          align: str | None = None, note: str = ""):
-    """Write a pandas DataFrame as a booktabs LaTeX table the chapter can \\input."""
+          align: str | None = None, note: str = "", math_headers: bool = False):
+    """Write a pandas DataFrame as a booktabs LaTeX table the chapter can \\input.
+
+    `math_headers=True` passes the column headers through to LaTeX unescaped, so a header may
+    carry math (`$\\varphi$`, `$\\hat\\tau$`). The default escapes everything, which is right for
+    the *cells* — a euro sign or a per-cent in a data cell must not be read as LaTeX — but it also
+    mangles a header that was written as math into the literal text `\\$\\textbackslash varphi\\$`.
+    Escaping cells and typesetting headers are different jobs; this flag separates them.
+    """
     macro_name(key)
     BUILD.joinpath("tables").mkdir(parents=True, exist_ok=True)
     path = BUILD / "tables" / (key.replace(".", "_") + ".tex")
@@ -142,6 +170,19 @@ def table(df, key: str, *, caption: str, label: str | None = None, fmt: str = "%
                        column_format=align or ("l" + "r" * (df.shape[1] - 1)),
                        caption=caption, label=label or f"tab:{key.replace('.', ':')}",
                        position="htbp")
+    if math_headers:
+        # Put the ORIGINAL header text back, unescaped. Only the header row is affected: the
+        # cells stay escaped, because a "€" or a "%" in a data cell is data, not LaTeX.
+        esc = " & ".join(_latex_escape(str(c)) for c in df.columns) + r" \\"
+        raw = " & ".join(str(c) for c in df.columns) + r" \\"
+        if esc in body:
+            body = body.replace(esc, raw, 1)
+        else:                                          # pandas changed its escaping — fail loudly
+            raise RuntimeError(
+                f"table({key!r}, math_headers=True): could not locate the escaped header row to "
+                f"restore. Escaping the headers would silently mangle the math, so this refuses "
+                f"rather than shipping a broken table."
+            )
     # to_latex emits \toprule/\midrule/\bottomrule with booktabs=True by default in
     # modern pandas; be explicit so the chapter's preamble requirement is unambiguous.
     #

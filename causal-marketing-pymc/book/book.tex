@@ -58,9 +58,19 @@ error, which is the property we wanted.
 \mainmatter
 
 % ---------------------------------------------------------------------------------------
-% Part II · Methods.  (Part I — foundations — and chapters 3–8, 10–13 are drafted in the
-% notebooks and land in this file as they are converted; the geo-lift chapter is the pilot
-% and fixes the template for all of them.)
+% Part I · Foundations.  Chapter 1 builds the vocabulary and the estimator ladder;
+% Chapter 2 is the point-estimate-vs-posterior explainer that every later chapter
+% cross-references, and is the spine of the book's argument.
+% ---------------------------------------------------------------------------------------
+\part{Foundations}
+
+\include{chapters/foundations}
+\include{chapters/point_vs_posterior}
+
+% ---------------------------------------------------------------------------------------
+% Part II · Methods.  (The remaining chapters are drafted in the notebooks and land in this
+% file as they are converted; the geo-lift chapter is the pilot and fixes the template for
+% all of them.)
 % ---------------------------------------------------------------------------------------
 % The geo-lift chapter is Chapter 9 of the planned book (BOOK_SPEC.md), and is numbered as
 % such: its cross-references, equation numbers and table numbers are the ones it will keep
@@ -68,9 +78,24 @@ error, which is the property we wanted.
 % chapter of a whole rather than a standalone note that will have to be renumbered later.
 \setcounter{part}{1}
 \part{Methods}
+\setcounter{chapter}{3}
+\include{chapters/segment_effects}
+
+\setcounter{chapter}{5}
+\include{chapters/mediation}
+
+\setcounter{chapter}{6}
+\include{chapters/what_to_control}
+
 \setcounter{chapter}{8}
 
 \include{chapters/geo_lift}
+
+\setcounter{chapter}{10}
+\include{chapters/rdd}
+
+\setcounter{chapter}{11}
+\include{chapters/its}
 
 \backmatter
 \printbibliography[heading=bibintoc, title={Bibliography}]

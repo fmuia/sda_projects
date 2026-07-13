@@ -1,0 +1,763 @@
+% =====================================================================================
+% Chapter 1 · Potential outcomes, confounding, and DAGs
+%
+% Built from notebooks/00_foundations.ipynb (§1–§6, §8, §9). NOT ONE NUMBER IN THIS FILE
+% IS TYPED BY HAND: every figure in the prose is a macro from build/macros.tex, generated
+% by cmp.report from the executed notebook (CMP_FAST=0, CMP_REAL=1). The only literals
+% below are (i) the constants of the data-generating models in §1.2, which are *definitions*
+% rather than results, (ii) the conventional thresholds (the 0.1 SMD bar, the [0.05, 0.95]
+% propensity clip, the 90 % interval level), which are *conventions* stated in the text, and
+% (iii) the published LaLonde experimental benchmark, which is emitted as a macro and
+% flagged, in the notebook and here, as cited rather than estimated.
+% =====================================================================================
+\chapter{Potential outcomes, confounding, and DAGs}
+\label{ch:foundations}
+
+\begin{quote}\small
+\emph{A retailer's dashboard reports that emailed customers spend \eur{\nbZeroObsNaive} more
+than un-emailed ones, against a contact cost of \eur{\nbZeroCost}. The email therefore pays,
+and the recommendation writes itself. It is wrong. The true average effect in this world is
+\eur{\nbZeroTrueAte}, and the gap is not noise: the confounded estimate sits
+\nbZeroObsSeDist{} standard errors from the truth, while the randomized one sits
+\nbZeroRandSeDist{}. Exactly \eur{\nbZeroSelBias} of the gap is a statement about \emph{who}
+was emailed rather than about what the email did, and acting on the dashboard burns
+\eur{\nbZeroPolBurn} on a base of \nbZeroNCustomers{} customers. This chapter builds the
+vocabulary that makes that sentence precise --- potential outcomes, confounding, backdoor
+paths, colliders --- and then climbs the estimator ladder that repairs the number, from a
+naive difference of means through regression adjustment and inverse-propensity weighting to
+the doubly-robust estimator, each with the standard error its data structure demands. It
+closes on LaLonde's job-training data, where the naive comparison says training destroyed
+\usd{\nbZeroLlNaive} of earnings and adjustment moves it \usd{\nbZeroLlSwing} --- across zero
+--- to within \usd{\nbZeroLlShortfall} of the randomized benchmark.}
+\end{quote}
+
+% =====================================================================================
+\section{The decision}
+\label{sec:fnd:decision}
+
+A retailer has a customer file and an email programme. Each contact costs \eur{\nbZeroCost}
+to print, post and process. The analytics team pulls the obvious number --- average spend
+among customers who were emailed, minus average spend among those who were not --- and it
+comes to \eur{\nbZeroObsNaive}. The email clears its cost by a comfortable margin. Scale it.
+
+That recommendation is the most expensive sentence in marketing analytics, and it is wrong
+for a reason that has nothing to do with the arithmetic. The arithmetic is correct: the
+emailed customers really did spend \eur{\nbZeroObsNaive} more. What is wrong is the
+\emph{claim} smuggled into the comparison --- that the un-emailed customers tell us what the
+emailed ones \emph{would have spent} had no email been sent. They do not, because nobody
+flipped a coin. A marketer chose whom to email, and chose the loyal, engaged, recently-active
+customers, who spend more anyway.
+
+The chapter's central quantity is therefore not a number but a \emph{missing} number: what
+the treated would have done untreated. Everything that follows --- the notation, the graphs,
+the four estimators, the diagnostics --- exists to reconstruct it, and to state honestly the
+assumptions under which the reconstruction is licensed. \Cref{sec:fnd:euro} prices what
+getting it wrong costs, and the figure it arrives at, \eur{\nbZeroPolBurn} burned per
+\nbZeroNCustomers{} contacts, is the reason this is not a philosophy chapter.
+
+% =====================================================================================
+\section{The data-generating model}
+\label{sec:fnd:dgm}
+
+A causal method cannot be graded on real data, because on real data the counterfactual is
+missing --- that is the entire problem. So the methods are first graded against worlds whose
+answers are known by construction, and only then trusted on a world whose answer is not.
+\Cref{sec:fnd:real} performs the second half of that bargain on LaLonde's job-training data;
+this section builds the first.
+
+\subsection*{The customer file}
+
+Each of the \nbZeroNCustomers{} customers carries features $x$ --- recency $R$, frequency
+$F$, monetary value $M$, tenure and engagement $E$ --- a baseline spend $\mu_0(x)$, and a
+\emph{planted per-customer effect} $\tau(x)$. Observed spend is
+%
+\begin{equation}
+  Y \;=\; \mu_0(x) \;+\; \tau(x)\,T \;+\; \varepsilon,
+  \qquad \varepsilon \sim \mathcal N\!\left(0,\ 8^{2}\right),
+  \label{eq:fnd:uplift}
+\end{equation}
+%
+with $T \in \{0,1\}$ the email. The simulator is run twice, and \emph{only the assignment rule
+differs}:
+%
+\begin{align}
+  \text{randomized:}\quad     & T \sim \text{Bernoulli}(\tfrac12), \label{eq:fnd:rct}\\
+  \text{observational:}\quad  & T \sim \text{Bernoulli}\Big(\sigma\big(1.8\,(E - 0.4)
+     + 1.2\,\tfrac{150 - R}{150} + 0.15\,(F - 5)\big)\Big), \label{eq:fnd:obs}
+\end{align}
+%
+where $\sigma(z) = 1/(1 + e^{-z})$ is the logistic function, which turns any score into a
+probability. \Cref{eq:fnd:obs} is a caricature of a real marketing department: engaged,
+recently-active, frequent buyers are the ones who get emailed --- and, through $\mu_0(x)$,
+they are the ones who would have spent more regardless. The planted average effect is
+\eur{\nbZeroTrueAte} in both worlds. Nothing about the \emph{effect} changes between
+\cref{eq:fnd:rct} and \cref{eq:fnd:obs}; only the mechanism that assigns it changes, and that
+alone is enough to move the naive estimate from \eur{\nbZeroRandNaive} to
+\eur{\nbZeroObsNaive} (\cref{fig:fnd:confounding}).
+
+\input{build/floats/nb00_confounding}
+
+\subsection*{The one-confounder world}
+
+The estimator ladder of \cref{sec:fnd:classical} needs a world simple enough that the reader
+can hold the whole causal structure in mind, and it gets one. A single observed confounder,
+loyalty $L \sim \mathcal N(0,1)$, drives both the send and the spend; an independent
+unobserved trait $G \sim \mathcal N(0,1)$ adds noise to spend but never touches assignment,
+and is therefore \emph{not} a confounder:
+%
+\begin{align}
+  T &\;\sim\; \text{Bernoulli}\big(\sigma(0.8\,L)\big), \label{eq:fnd:dag_t}\\
+  Y &\;=\; 20 \;+\; 5\,L \;+\; 6\,T \;+\; 3\,G \;+\; \varepsilon,
+       \qquad \varepsilon \sim \mathcal N\!\left(0,\ 4^{2}\right). \label{eq:fnd:dag_y}
+\end{align}
+%
+The planted effect is exactly \eur{\nbZeroTrueDag}, and it is the grade every estimator in
+this chapter --- and the posterior of Chapter~2 --- is marked against. The coefficient
+$5$ on $L$ in \cref{eq:fnd:dag_y} and the coefficient $0.8$ on $L$ in \cref{eq:fnd:dag_t} are
+the two halves of the confounding: loyalty raises the chance of being emailed \emph{and}
+raises spend. Remove either and the naive estimator would be fine.
+
+\subsection*{The zero-effect world, for the collider}
+
+\Cref{sec:fnd:collider} needs a world in which the true effect is \emph{exactly zero} and the
+treatment is randomized, so that any effect an estimator reports is manufactured rather than
+merely mismeasured:
+%
+\begin{equation}
+  T \sim \text{Bernoulli}(\tfrac12), \qquad
+  Y = 20 + 0 \cdot T + \varepsilon, \quad \varepsilon \sim \mathcal N(0, 5^2), \qquad
+  C = \mathbf 1\big\{\,1.2\,T + 1.2\,\tilde Y + \eta > 0.8\,\big\},
+  \label{eq:fnd:collider}
+\end{equation}
+%
+with $\eta \sim \mathcal N(0,1)$ and $\tilde Y$ spend standardized to unit variance. Here $C$
+is ``responded to the campaign'' --- more likely if the customer was emailed \emph{and} more
+likely if the customer spends a lot. It is a common effect of the treatment and the outcome,
+and \cref{eq:fnd:collider} is the smallest machine that manufactures a causal effect out of
+nothing.
+
+% =====================================================================================
+\section{Identification}
+\label{sec:fnd:ident}
+
+\subsection*{Potential outcomes, and the fundamental problem}
+
+Fix a unit $i$ --- a customer --- and a binary treatment $T_i$. In the notation of
+\citet{neyman1923} and \citet{rubin1974}, the unit carries \emph{two} potential outcomes:
+$Y_i(1)$, its spend if emailed, and $Y_i(0)$, its spend if not. Both exist before anything is
+done; the treatment decides which one is revealed. What is observed is
+%
+\begin{equation}
+  Y_i \;=\; T_i\,Y_i(1) \;+\; (1 - T_i)\,Y_i(0),
+  \label{eq:fnd:consistency}
+\end{equation}
+%
+which is called \emph{consistency}: the observed outcome equals the potential outcome
+corresponding to the treatment actually received. The individual causal effect is the contrast
+$Y_i(1) - Y_i(0)$, and it is \textbf{never observable for any unit}, because one of its two
+terms is always missing. This is the \emph{fundamental problem of causal inference}
+\citep{holland1986}, and its most useful reading is the one \citet{ding2018} make explicit:
+causal inference is a \emph{missing-data} problem. Half of every unit's table was never filled
+in, and every method in this book is a principled way of imputing it.
+
+Because individual effects are unavailable, decisions run on averages, and \emph{which} average
+is a choice that must be made before a method is chosen. Four appear in this book:
+%
+\begin{align}
+  \text{ATE} &\;=\; \E\big[Y(1) - Y(0)\big]
+     &&\text{the effect on a randomly chosen customer,} \label{eq:fnd:ate}\\
+  \text{ATT} &\;=\; \E\big[Y(1) - Y(0) \,\big|\, T = 1\big]
+     &&\text{the effect on those actually treated,} \label{eq:fnd:att}\\
+  \tau(x) &\;=\; \E\big[Y(1) - Y(0) \,\big|\, X = x\big]
+     &&\text{the CATE: the effect for customers like } x, \label{eq:fnd:cate}\\
+  \text{LATE} &\;=\; \E\big[Y(1) - Y(0) \,\big|\, \text{compliers}\big]
+     &&\text{the effect on the units an instrument moves.} \label{eq:fnd:late}
+\end{align}
+%
+These answer different commercial questions about the same campaign. The ATE prices \emph{roll
+it out to everyone?}; the ATT audits \emph{what did our past sends earn?}; the CATE decides
+\emph{who next?}; the LATE is the honest scope when exposure could only be encouraged, not
+assigned. They are not interchangeable, and \cref{fig:fnd:tau} shows why the distinction is
+commercial rather than terminological: the ATE of \eur{\nbZeroTrueAte} sits below the
+\eur{\nbZeroCost} cost, so an average-level rule says \emph{email no one} --- while
+\pc{\nbZeroShareAboveCost} of customers individually clear the cost bar and
+\pc{\nbZeroShareNegative} are actively \emph{harmed} by the email. One number, opposite
+per-customer instructions. Recovering $\tau(x)$ is the subject of Chapter~3; naming the
+estimand is the subject of this paragraph.
+
+\input{build/floats/nb00_tau_spread}
+
+\subsection*{The naive difference, decomposed}
+
+Now the central algebraic fact of the chapter. Take the number the dashboard computes, apply
+consistency \cref{eq:fnd:consistency}, and add and subtract the one quantity nobody
+observes --- the mean untreated outcome \emph{among the treated}, $\E[Y(0) \mid T=1]$:
+%
+\begin{equation}
+  \underbrace{\E[Y \mid T{=}1] - \E[Y \mid T{=}0]}_{\text{the naive difference (observable)}}
+  \;=\;
+  \underbrace{\E[Y(1) - Y(0) \mid T{=}1]}_{\text{ATT}}
+  \;+\;
+  \underbrace{\E[Y(0) \mid T{=}1] - \E[Y(0) \mid T{=}0]}_{\text{selection bias}} .
+  \label{eq:fnd:decomp}
+\end{equation}
+%
+\Cref{eq:fnd:decomp} is an identity, not an approximation, and it is the whole subject in one
+line. The naive difference is a causal effect \emph{plus} a statement about who was chosen.
+The simulator can verify it because it knows every customer's unobserved branch
+$Y(0) = Y - \tau T$: the naive \eur{\nbZeroNaiveObs} decomposes exactly into an ATT of
+\eur{\nbZeroAtt} and a selection bias of \eur{\nbZeroSelBias}. And the ATT itself exceeds the
+ATE of \eur{\nbZeroAte} by \eur{\nbZeroTargetingGap}, because past targeting favoured the very
+customers on whom the email works best. So the \eur{\nbZeroObsNaive} the dashboard reports and
+the \eur{\nbZeroTrueAte} the business needs are separated by two distinct errors, and only one
+of them is bias in the usual sense.
+
+\subsection*{Randomization, and what it buys}
+
+Under \cref{eq:fnd:rct} the coin flip makes $T$ independent of \emph{everything} a customer
+carries into the experiment, measured or not --- in particular of $Y(0)$. The selection term in
+\cref{eq:fnd:decomp} is then \textbf{exactly zero}, the ATT equals the ATE, and the naive
+difference of means becomes an unbiased estimate of the causal effect. That is the entire proof
+behind the green bar of \cref{fig:fnd:confounding}, and it is why an A/B test is worth more than
+any estimator in this book.
+
+The residual gap in the randomized arm --- \eur{\nbZeroRandNaive} against a truth of
+\eur{\nbZeroTrueAte} --- is \emph{noise}: \nbZeroRandSeDist{} standard errors, and it shrinks
+like $1/\sqrt{n}$. The gap in the observational arm --- \eur{\nbZeroObsNaive} --- is
+\emph{bias}: \nbZeroObsSeDist{} standard errors, and it does not shrink at all. More data makes
+a confounded estimate more precisely wrong. This distinction is the reason the chapter's central
+diagnostic (\cref{fig:fnd:ladder}, right panel) is a picture of \emph{repeated samples} rather
+than of one.
+
+\subsection*{The assumptions, when there is no coin flip}
+
+Without randomization the effect is not identified by the data alone. It is identified by the
+data \emph{plus assumptions}, and those assumptions are the price of admission. Four are stated
+here; each is either tested later in the chapter or explicitly declared untestable --- an
+assumption with no accompanying test is a wish.
+
+\begin{assumption}[SUTVA: no interference, one version of treatment]\label{as:fnd:sutva}
+Unit $i$'s potential outcomes depend on $i$'s own treatment only, not on anyone else's, and
+``emailed'' means one well-defined thing \citep{rubin1980, imbens2015}. In a customer file this
+fails if emailed customers talk to un-emailed ones, or if ``the email'' was in fact three
+creatives. \textbf{Untestable from the data}, and named as such: it is discharged by knowing how
+the campaign ran, not by a statistic. Chapter~9 plants a violation in a simulator, which is
+the only place one can be seen.
+\end{assumption}
+
+\begin{assumption}[Unconfoundedness]\label{as:fnd:unconf}
+Conditional on the measured features, treatment is as good as randomly assigned:
+%
+\begin{equation}
+  \{\,Y(0),\, Y(1)\,\} \;\perp\; T \;\;\big|\;\; X .
+  \label{eq:fnd:unconf}
+\end{equation}
+%
+Within customers alike on $X$, who got the email carries no further information about what they
+would have spent. This is the load-bearing assumption of the entire chapter, and it is
+\textbf{untestable}: it is a statement about the potential outcomes that were never observed.
+\Cref{sec:fnd:wrong} does the only honest thing available --- it plants a violation and measures
+what it costs (\cref{fig:fnd:hidden}) --- and Chapter~3 prices the strength a hidden
+confounder would need to overturn a decision.
+\end{assumption}
+
+\begin{assumption}[Positivity, or overlap]\label{as:fnd:overlap}
+Every kind of customer could have gone either way:
+%
+\begin{equation}
+  0 \;<\; e(x) \;<\; 1, \qquad e(x) \;=\; \Prob(T = 1 \mid X = x),
+  \label{eq:fnd:overlap}
+\end{equation}
+%
+where $e(x)$ is the \emph{propensity score} \citep{rosenbaum1983}. If some region of feature
+space is always emailed, there is no like-for-like comparison to be made there and no
+reweighting can invent one. Unlike \cref{as:fnd:unconf}, this one is \textbf{testable}, because
+$e(x)$ is estimable from observed data. It is tested in \cref{sec:fnd:valid}, where it passes
+(\cref{fig:fnd:overlap}), and again in \cref{sec:fnd:real}, where it fails badly
+(\cref{fig:fnd:lalonde}).
+\end{assumption}
+
+\begin{assumption}[A valid adjustment set]\label{as:fnd:backdoor}
+The variables conditioned on block every backdoor path from treatment to outcome, and open no
+new ones: $X$ satisfies Pearl's \emph{backdoor criterion} \citep{pearl1995, pearl2009}. In
+practice this means $X$ contains the common causes and \emph{no descendants of the treatment} ---
+no mediators, no colliders. It is \textbf{partially testable}: the graph itself is an
+assumption, but the consequence of getting it wrong is measurable, and \cref{sec:fnd:collider}
+measures it on a treatment whose true effect is exactly zero.
+\end{assumption}
+
+Under \crefrange{as:fnd:sutva}{as:fnd:backdoor}, the ATE is identified by the
+\emph{adjustment formula}, also called the g-formula:
+%
+\begin{equation}
+  \text{ATE} \;=\; \E_X\Big[\ \E\big[Y \mid T{=}1,\, X\big] \;-\; \E\big[Y \mid T{=}0,\, X\big]\ \Big].
+  \label{eq:fnd:gformula}
+\end{equation}
+%
+Read \cref{eq:fnd:gformula} as an instruction rather than a formula: \emph{compare like with
+like within strata of $X$, then average the within-stratum contrasts over the population
+distribution of $X$} --- crucially, over the \emph{population} mix, not over the mix inside one
+arm, which is exactly the substitution the naive difference makes.
+
+\Cref{tab:fnd:strata} runs \cref{eq:fnd:gformula} by hand, once, before any model is fitted.
+Cutting loyalty into five quintiles and computing the emailed-minus-not difference \emph{within}
+each gives roughly the planted \eur{\nbZeroTrueDag} in every bin; the strata-weighted average is
+\eur{\nbZeroStratAte}. The pooled contrast on the same data is \eur{\nbZeroPooledNaive}. The
+\emph{\% emailed} column is the whole explanation: the emailed share climbs from
+\pc{\nbZeroStratLoEmailed} in the least loyal quintile to \pc{\nbZeroStratHiEmailed} in the most
+loyal one, so the pooled number is comparing loyal emailed customers with casual controls. Every
+rung of the ladder in \cref{sec:fnd:classical} is a smarter way of doing exactly this
+stratification.
+
+\input{build/tables/nb00_strata}
+
+% =====================================================================================
+\section{The graph: seeing, doing, and what to condition on}
+\label{sec:fnd:collider}
+
+\subsection*{Seeing is not doing}
+
+\emph{Observing} $X = x$ selects the units that happened to arrive at $x$, carrying every reason
+they got there. \emph{Doing} $do(X = x)$ reaches in and sets it \citep{pearl2009}. Causal
+questions are about doing. Confounding is precisely the disagreement between the two: in
+\cref{tab:fnd:strata}, seeing gives \eur{\nbZeroPooledNaive} and doing is worth
+\eur{\nbZeroTrueDag}. When the backdoor variables are measured, the backdoor adjustment formula
+converts one into the other,
+%
+\begin{equation}
+  \Prob\big(y \mid do(T{=}t)\big) \;=\; \sum_x \Prob\big(y \mid T{=}t,\, X{=}x\big)\, \Prob(X{=}x),
+  \label{eq:fnd:backdoor}
+\end{equation}
+%
+which is \cref{eq:fnd:gformula} written for distributions rather than means. \Cref{tab:fnd:strata}
+\emph{is} \cref{eq:fnd:backdoor}, executed by hand on five strata.
+
+\subsection*{Three graphs, and only one calls for adjustment}
+
+A directed acyclic graph draws each variable as a node and each direct cause as an arrow. It is
+not decoration: it is the object that decides what to control for, and it must be committed to
+before the data are touched \citep{greenland1999}. \Cref{fig:fnd:dags} shows the three
+configurations that matter, and the instinct to ``control for everything we have'' gets two of
+the three wrong.
+
+\input{build/floats/nb00_dags}
+
+\begin{description}[leftmargin=*, style=nextline]
+  \item[Confounder --- a backdoor path: $T \leftarrow L \rightarrow Y$.]
+    Association flows from $T$ to $Y$ through a path with an arrow \emph{into} $T$. This is
+    non-causal association, and conditioning on $L$ blocks it. Adjust.
+  \item[Mediator --- on the causal path: $T \rightarrow M \rightarrow Y$.]
+    Whether the email was \emph{opened} lies on the route by which the email works. Conditioning
+    on it removes part of the very effect being measured, and the total effect is no longer
+    identified. Do not adjust --- and note that ``opened'' is a variable every marketing
+    warehouse holds, which is what makes this the most tempting error in the list.
+    Chapter~6 shows how to decompose an effect into direct and indirect parts when the
+    decomposition is genuinely what is wanted.
+  \item[Collider --- a common effect: $T \rightarrow C \leftarrow Y$.]
+    A path through a collider is \emph{blocked by default} and is \emph{opened} by conditioning
+    on it. Conditioning on a common effect manufactures association where none existed.
+\end{description}
+
+\subsection*{The collider, priced}
+
+The most common self-inflicted wound in marketing analytics is analysing only the customers who
+responded --- opened, clicked, replied, converted. \Cref{eq:fnd:collider} makes the damage
+visible by planting an email whose true effect is \textbf{exactly zero} and randomizing it, so
+that even the naive comparison is unbiased. On all \nbZeroColliderN{} customers, the estimated
+email coefficient is \eur{\nbZeroColliderAll} --- correctly, nothing. Restricted to the
+\pc{\nbZeroColliderShare} who responded, it is \eur{\nbZeroColliderResp}.
+
+An effect out of thin air, and with the wrong sign. The mechanism is worth stating exactly,
+because it is not intuitive: among responders, \emph{having been emailed already explains the
+response}, so an emailed responder needed \emph{less} spend to cross the response threshold than
+an un-emailed one did. Conditioning on the common effect induces a negative association between
+its two causes --- what \citet{pearl2009} calls \emph{explaining away}. Scaled across the
+\nbZeroColliderNResp{} responders, the responders-only analysis reports
+\eur{\nbZeroColliderPhantom} of phantom revenue destruction on a campaign whose true effect is
+zero. Nothing in that analysis looks broken: the treatment was randomized, the sample is large,
+the coefficient is precisely estimated. It is simply an answer to a question nobody asked.
+
+The rule this yields is short and absolute: \textbf{post-treatment variables stay out of the
+adjustment set}. Opens, clicks, conversions and responses are all descendants of the treatment,
+and \cref{as:fnd:backdoor} excludes them.
+
+\subsection*{M-bias: the collider you cannot see}
+
+The uncomfortable corollary --- and the reason \cref{as:fnd:backdoor} is only \emph{partially}
+testable --- is that a collider need not be a variable one thinks of as post-treatment, and need
+not even be visible in the drawn graph. Consider the classic M-shaped structure, with two
+unobserved variables $U_1$ and $U_2$ and one observed pre-treatment covariate $Z$:
+%
+\begin{equation}
+  U_1 \rightarrow Z \leftarrow U_2, \qquad U_1 \rightarrow T, \qquad U_2 \rightarrow Y .
+  \label{eq:fnd:mbias}
+\end{equation}
+%
+Here $Z$ is measured \emph{before} treatment, is correlated with both $T$ and $Y$, and passes
+every screening rule a practitioner is likely to apply. And yet the path
+$T \leftarrow U_1 \rightarrow Z \leftarrow U_2 \rightarrow Y$ is \emph{blocked} --- $Z$ is a
+collider on it --- so the naive comparison is unconfounded, and conditioning on $Z$
+\emph{opens} the path and \emph{creates} bias. Adjusting for a pre-treatment covariate can make
+things worse.
+
+Two things follow. First, ``adjust for everything measured before treatment'' is not a safe
+rule; it is merely a safer one than adjusting for everything. Second, the graph is not a picture
+of the data --- it is a claim about the world, defended with domain knowledge, and there is no
+test on the observed variables that can distinguish \cref{eq:fnd:mbias} from a world in which
+$Z$ is an honest confounder. Chapter~7 is the chapter devoted to that problem, and it
+demonstrates M-bias with a working example. This chapter's obligation is only to say plainly
+that the failure exists, that it is invisible, and that it is why the DAG is drawn first.
+
+% =====================================================================================
+\section{The classical baseline: the estimator ladder}
+\label{sec:fnd:classical}
+
+The discipline of this book is to ask, before any sampler, what a competent analyst produces
+\emph{without} one: a point estimate, and an interval whose covariance assumption is stated out
+loud. This section is that read, in full, on the one-confounder world of
+\crefrange{eq:fnd:dag_t}{eq:fnd:dag_y}. There are no priors here, no likelihood and no chains.
+Chapter~2 adds them --- and its first finding is that they change nothing.
+
+Let $\hat m(t, x) \approx \E[Y \mid T{=}t, X{=}x]$ be a fitted outcome model,
+$\hat e(x) \approx \Prob(T{=}1 \mid X{=}x)$ a fitted propensity, and $\bar Y_1, \bar Y_0$ the raw
+arm means over $n$ customers. The four rungs are
+%
+\begin{align}
+  \hat\tau_{\text{naive}} &\;=\; \bar Y_1 - \bar Y_0, \label{eq:fnd:naive}\\[2pt]
+  \hat\tau_{\text{reg}}   &\;=\; \frac1n \sum_{i=1}^{n}
+     \big[\hat m(1, x_i) - \hat m(0, x_i)\big], \label{eq:fnd:reg}\\[2pt]
+  \hat\tau_{\text{IPW}}   &\;=\; \frac1n \sum_{i=1}^{n}
+     \left[\frac{T_i\,Y_i}{\hat e(x_i)} - \frac{(1 - T_i)\,Y_i}{1 - \hat e(x_i)}\right],
+     \label{eq:fnd:ipw}\\[2pt]
+  \hat\tau_{\text{AIPW}}  &\;=\; \frac1n \sum_{i=1}^{n}
+     \left[\hat m(1, x_i) - \hat m(0, x_i)
+      + \frac{T_i\big(Y_i - \hat m(1, x_i)\big)}{\hat e(x_i)}
+      - \frac{(1 - T_i)\big(Y_i - \hat m(0, x_i)\big)}{1 - \hat e(x_i)}\right].
+     \label{eq:fnd:aipw}
+\end{align}
+
+\Cref{eq:fnd:naive} ignores $X$ and is the dashboard. \Cref{eq:fnd:reg} is
+\cref{eq:fnd:gformula} with the strata replaced by a fitted line: correct if the outcome model
+is correct. \Cref{eq:fnd:ipw} is the same idea from the other side --- weighting a treated
+customer by $1/\hat e(x_i)$ makes rarely-emailed kinds of customer count for more, so the
+reweighted treated arm matches the \emph{population's} feature mix rather than the treated arm's
+\citep{rosenbaum1983}; correct if the propensity model is correct.
+
+\Cref{eq:fnd:aipw} is the doubly-robust estimator of \citet{robins1994}, and its logic deserves
+two lines rather than a citation. It is the regression answer \emph{plus} a weighted-residual
+correction. If $\hat m$ is right, the residuals $Y - \hat m$ are mean-zero noise, the correction
+term vanishes in expectation, and one keeps \cref{eq:fnd:reg}. If instead $\hat e$ is right, the
+correction is an unbiased inverse-propensity estimate of precisely the error a wrong $\hat m$
+makes, and repairs it. \textbf{Either model being correct suffices} --- hence \emph{doubly}
+robust. The implementation here is cross-fitted \citep{chernozhukov2018}: $\hat m$ and $\hat e$
+are fitted on one half of the data and applied to the other, so that no customer is scored by a
+model that has seen it, which removes an overfitting bias in the correction term.
+
+\subsection*{Each rung, and the standard error it demands}
+
+The standard-error column of \cref{tab:fnd:ladder} is not bookkeeping. An interval built on the
+wrong standard error is worse than no interval, because it is a confident lie, and the four rungs
+demand four different answers:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Naive.} A \emph{Welch} standard error, which does not assume the two arms have
+        equal variances --- and here they do not, because loyal customers are both more likely to
+        be emailed and noisier spenders.
+  \item \textbf{Regression.} An \textbf{HC1} heteroskedasticity-robust standard error
+        \citep{white1980}. Spend is noisier at high loyalty; a classical iid standard error would
+        quietly understate that.
+  \item \textbf{IPW.} No closed form survives the fact that the propensity is itself
+        \emph{estimated}, so the interval is a percentile \textbf{bootstrap}
+        \citep{efron1979, efron1993}: resample customers with replacement, refit the propensity
+        and the estimator, take percentiles of the re-estimates.
+  \item \textbf{AIPW.} A cross-fitted influence-function estimate, with a bootstrap interval. It
+        is a \emph{frequentist} estimator and its interval is a confidence interval --- a
+        distinction Chapter~2 is entirely about.
+\end{itemize}
+
+\input{build/tables/nb00_ladder}
+
+\Cref{tab:fnd:ladder} is the chapter's central result. On one confounded sample of
+\nbZeroNCustomers{} customers with a planted effect of \eur{\nbZeroTrueDag}, the naive rung
+returns \eur{\nbZeroLadNaive} --- \eur{\nbZeroLadNaiveErr}, and its 90\,\% interval,
+$[\eur{\nbZeroLadNaiveLo},\ \eur{\nbZeroLadNaiveHi}]$, does not come close to containing the
+truth. Regression adjustment returns \eur{\nbZeroLadReg}, inverse-propensity weighting
+\eur{\nbZeroLadIpw}, and the doubly-robust estimator \eur{\nbZeroLadAipw}. Every adjusted rung
+lands within \eur{\nbZeroLadAdjWorst} of the planted effect. Same data, four estimators, and the
+one that ignores the graph is the only one that fails: \textbf{the estimator is the
+identification strategy}, and the arithmetic is a detail by comparison.
+
+One detail in \cref{tab:fnd:ladder} is worth pausing on rather than hiding, because it is the
+single most misread feature of an interval. On this seed the AIPW interval,
+$[\eur{\nbZeroLadAipwLo},\ \eur{\nbZeroLadAipwHi}]$, \emph{just misses} \eur{\nbZeroTrueDag}. That
+is not a defect. A 90\,\% interval is \emph{supposed} to miss about one time in ten, and a
+procedure whose intervals never missed would be one whose intervals were too wide to be useful.
+The correct response to a single miss is not to distrust the estimator but to look at the
+distribution of many --- which is the next section, and which is also the exact reason
+Chapter~2 spends its length on what an interval does and does not license.
+
+% =====================================================================================
+\section{Diagnostics and validation}
+\label{sec:fnd:valid}
+
+\subsection*{Bias is what survives repetition}
+
+An estimator is not graded on one draw of the world. \emph{Unbiased} is a statement about the
+average over repeated samples, and the honest test refits everything on fresh data.
+\Cref{tab:fnd:multiseed} does exactly that, on \nbZeroNSeeds{} fresh confounded panels drawn from
+\crefrange{eq:fnd:dag_t}{eq:fnd:dag_y}, and it separates the two failure modes that
+\cref{sec:fnd:ident} named:
+
+\begin{itemize}[leftmargin=*]
+  \item The naive rung averages \eur{\nbZeroMsNaiveMean} across panels --- a bias of
+        \eur{\nbZeroMsNaiveBias} that shows no sign of shrinking, because it is not sampling
+        error. It is the confounding, and confounding is a property of the design, not of $n$.
+  \item Every adjusted rung centres on the truth: regression at \eur{\nbZeroMsRegMean}, IPW at
+        \eur{\nbZeroMsIpwMean}, AIPW at \eur{\nbZeroMsAipwMean}, against a planted
+        \eur{\nbZeroTrueDag}. Their sample-to-sample standard deviations
+        (\eur{\nbZeroMsRegSd}, \eur{\nbZeroMsIpwSd}, \eur{\nbZeroMsAipwSd}) price what they
+        cost in precision, and IPW --- which throws away information by not modelling the
+        outcome --- is measurably the noisiest of the three.
+  \item The AIPW 90\,\% confidence interval covered the planted effect on \nbZeroAipwCovered{}
+        of \nbZeroNSeeds{} panels: \pc{\nbZeroAipwCovPct}, against a nominal 90. The procedure
+        keeps its promise. This number is the \emph{only} audit a confidence interval admits, and
+        Chapter~2 explains why.
+\end{itemize}
+
+\input{build/tables/nb00_multiseed}
+\input{build/floats/nb00_rungs}
+
+\subsection*{Overlap and balance: the assumption that can be tested}
+
+\Cref{as:fnd:overlap} is testable, so it is tested. \Cref{fig:fnd:overlap} plots the estimated
+propensity by arm. Both arms span essentially the same range, $[\nbZeroEMin, \nbZeroEMax]$, and
+the conventional $[0.05, 0.95]$ clip --- which bounds the weights away from division by zero ---
+binds on only \pc{\nbZeroClipFrac} of customers. Overlap holds; the IPW rung is trustworthy here.
+
+The companion diagnostic asks whether the weights actually did their job. The
+\emph{standardized mean difference} (SMD) in loyalty between the arms --- the gap in means,
+measured in pooled standard deviations --- is \nbZeroSmdRaw{} in the raw data, far above the
+conventional $0.1$ ``balanced'' bar. Under the inverse-propensity weights it collapses to
+\nbZeroSmdIpw. That collapse \emph{is} what an IPW estimator does when it works, and it is the
+diagnostic to run before believing one.
+
+\input{build/floats/nb00_overlap}
+
+\begin{remark}
+Note the asymmetry the two diagnostics reveal, because it is the shape of the whole field.
+Positivity and balance can be checked, and were. Unconfoundedness cannot be checked at all, and
+is the assumption everything actually rests on. A causal analysis that reports only the testable
+diagnostics has reported only the assumptions it was not worried about.
+\end{remark}
+
+% =====================================================================================
+\section{What can go wrong}
+\label{sec:fnd:wrong}
+
+Everything so far has been a success story, and that is a dangerous thing to teach: the ladder
+recovered \eur{\nbZeroTrueDag} because the one confounder was \emph{in the data}. The foundational
+question is what happens when it is not.
+
+\subsection*{The unmeasured backdoor}
+
+\Cref{fig:fnd:hidden} and \cref{tab:fnd:hidden} rerun the entire ladder on data in which a hidden
+trait $U$ --- a salesperson's hunch, an unlogged loyalty signal --- is wired into both the
+assignment and the outcome, while every rung is fitted on the five \emph{observed} features only,
+exactly as a real analyst would have to. The naive rung returns \eur{\nbZeroHidNaive} against a
+truth of \eur{\nbZeroHiddenTrue}. Regression returns \eur{\nbZeroHidReg}, IPW
+\eur{\nbZeroHidIpw}, and AIPW \eur{\nbZeroHidAipw}.
+
+Read that row again. Every adjusted rung sits at least \eur{\nbZeroHiddenMinBias} above the truth,
+and \emph{they fail together}. This is the single most important negative result in the chapter,
+and it has two parts:
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Double robustness offers no protection here}, and the reason is precise rather
+        than empirical. AIPW insures against a mis-specified \emph{model of the observed
+        features}. It has no insurance to offer against a feature that is \emph{absent}: both of
+        its two models are fitted on the same $X$, and the open backdoor runs through $U$, which
+        neither can see. Two chances at the wrong problem are not one chance at the right one.
+  \item \textbf{The failure is silent.} Nothing in the output of any rung says so. The estimates
+        are stable across seeds, the standard errors are small, the diagnostics of
+        \cref{sec:fnd:valid} pass. A confidently wrong answer is the default output of a
+        well-run analysis on a badly-drawn graph, and Chapter~2 shows that a Bayesian
+        posterior fails in exactly the same silent way, and with the same serenity.
+\end{enumerate}
+
+\input{build/floats/nb00_hidden_u}
+\input{build/tables/nb00_hidden}
+
+The honest responses are three, and none of them is a better estimator: get better data; get a
+better \emph{design} (randomize --- \cref{eq:fnd:rct}); or run a \emph{sensitivity analysis},
+asking how strong a hidden $U$ would have to be to overturn the decision. Chapter~3 prices
+that stress as a tipping point and an E-value.
+
+\subsection*{When positivity fails}
+
+The second assumption fails differently, and worse. Keeping the confounder fully observed but
+sharpening the selection until it is nearly deterministic --- so that high-loyalty customers are
+almost always emailed and low-loyalty ones almost never --- the propensity clip begins to bind on
+\pc{\nbZeroPosClipBad} of customers, and IPW drifts from \eur{\nbZeroPosIpwOk} under gentle
+selection to \eur{\nbZeroPosIpwBad} against a truth of \eur{\nbZeroTrueDag}. The estimator is not
+being asked to model something badly; it is being asked to compare customers who have no
+counterparts in the other arm. No reweighting recovers a full-population ATE from data that
+contains no such comparison, and the correct response is to change the estimand --- to report an
+effect on the region where overlap holds --- rather than to extrapolate over the region where it
+does not. \Cref{fig:fnd:overlap} is the diagnostic that catches this before the number is
+trusted, and \cref{sec:fnd:real} is what it looks like when nobody ran it.
+
+% =====================================================================================
+\section{On real data: LaLonde}
+\label{sec:fnd:real}
+
+Everything above was graded against a truth that was planted. The obvious objection --- that
+recovering an effect somebody put there proves nothing --- deserves a real answer, and causal
+inference has a canonical one.
+
+\citet{lalonde1986} studied a 1970s job-training programme, the National Supported Work
+demonstration. Its decisive feature is that it \emph{included a randomized arm}, so the true
+effect of training on 1978 earnings is known: about \usd{\nbZeroLlBenchmark}. LaLonde then asked
+the question that founded a literature. Throw the experimental controls away. Replace them with a
+\emph{non-experimental} comparison group pulled from national surveys --- the kind of comparison
+group an analyst without an experiment actually has --- and see whether the econometric methods of
+the day can recover the experimental answer.
+
+They could not, and the failure is spectacular. On the \nbZeroLlTreated{} trainees against
+\nbZeroLlControl{} survey controls, the naive difference of means is \usd{\nbZeroLlNaive}. Not
+small. \emph{Negative}. Read literally, job training destroyed earnings --- and the reason is
+\cref{eq:fnd:decomp} in the wild: the trainees were far more disadvantaged to begin with, so the
+selection-bias term swamps the effect and reverses its sign.
+
+Adjusting for the \nbZeroLlNCovs{} measured covariates moves the estimate by \usd{\nbZeroLlSwing},
+across zero, to \usd{\nbZeroLlAdj} --- right sign, right order of magnitude, and within
+\usd{\nbZeroLlShortfall} of the randomized benchmark (\cref{tab:fnd:lalonde}). This is the whole
+chapter, on data nobody simulated: \textbf{the naive comparison is not merely imprecise, it points
+the wrong way, and adjustment repairs the sign}.
+
+\input{build/tables/nb00_lalonde}
+
+\subsection*{The residual, and why it is there}
+
+The remaining \usd{\nbZeroLlShortfall} is not a rounding error, and it is not left unexplained.
+\Cref{fig:fnd:lalonde} runs \cref{as:fnd:overlap}'s diagnostic --- the same one that passed in
+\cref{fig:fnd:overlap} --- on LaLonde, and it fails loudly:
+\pc{\nbZeroLlCtrlLowE} of the survey controls sit below $e(x) = 0.10$, against
+\pc{\nbZeroLlTrtLowE} of the trainees. Most of the comparison pool looks nothing like a trainee.
+A regression adjusting for covariates across that pool is not comparing like with like; it is
+\emph{extrapolating} a fitted surface into a region where one arm is essentially absent, and
+\cref{eq:fnd:gformula} was never licensed there.
+
+\input{build/floats/nb00_lalonde_overlap}
+
+That is why the field moved to propensity trimming and matching \citep{dehejia1999} --- restrict
+the comparison group to the controls that could plausibly have been trainees, and the shortfall
+closes --- and why the doubly-robust rung of \cref{eq:fnd:aipw} exists at all. The lesson is not
+that adjustment failed on LaLonde. It is that adjustment did most of the job, its own diagnostic
+correctly flagged the part it could not do, and the diagnostic pointed at the exact repair.
+
+\begin{remark}[Why this dataset, and not a marketing one]
+A marketing analyst may reasonably ask what a job-training programme has to do with an email
+campaign. The answer is that LaLonde is the only kind of dataset that can settle the argument: it
+carries both a randomized benchmark and an observational comparison group, on the same treatment,
+in the same population. That is the exam a causal method has to sit, and real marketing data ---
+which has the observational arm and never the benchmark --- cannot set it. Chapter~9 sits the
+same exam on a real, randomized geo experiment, and the shape of the finding is identical.
+\end{remark}
+
+% =====================================================================================
+\section{The decision, in euros}
+\label{sec:fnd:euro}
+
+Statistical bias becomes a business problem the moment somebody acts on it. The simulator knows
+every customer's true effect $\tau_i$, so each policy can be priced on the actual customer base.
+
+\input{build/tables/nb00_policy}
+
+The confounded read-out --- \eur{\nbZeroNaiveObs} per contact against an \eur{\nbZeroCost} cost ---
+says \emph{email everyone}. Doing so on this base realises \eur{\nbZeroPolEveryone}: it burns
+\eur{\nbZeroPolBurn}. The true ATE of \eur{\nbZeroAte} sits below the cost and says \emph{email no
+one}, which realises nothing and loses nothing, and is the right answer at the level of an
+average. \textbf{The identification error is not a footnote; it is a profit-and-loss line}, and its
+size here is roughly \eur{\nbZeroPolBurn} per \nbZeroNCustomers{} contacts.
+
+The third row is the one to take away, and it points at the rest of the book. An oracle who could
+see each customer's true $\tau_i$ and email only those it pays for would realise
+\eur{\nbZeroPolOracle}. That money is not in the average at all --- no ATE-level rule, however
+perfectly identified, can reach it --- and it is exactly the prize Chapter~3 competes for.
+The decision this chapter fixes is \emph{whether to send}; the decision it cannot reach is
+\emph{whom to send to}.
+
+\begin{remark}[The memo to the CMO]
+The dashboard says the email pays for itself; it does not. Most of the gap is \emph{who we
+emailed}, not what the email did: our historical targeting picked loyal, engaged customers who
+would have spent more anyway (\eur{\nbZeroSelBias} of selection bias), and on whom the email also
+happens to work better than average (\eur{\nbZeroTargetingGap} of ATT-above-ATE). What to do, in
+order: \textbf{randomize} when you can, because a holdout kills selection bias by design; when you
+cannot, \textbf{adjust} for the confounders you measured and \textbf{stress-test} the ones you did
+not; and note that the real money is not in the average at all.
+\end{remark}
+
+% =====================================================================================
+\section{Takeaways}
+\label{sec:fnd:take}
+
+\begin{enumerate}[leftmargin=*, itemsep=.45em]
+  \item \textbf{Half of every unit's table is missing, and that is the whole problem.} Each
+        customer has two potential outcomes and reveals one. Causal inference is imputation of
+        the other half under stated assumptions \citep{holland1986, ding2018}, and the assumptions
+        --- not the arithmetic --- are where the argument is won or lost.
+
+  \item \textbf{The naive difference is an effect plus a claim about who was chosen.}
+        \Cref{eq:fnd:decomp} splits it exactly: on this data the dashboard's
+        \eur{\nbZeroNaiveObs} is an ATT of \eur{\nbZeroAtt} plus \eur{\nbZeroSelBias} of selection
+        bias, and the ATT itself exceeds the ATE by \eur{\nbZeroTargetingGap} because past
+        targeting favoured the customers the email works on. Two distinct errors, and neither is
+        noise.
+
+  \item \textbf{Randomization is worth more than any estimator in this book.} A coin flip makes
+        the selection term exactly zero. The randomized naive estimate is \nbZeroRandSeDist{}
+        standard errors from the truth (noise, which shrinks); the observational one is
+        \nbZeroObsSeDist{} (bias, which does not). More data makes a confounded estimate more
+        precisely wrong.
+
+  \item \textbf{The graph decides what to control for, and two of the three configurations say
+        ``don't''.} Confounders are adjusted for; mediators and colliders are not. Conditioning on
+        response --- a common effect of the email and of spend --- manufactures
+        \eur{\nbZeroColliderResp} per customer of email ``effect'' on a campaign whose true effect
+        is \emph{exactly zero}, or \eur{\nbZeroColliderPhantom} of phantom revenue across the
+        responders. Post-treatment variables stay out of the adjustment set, and M-bias
+        (\cref{eq:fnd:mbias}) shows that even a pre-treatment variable can be a trap.
+
+  \item \textbf{Every adjusted rung works, and the standard error is part of the estimator.} On
+        confounded data with a planted \eur{\nbZeroTrueDag}, regression gives \eur{\nbZeroLadReg},
+        IPW \eur{\nbZeroLadIpw} and AIPW \eur{\nbZeroLadAipw}, against the naive rung's
+        \eur{\nbZeroLadNaive}. Each buys its correctness with a different assumption
+        (\cref{tab:fnd:ladder}) and each demands a different covariance --- Welch, HC1, bootstrap.
+        An interval built on the wrong standard error is a confident lie.
+
+  \item \textbf{No estimator upgrade fixes missing data.} With an unmeasured confounder, all four
+        rungs fail \emph{together} --- every adjusted one at least \eur{\nbZeroHiddenMinBias} above
+        the truth --- and they fail \emph{silently}. Double robustness insures against a wrong
+        model of the features you have, never against a feature you do not have. Bayes, ML and a
+        bigger sample all leave this untouched: \textbf{estimation is sharpened by better methods;
+        identification is not}.
+
+  \item \textbf{The failure is real, and it is expensive.} Acting on the confounded
+        \eur{\nbZeroNaiveObs} burns \eur{\nbZeroPolBurn} per \nbZeroNCustomers{} contacts. On
+        LaLonde it is worse than expensive, it is inverted: the naive comparison says training
+        cost workers \usd{\nbZeroLlNaive}, and adjustment moves it \usd{\nbZeroLlSwing} across zero
+        to within \usd{\nbZeroLlShortfall} of the experimental truth --- while the overlap
+        diagnostic correctly flags the residual it could not close.
+\end{enumerate}
+
+\notebooknote{%
+  This chapter is \code{notebooks/00\_foundations.ipynb}, \S1--\S6 and \S8--\S9; Chapter~2 is
+  its \S7. The simulators are \code{cmp.dgp.uplift\_customers} (\cref{eq:fnd:uplift}) and
+  \code{cmp.dgp.dag\_control\_demo} (\crefrange{eq:fnd:dag_t}{eq:fnd:dag_y}); the classical
+  estimators and their covariance choices are \code{cmp.classical} and \code{cmp.estimators};
+  the seeds are fixed in the notebook. Every number in this chapter comes from the full run
+  (\code{CMP\_FAST=0}), with the LaLonde section enabled (\code{CMP\_REAL=1}, which fetches the
+  Dehejia--Wahba extract of the NSW data from a public URL), emitted by \code{cmp.report} and
+  injected here as a macro. The one exception is the \usd{\nbZeroLlBenchmark} experimental
+  benchmark, which is cited from \citet{lalonde1986} rather than estimated, and is flagged as such
+  where it is emitted.}

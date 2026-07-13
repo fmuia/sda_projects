@@ -27,6 +27,8 @@ That refusal is the point: a hole is louder than a stale number.
 from __future__ import annotations
 
 import argparse
+import contextlib
+import fcntl
 import json
 import os
 import re
@@ -46,8 +48,24 @@ BIBER = shutil.which("biber") or "/Library/TeX/texbin/biber"
 # The chapters, in book order: (source stem, the chapter number MINUS ONE, offprint name).
 # The offprint carries the book's own chapter/equation/float numbers — an offprint, not a
 # second edition — so a reader can be handed Chapter 9 alone and still find Table 9.2 in it.
+#
+# A stem whose .tex does not exist yet is SKIPPED with a warning rather than failing the build:
+# the chapters land one at a time, and a half-written book must still compile so the chapters
+# that ARE done can be read.
 CHAPTERS = [
-    ("geo_lift", 8, "ch09_geo_lift"),
+    ("foundations",        0, "ch01_foundations"),
+    ("point_vs_posterior", 1, "ch02_point_vs_posterior"),
+    ("uplift",             2, "ch03_uplift"),
+    ("segment_effects",    3, "ch04_segment_effects"),
+    ("price_elasticity",   4, "ch05_price_elasticity"),
+    ("mediation",          5, "ch06_mediation"),
+    ("what_to_control",    6, "ch07_what_to_control"),
+    ("mmm",                7, "ch08_mmm"),
+    ("geo_lift",           8, "ch09_geo_lift"),
+    ("did",                9, "ch10_did"),
+    ("rdd",               10, "ch11_rdd"),
+    ("its",               11, "ch12_its"),
+    ("iv",                12, "ch13_iv"),
 ]
 
 
@@ -104,7 +122,58 @@ def _check_log(log: Path, what: str) -> None:
         sys.exit(f"FAIL {what}: {fatal[0]}\n       see {log}")
 
 
+_LOCK_DEPTH = 0
+
+
+@contextlib.contextmanager
+def _build_lock():
+    """Serialise LaTeX runs across PROCESSES.
+
+    Every xelatex run writes build/<jobname>.aux and, because of `\\include`, one aux file per
+    chapter under build/chapters/. Two `build.py` processes running at once therefore write the
+    same aux files, and a run that reads an aux another run is halfway through writing dies with
+    a baffling error ("Missing \\begin{document}") that has nothing to do with the chapter being
+    compiled. The chapters are authored concurrently, so this is not hypothetical — it was
+    observed. A single lock is enough: LaTeX is fast, and correctness beats parallelism here.
+    """
+    global _LOCK_DEPTH
+    if _LOCK_DEPTH:                       # reentrant: main() already holds it
+        yield
+        return
+    lock = BUILD / ".build.lock"
+    lock.parent.mkdir(parents=True, exist_ok=True)
+    with open(lock, "w") as fh:
+        fcntl.flock(fh, fcntl.LOCK_EX)    # blocks until the other build.py finishes
+        _LOCK_DEPTH += 1
+        try:
+            yield
+        finally:
+            _LOCK_DEPTH -= 1
+            fcntl.flock(fh, fcntl.LOCK_UN)
+
+
+def _clear_aux(jobname: str) -> None:
+    """Remove the aux files a run reads back on its second pass."""
+    for p in [BUILD / f"{jobname}.aux", BUILD / f"{jobname}.toc", BUILD / f"{jobname}.bcf",
+              *(BUILD / "chapters").glob("*.aux")]:
+        p.unlink(missing_ok=True)
+
+
 def compile_tex(jobname: str, source: str, tex_cmd: str | None = None, bib: bool = True) -> Path:
+    with _build_lock():
+        try:
+            return _compile_tex(jobname, source, tex_cmd, bib)
+        except SystemExit:
+            # A corrupt aux is STICKY: pass 1 reads it, dies under -halt-on-error, and never gets
+            # far enough to rewrite it — so every subsequent build fails too, with an error
+            # ("Missing \begin{document}") that has nothing to do with the source. The aux is pure
+            # derived state, so throwing it away costs one pass and can lose nothing. Retry once.
+            print(f"  {jobname}: build failed — clearing aux and retrying once")
+            _clear_aux(jobname)
+            return _compile_tex(jobname, source, tex_cmd, bib)
+
+
+def _compile_tex(jobname: str, source: str, tex_cmd: str | None = None, bib: bool = True) -> Path:
     (BUILD / "chapters").mkdir(parents=True, exist_ok=True)   # \include writes aux files here
     args = ["-interaction=nonstopmode", "-halt-on-error", "-file-line-error",
             "-output-directory=build", f"-jobname={jobname}"]
@@ -147,25 +216,32 @@ def main() -> None:
         sys.exit("FAIL: no results in book/build/results/ — execute the notebooks first "
                  "(CMP_FAST=0), so they can emit their results.")
 
-    macros = report.write_macros()
-    n_macros = sum(1 for ln in macros.read_text().splitlines() if ln.startswith(r"\newcommand"))
-    n_floats = generate_floats()
-    n_tables = len(list((BUILD / "tables").glob("*.tex")))
-    print(f"macros.tex: {n_macros} numbers · {n_floats} figure floats · {n_tables} tables "
-          f"— all from executed notebooks")
+    # One lock for the whole run: macros.tex and the aux files are shared state, and the chapters
+    # are authored by concurrent agents each invoking this script.
+    with _build_lock():
+        macros = report.write_macros()
+        n_macros = sum(1 for ln in macros.read_text().splitlines()
+                       if ln.startswith(r"\newcommand"))
+        n_floats = generate_floats()
+        n_tables = len(list((BUILD / "tables").glob("*.tex")))
+        print(f"macros.tex: {n_macros} numbers · {n_floats} figure floats · {n_tables} tables "
+              f"— all from executed notebooks")
 
-    if not args.no_book:
-        pdf = compile_tex("book", "book.tex")
-        print(f"book:     {pdf.relative_to(REPO)}  ({pages('book')} pages)")
+        if not args.no_book:
+            pdf = compile_tex("book", "book.tex")
+            print(f"book:     {pdf.relative_to(REPO)}  ({pages('book')} pages)")
 
-    if not args.no_chapters:
-        for stem, before, jobname in CHAPTERS:
-            if args.chapter and args.chapter != stem:
-                continue
-            cmd = (rf"\def\chapterfile{{chapters/{stem}}}"
-                   rf"\def\chapternumber{{{before}}}\input{{chapter.tex}}")
-            pdf = compile_tex(jobname, "chapter.tex", tex_cmd=cmd)
-            print(f"offprint: {pdf.relative_to(REPO)}  ({pages(jobname)} pages)")
+        if not args.no_chapters:
+            for stem, before, jobname in CHAPTERS:
+                if args.chapter and args.chapter != stem:
+                    continue
+                if not (BOOK / "chapters" / f"{stem}.tex").exists():
+                    print(f"  skip {stem}: not written yet")
+                    continue
+                cmd = (rf"\def\chapterfile{{chapters/{stem}}}"
+                       rf"\def\chapternumber{{{before}}}\input{{chapter.tex}}")
+                pdf = compile_tex(jobname, "chapter.tex", tex_cmd=cmd)
+                print(f"offprint: {pdf.relative_to(REPO)}  ({pages(jobname)} pages)")
 
 
 if __name__ == "__main__":
