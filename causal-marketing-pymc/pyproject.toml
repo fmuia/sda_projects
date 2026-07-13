@@ -23,6 +23,11 @@ dependencies = [
     "pandas>=2.2,<3",
     "scipy>=1.13,<2",
     "scikit-learn>=1.5,<2",
+    # Step-0 "classical read" sections: honest frequentist inference (HC1 / cluster-
+    # robust / Newey-West HAC standard errors, 2SLS). Hand-rolling these invites a
+    # wrong SE, and a wrong interval is worse than no interval. Already present in the
+    # legacy env (causalpy pulls it in), so cmp.classical imports in both.
+    "statsmodels>=0.14,<0.15",
     "matplotlib>=3.9,<4",
     "networkx>=3.3,<4",
     "marimo>=0.9,<1",
