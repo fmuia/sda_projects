@@ -29,6 +29,11 @@ Hand-copying numbers into a second narrative would industrialise that failure.
 - Macros are named `\nbSevenScTotal` style, auto-generated — never hand-written.
 - Figures are re-emitted in **book style** (larger fonts, no titles — the caption does that
   work, consistent palette, vector PDF).
+- **Results are SHARDED per notebook** — `build/results/nb07.json`, `nb08.json`, … A notebook
+  writes only its own shard; `report.load()` merges them at build time. This is not tidiness: the
+  chapters are built by many notebooks executing concurrently, and a single `results.json` would
+  be a read-modify-write race in which one notebook's emit silently drops another's keys. Never
+  reintroduce a shared store.
 
 ## Book structure
 
@@ -64,6 +69,34 @@ they are not separate chapters.
     N.9  What can go wrong            the failure modes, demonstrated
     N.10 Takeaways
     (Notes: the runnable notebook, seeds, FAST/FULL — a short pointer, not a section.)
+
+## The chapter epigraph — CONCRETE, never atmospheric
+
+Every chapter opens with a short italic epigraph before N.1. **It must be specific enough that
+it could only introduce THIS chapter.** The V0 pilot's epigraph was rejected as "handwavy and
+vague", and the failure mode is worth naming precisely: it gestured at a mood ("the diagnosis is
+precise, and it is the spine of this book") instead of stating what happened.
+
+An epigraph must state, in three or four sentences:
+1. **the concrete situation** — what was bought, in what quantity, at what price;
+2. **the decision that hangs on it** — the euro question, with the number;
+3. **the finding** — what this chapter actually discovers, stated as a result, not a promise.
+
+It carries **real numbers, injected as macros** — an epigraph is prose and is therefore subject
+to the no-retyped-number rule like everything else.
+
+> **Bad (the V0):** *"This chapter builds it, prices it, and then discovers that the Bayesian
+> interval around it is badly too narrow. The diagnosis is precise, and it is the spine of this
+> book: the likelihood was wrong, not the paradigm."* — promises a finding, states none; the
+> reader learns nothing they could disagree with.
+>
+> **Good:** *"A €300k television campaign ran in one of thirty markets. It has no control group
+> and never will. Synthetic control prices the lift at €318k against a planted €339k — and then
+> reports a posterior standard deviation of €21k for a quantity whose true sampling variability
+> is €59k, so its 90% band covers the truth half the time. The error is not the prior; it is an
+> iid likelihood applied to a random walk, and §9.7 measures it."*
+
+Never write an epigraph that would survive being pasted into a different chapter.
 
 ## Register (what makes it a book, not a transcript)
 

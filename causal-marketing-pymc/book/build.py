@@ -60,7 +60,8 @@ def generate_floats() -> int:
     retyped number would go unnoticed for a year. So captions are authored *in the notebook*,
     beside the computation, and travel with the figure.
     """
-    results = json.loads((BUILD / "results.json").read_text())
+    from cmp import report
+    results = report.load()                    # merges build/results/nb*.json (one shard per notebook)
     out = BUILD / "floats"
     out.mkdir(parents=True, exist_ok=True)
     n = 0
@@ -142,8 +143,8 @@ def main() -> None:
 
     from cmp import report                                   # noqa: E402  (needs sys.path above)
 
-    if not (BUILD / "results.json").exists():
-        sys.exit("FAIL: book/build/results.json is missing — execute the notebooks first "
+    if not report.load():
+        sys.exit("FAIL: no results in book/build/results/ — execute the notebooks first "
                  "(CMP_FAST=0), so they can emit their results.")
 
     macros = report.write_macros()

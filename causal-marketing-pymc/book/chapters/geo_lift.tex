@@ -13,11 +13,18 @@
 \label{ch:geo}
 
 \begin{quote}\small
-\emph{One market got the campaign. Thirty did not. There was no coin flip, and the
-counterfactual — what that one market would have sold with no campaign — was never
-observed and never will be. This chapter builds it, prices it, and then discovers that the
-Bayesian interval around it is badly too narrow. The diagnosis is precise, and it is the
-spine of this book: the likelihood was wrong, not the paradigm.}
+\emph{A television campaign costing \keur{\nbSevenCost} ran in one of \nbSevenNDmas{} markets.
+There was no coin flip and there is no control group, so the one quantity the decision turns
+on --- what that market would have sold had the campaign not run --- was never observed and
+never will be. Synthetic control constructs it, and prices the lift at \keur{\nbSevenClTotal}
+against a planted truth of \keur{\nbSevenTrueTotal}: accurate enough to roll out on. The
+Bayesian re-housing of that same estimator returns the same answer and a far more confident
+one --- a posterior standard deviation of \keur{\nbSevenBayesSd} for a quantity whose true
+sampling variability, measured across seeds, is \keur{\nbSevenSeedSd}. Its 90\,\% band
+consequently covers the truth \nbSevenTotalCov\,\% of the time, where the design-based
+interval covers it \nbSevenRiCov\,\%. The prior is not the culprit: an iid likelihood was
+applied to a random walk. \Cref{sec:sc:compare} measures the damage, and
+\cref{sec:sc:euro} shows the euro decision inheriting it.}
 \end{quote}
 
 % =====================================================================================
