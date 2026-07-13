@@ -570,7 +570,9 @@ def iv(df, instruments_formula, formula, instrument_col, treatment_col, outcome_
     cp = _require_causalpy()
     # GOTCHA: CausalPy 0.8.1 defaults the IV beta priors to CENTER on the 2SLS
     # point estimates with sigma=1 — very tight, so the posterior is overconfident
-    # and its 90% interval can exclude the truth (a ~3x too-narrow band). Pass
+    # and its 90% interval can exclude the truth (nb11's "PRIORS, PRICED" block
+    # fits both and prints the widths: the default band is several times too
+    # narrow on that DGP and misses the planted effect). Pass
     # weakly-informative priors, e.g. priors={"mus": [0, 0], "sigmas": [50, 50],
     # "eta": 2, "lkj_sd": 2}, for an honest, ~frequentist-width interval.
     # binary_treatment=True selects the logit control-function likelihood (the

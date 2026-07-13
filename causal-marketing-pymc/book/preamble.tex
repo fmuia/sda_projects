@@ -1,0 +1,104 @@
+% =====================================================================================
+% book/preamble.tex — shared by book.tex and every standalone chapter driver.
+%
+% Compiled with xelatex (Unicode straight through: €, τ, ≈ appear in the source and in
+% the notebook-generated captions, and must typeset, not vanish into a blank box).
+% =====================================================================================
+
+% ---------------------------------------------------------------- fonts
+% The TeX Gyre faces ship with TeX Live but are not installed system-wide on macOS, so they
+% are loaded by FILE NAME through kpathsea rather than by family name through fontconfig.
+% (Loading by family name — \setmainfont{TeX Gyre Pagella} — fails here with "cannot be found".)
+\usepackage{fontspec}
+\setmainfont{texgyrepagella}[
+  Extension = .otf, UprightFont = *-regular, BoldFont = *-bold,
+  ItalicFont = *-italic, BoldItalicFont = *-bolditalic]
+\setsansfont{texgyreheros}[
+  Extension = .otf, UprightFont = *-regular, BoldFont = *-bold,
+  ItalicFont = *-italic, BoldItalicFont = *-bolditalic, Scale = MatchLowercase]
+\setmonofont{texgyrecursor}[
+  Extension = .otf, UprightFont = *-regular, BoldFont = *-bold,
+  ItalicFont = *-italic, BoldItalicFont = *-bolditalic, Scale = MatchLowercase]
+\usepackage{unicode-math}
+\setmathfont{texgyrepagella-math.otf}
+\usepackage{microtype}
+
+% ---------------------------------------------------------------- maths
+\usepackage{amsmath}
+\usepackage{amsthm}
+\numberwithin{equation}{chapter}   % (9.3), not (137) — a book numbers by chapter
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+% Named, numbered assumptions. Identification lives or dies on these, so they are
+% first-class objects in this book, not bullets: they get numbers, and the text refers
+% to them by number ("Assumption 9.2 is the one the placebos cannot test").
+\theoremstyle{definition}
+\newtheorem{assumption}{Assumption}[chapter]
+\newtheorem{proposition}{Proposition}[chapter]
+\theoremstyle{remark}
+\newtheorem*{remark}{Remark}
+
+% ---------------------------------------------------------------- floats, tables, figures
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{caption}
+\captionsetup{font=small, labelfont=bf, width=.92\linewidth}
+\usepackage{float}
+\usepackage[table]{xcolor}
+\usepackage{enumitem}
+
+% ---------------------------------------------------------------- house colours
+\definecolor{SchemeDark}{HTML}{1F4E66}
+\definecolor{SchemeBlue}{HTML}{2C7FB8}   % the model / our estimate  (matches cmp.plots)
+\definecolor{SchemeOrange}{HTML}{D95F0E} % the naive baseline / the cost line
+\definecolor{SchemeGrey}{HTML}{999999}
+
+% ---------------------------------------------------------------- links, refs, bibliography
+\usepackage[colorlinks=true, linkcolor=SchemeDark, citecolor=SchemeDark,
+            urlcolor=SchemeDark, breaklinks=true]{hyperref}
+\usepackage[nameinlink]{cleveref}
+\crefname{assumption}{Assumption}{Assumptions}
+\Crefname{assumption}{Assumption}{Assumptions}
+\usepackage[backend=biber, style=authoryear, natbib=true, maxcitenames=2,
+            uniquelist=false, giveninits=true, doi=false, isbn=false, url=false]{biblatex}
+
+% ---------------------------------------------------------------- money and per cent
+% Numbers themselves are NEVER written here: they arrive as macros from build/macros.tex,
+% which is generated from the executed notebooks. These commands only carry the typography.
+\newcommand{\keur}[1]{\mbox{\texteuro#1\,k}}   % \keur{\nbSevenClTotal}  ->  €318 k
+\newcommand{\eur}[1]{\mbox{\texteuro#1}}
+\newcommand{\kusd}[1]{\mbox{\$#1\,k}}
+\newcommand{\usd}[1]{\mbox{\$#1}}
+\newcommand{\pc}[1]{\mbox{#1\,\%}}
+\newcommand{\pcof}[1]{\mbox{#1\,\%}}
+
+% ---------------------------------------------------------------- notation
+\newcommand{\Prob}{\operatorname{\mathbb{P}}}
+\newcommand{\E}{\operatorname{\mathbb{E}}}
+\newcommand{\Var}{\operatorname{Var}}
+\newcommand{\sd}{\operatorname{sd}}
+\newcommand{\simplex}{\Delta^{J-1}}
+\newcommand{\Yobs}{Y}
+\newcommand{\code}[1]{\texttt{#1}}
+
+% ---------------------------------------------------------------- the notebook pointer box
+% Every chapter closes with one of these: where the runnable code is, which seed, FAST vs FULL.
+% Deliberately a small note, not a section — the book is the artifact, the notebook is the lab.
+\newcommand{\notebooknote}[1]{%
+  % ragged right, not \sloppy: the note is dense with long unbreakable \code{} paths, and
+  % justifying around them opens word gaps you can drive a bus through.
+  \par\medskip\noindent\begingroup\small\raggedright
+  \textcolor{SchemeGrey}{\rule{\linewidth}{0.4pt}}\par\smallskip
+  \textbf{The runnable notebook.} #1\par
+  \endgroup\medskip}
+
+% ---------------------------------------------------------------- generated inputs
+% build/macros.tex   : one \newcommand per number the notebooks emitted (cmp.report.value)
+% build/tables/*.tex : booktabs floats                                  (cmp.report.table)
+% build/floats/*.tex : figure floats, captions and all                  (cmp.report.figure)
+%
+% If a macro is missing, xelatex raises "Undefined control sequence" and book/build.py
+% refuses to ship the PDF. That is the whole point: a hole is louder than a stale number.
+\graphicspath{{build/}{build/figures/}{../build/}{../build/figures/}}

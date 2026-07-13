@@ -1,0 +1,33 @@
+% =====================================================================================
+% chapter.tex — the standalone per-chapter driver.
+%
+% Same preamble, same generated macros, same chapter source as book.tex: a chapter offprint,
+% not a second edition. Which chapter is set by \chapterfile, passed on the command line by
+% book/build.py:
+%
+%   xelatex -jobname=ch09_geo_lift \
+%     "\def\chapterfile{chapters/geo_lift}\def\chapternumber{8}\input{chapter.tex}"
+%
+% \chapternumber is the number BEFORE the chapter (8 -> the chapter sets as 9), so the
+% offprint carries the same chapter, equation and float numbers as the bound book.
+% =====================================================================================
+\documentclass[11pt, a4paper, oneside, numbers=noenddot, chapterprefix=true,
+               DIV=11]{scrbook}
+
+\providecommand{\chapterfile}{chapters/geo_lift}
+\providecommand{\chapternumber}{8}
+
+\input{preamble}
+\addbibresource{refs.bib}
+\input{build/macros}
+
+\begin{document}
+
+\setcounter{chapter}{\chapternumber}
+\pagestyle{headings}
+
+\input{\chapterfile}
+
+\printbibliography[heading=bibnumbered, title={References}]
+
+\end{document}

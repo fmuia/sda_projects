@@ -1,0 +1,78 @@
+% =====================================================================================
+% book.tex — Causal Marketing: the whole book.
+%
+%   xelatex book && biber book && xelatex book && xelatex book
+%   (or, correctly: python book/build.py — which regenerates macros.tex first)
+%
+% Chapters are \include'd, so \includeonly{chapters/geo_lift} produces the pilot chapter
+% alone from this same source; book/chapter.tex is the standalone driver that does exactly
+% that with its own front matter.
+% =====================================================================================
+\documentclass[11pt, a4paper, twoside, openright, numbers=noenddot,
+               chapterprefix=true, DIV=11, BCOR=8mm]{scrbook}
+
+\input{preamble}
+\addbibresource{refs.bib}
+
+% Every number below arrives from an executed notebook. Nothing is retyped.
+\input{build/macros}
+
+\title{Causal Marketing}
+\subtitle{Classical estimates, Bayesian posteriors, and the euro decision}
+\author{Francesco Muia}
+\date{\today}
+
+\begin{document}
+
+\frontmatter
+\maketitle
+
+\chapter*{Preface}
+\addcontentsline{toc}{chapter}{Preface}
+
+This book is about a narrow and expensive question: \emph{did the marketing spend cause the
+sales, and was it worth the money?} It is written for the analyst who must answer it with the
+data a company actually has --- a weekly sales panel, a campaign flag, a cost line --- and who
+must then defend the answer to someone holding the budget.
+
+Each chapter takes one marketing decision and works it twice. First classically: the simplest
+correct estimator, a point estimate, an interval whose covariance assumption is stated out loud.
+Then Bayesianly: a likelihood, priors that are justified rather than defaulted, a posterior. The
+two answers are then laid side by side on the \emph{same} estimand, and the chapter says plainly
+where they agree, where they differ, and why. Usually they agree; the interesting chapters are the
+ones where they do not, and the book's central claim --- earned, not asserted --- is that when the
+Bayesian arm loses, the culprit is a \emph{misspecified likelihood}, not the Bayesian paradigm.
+The chapter you are about to read, if you are reading the pilot, is the sharpest instance of that
+claim in the book.
+
+Two conventions carry through. Every result is reported as a captioned table or figure and
+referred to by number; there is no pasted program output in these pages. And no number in the
+prose was typed by a human: each one is a macro injected from the notebook that computed it, so a
+figure in the text cannot drift from the figure in the output. A missing number is a compilation
+error, which is the property we wanted.
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+\mainmatter
+
+% ---------------------------------------------------------------------------------------
+% Part II · Methods.  (Part I — foundations — and chapters 3–8, 10–13 are drafted in the
+% notebooks and land in this file as they are converted; the geo-lift chapter is the pilot
+% and fixes the template for all of them.)
+% ---------------------------------------------------------------------------------------
+% The geo-lift chapter is Chapter 9 of the planned book (BOOK_SPEC.md), and is numbered as
+% such: its cross-references, equation numbers and table numbers are the ones it will keep
+% when the chapters around it land. Advancing the counters is what makes the pilot a genuine
+% chapter of a whole rather than a standalone note that will have to be renumbered later.
+\setcounter{part}{1}
+\part{Methods}
+\setcounter{chapter}{8}
+
+\include{chapters/geo_lift}
+
+\backmatter
+\printbibliography[heading=bibintoc, title={Bibliography}]
+
+\end{document}

@@ -6,7 +6,7 @@
 CORE   = .venv/bin
 LEGACY = .venv-legacy/bin
 
-.PHONY: help env env-legacy kernels apps app-uplift app-confounding app-sc test test-fast test-legacy reports clean
+.PHONY: help env env-legacy kernels apps app-uplift app-confounding app-sc test test-fast test-legacy reports book clean
 
 help:
 	@echo "make env          - create/refresh the core env (pymc>=6) with uv"
@@ -17,6 +17,8 @@ help:
 	@echo "make test         - execute every notebook headless in FAST mode + run pytest"
 	@echo "make test-fast    - pytest smoke tests on the shared package only"
 	@echo "make test-legacy  - truth-recovery tests for the CausalPy DiD/ITS/IV estimators (legacy env)"
+	@echo "make reports      - one lecture-handout PDF per notebook (reports/)"
+	@echo "make book         - the book + chapter offprints (book/build/), numbers injected from the notebooks"
 
 env:
 	uv sync --python 3.12
@@ -59,6 +61,11 @@ test-legacy:  ## truth-recovery guards for the CausalPy DiD/ITS/IV estimators (l
 
 reports:  ## render one PDF per notebook (narrative + plots) into reports/ ; needs xelatex on PATH
 	PATH="/Library/TeX/texbin:$$PATH" $(CORE)/python scripts/make_reports.py
+
+book:  ## typeset the BOOK (book/build/book.pdf) + the chapter offprints, from the executed notebooks
+	# Reads book/build/results.json, which the notebooks write via cmp.report when they run.
+	# Numbers are injected as macros — nothing is retyped — so a missing one is a compile error.
+	PATH="/Library/TeX/texbin:$$PATH" $(CORE)/python book/build.py
 
 clean:
 	rm -rf .pytest_cache notebooks/*.html site/
