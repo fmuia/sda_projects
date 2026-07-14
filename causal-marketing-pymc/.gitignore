@@ -11,3 +11,6 @@ build/
 .DS_Store
 .jupyter_cache/
 notebooks/*.html
+
+# Generated WASM app bundles (make site) — 27 MB of Pyodide assets per app
+site/

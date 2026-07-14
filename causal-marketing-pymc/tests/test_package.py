@@ -83,6 +83,89 @@ def test_synthetic_control_recovers_lift():
     assert 0.4 * true_total < est_total < 1.6 * true_total
 
 
+# nb07's actual panel. The AR(1) tests below MUST use it rather than a small toy panel:
+# with only 12 donors over 40 weeks the donor pool happens to span the treated market
+# almost perfectly, the residual really is near-iid (rho ~ 0.08), and the AR(1) model
+# correctly reports that there is nothing to fix. Asserting "the fix widens the interval"
+# on a panel with no autocorrelation would be testing the fix on a world that does not
+# have the disease — the test would fail for the right reason, and we would learn nothing.
+NB07_PANEL = dict(n_weeks=60, launch_week=40, n_dmas=30, seed=5)
+
+
+def _nb07_panel():
+    sales_df, eff, launch, treated = dgp.geo_panel(**NB07_PANEL)
+    sales = sales_df.values.T
+    W = NB07_PANEL["n_weeks"]
+    return sales, eff, slice(0, launch), slice(launch, W)
+
+
+def test_sc_ar1_recovers_lift_and_detects_autocorrelation():
+    """The AR(1) synthetic control must (a) still recover the lift, and (b) actually
+    find the autocorrelation that the iid model assumes away. geo_panel's macro factor
+    is a cumsum (a random walk), and whatever share of it the donor weights fail to match
+    is left in the residual as a persistent, slowly-wandering offset."""
+    sales, eff, pre, post = _nb07_panel()
+    sc = est.synthetic_control_ar1(sales[0], sales[1:], pre, post, seed=1,
+                                   draws=300, tune=300, chains=2)
+    est_total = sc["effect_samples"][:, post].sum(1).mean()
+    true_total = eff[post].sum()
+    assert 0.4 * true_total < est_total < 1.6 * true_total
+    # The point of the model: it should detect persistence, not assume it away.
+    assert sc["rho_samples"].mean() > 0.3, "AR(1) failed to pick up residual persistence"
+
+
+def test_iv_binary_treatment_recovers_effect_and_endogeneity():
+    """The probit-first-stage IV must recover the planted effect on a BINARY treatment,
+    and must detect the endogeneity (rho > 0) that makes naive OLS wrong. rho is the
+    Bayesian image of the Cov(X, U) that the OVB formula prices."""
+    df, true_effect = dgp.iv_ad_exposure(n=3000, true_effect=15.0, seed=37)
+    r = est.iv_binary_treatment(df, outcome="sales", treatment="ad_exposure",
+                                instrument="encouragement", seed=1,
+                                draws=400, tune=400, chains=2)
+    beta = r["beta_samples"]
+    assert 11.0 < beta.mean() < 19.0, f"failed to recover ~15, got {beta.mean():.1f}"
+    # Positive endogeneity is what pushes naive OLS ABOVE the truth in this DGP.
+    assert r["rho_samples"].mean() > 0.05
+
+
+def test_iv_binary_treatment_rejects_continuous_treatment():
+    """Silently fitting a probit to a continuous regressor would be a wrong answer with
+    no error message — the worst kind. It must refuse."""
+    df, _ = dgp.iv_ad_exposure(n=200, seed=1)
+    df = df.copy()
+    df["ad_exposure"] = np.linspace(0, 3, len(df))       # not 0/1
+    with pytest.raises(ValueError, match="0/1 treatment"):
+        est.iv_binary_treatment(df, outcome="sales", treatment="ad_exposure",
+                                instrument="encouragement", draws=10, tune=10, chains=1)
+
+
+def test_sc_ar1_total_is_wider_than_iid():
+    """THE regression guard for the nb07 fix.
+
+    An iid likelihood prices the H-week cumulative total at Var = H*sigma^2. Under a
+    persistent error the truth grows toward H^2*sigma^2, so the iid model is
+    over-confident about exactly the number the euro decision consumes. The AR(1)
+    model must therefore produce a materially WIDER posterior on the post-period
+    total. If this ever flips, the AR(1) residual is no longer being propagated
+    forward and nb07's headline claim is false.
+
+    Measured on this panel: iid sd ~27k against a true sampling sd of ~59k (2.2x
+    over-confident); AR(1) sd ~72k. Across 24 panels the nominal-90% interval on the
+    total covers the truth 50% of the time under iid and 88% under AR(1).
+    """
+    sales, eff, pre, post = _nb07_panel()
+    kw = dict(seed=1, draws=300, tune=300, chains=2)
+    iid = est.synthetic_control(sales[0], sales[1:], pre, post, **kw)
+    ar1 = est.synthetic_control_ar1(sales[0], sales[1:], pre, post, **kw)
+
+    sd_iid = iid["effect_samples"][:, post].sum(1).std()
+    sd_ar1 = ar1["effect_samples"][:, post].sum(1).std()
+    assert sd_ar1 > 1.5 * sd_iid, (
+        f"AR(1) total sd ({sd_ar1:.0f}) should be much wider than iid ({sd_iid:.0f}); "
+        "the post-period residual is probably not being propagated."
+    )
+
+
 # --------------------------------------------------------------------------
 # metrics
 # --------------------------------------------------------------------------

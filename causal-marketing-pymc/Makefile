@@ -36,10 +36,19 @@ kernels:
 
 apps:
 	@echo "Interactive marimo apps (reactive; also open as plain notebooks with 'marimo edit'):"
+	@echo "  make app-design        # experiment design: power / MDE / peeking   [WASM-safe]"
 	@echo "  make app-uplift        # uplift policy explorer"
 	@echo "  make app-confounding   # confounding sensitivity"
 	@echo "  make app-sc            # synthetic-control placebo"
-	@echo "Deploy to in-browser WASM for the lecture:  marimo export html-wasm apps/<file>.py -o site/"
+	@echo ""
+	@echo "Ship to students as in-browser pages (no Python install):  make site"
+	@echo "  WASM-safe = imports only Pyodide packages (numpy/scipy/statsmodels/sklearn/"
+	@echo "  pandas/matplotlib). pymc, pytensor, arviz and the local 'cmp' package CANNOT"
+	@echo "  load in the browser — a WASM app must be self-contained and precompute any"
+	@echo "  posterior it needs, shipping the draws as data."
+
+app-design:
+	$(CORE)/marimo run apps/experiment_design.py
 
 app-uplift:
 	$(CORE)/marimo run apps/uplift_policy_explorer.py
@@ -49,6 +58,22 @@ app-confounding:
 
 app-sc:
 	$(CORE)/marimo run apps/synthetic_control_placebo.py
+
+site:  ## export the WASM-safe apps to static, in-browser pages under site/
+	$(CORE)/marimo export html-wasm apps/experiment_design.py -o site/experiment_design --mode run
+	@echo "Serve locally:  python -m http.server --directory site"
+
+warm:  ## RUN THIS BEFORE A LECTURE. Populates the fit cache so no notebook samples live.
+	@echo "Warming the posterior cache (~/.cache/cmp/fits, or \$$CMP_CACHE_HOME)..."
+	CMP_FAST=0 $(CORE)/python -m pytest tests/test_notebooks.py -q -x
+	@$(CORE)/python -c "from cmp.cache import cache_info; \
+	  rows = cache_info(); \
+	  print(f'{len(rows)} fits cached, {sum(r[\"mb\"] for r in rows):.0f} MB total'); \
+	  [print(f'  {r[\"file\"]:<48} {r[\"mb\"]:>6.1f} MB') for r in rows]"
+	@echo "Cache warm. Notebooks will now LOAD their posteriors instead of re-sampling."
+
+refit:  ## force every cached fit to recompute (use after changing a model)
+	CMP_REFIT=1 CMP_FAST=0 $(CORE)/python -m pytest tests/test_notebooks.py -q
 
 test:
 	$(CORE)/python -m pytest tests/ -v

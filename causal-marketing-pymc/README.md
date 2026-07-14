@@ -236,19 +236,67 @@ and where to get it (your own CRM / sales panel / event logs; public analogues l
 California Prop 99 for synthetic control) — because for those setups there is no single clean public dataset
 that maps 1:1.
 
+## Nothing samples live — `cmp.cache.load_or_run`
+
+**Run `make warm` before a lecture.** Every expensive fit in every notebook goes through
+`load_or_run`, which pickles the result to `~/.cache/cmp/fits` (deliberately *not* the repo — it
+lives in Dropbox) and loads it in milliseconds on every subsequent run. Notebook 07 goes from
+~20 minutes to **7 seconds**. Nothing is re-sampled in front of an audience.
+
+```python
+from cmp.cache import load_or_run
+
+sc = load_or_run("07_sc_ar1",
+                 lambda: est.synthetic_control_ar1(y_tr, donors, pre, post, **SC),
+                 inputs=dict(seed=SEED, model="ar1", **SC))   # hashed into the cache key
+```
+
+The `inputs=` dict is the safety property: it is hashed into the filename, so changing a seed, a
+sampler profile or the model forces a **refit** rather than silently serving a stale posterior whose
+numbers the prose no longer describes. That is the one bug this repo cannot afford, so the cache is
+designed to fail toward recomputation.
+
+```bash
+make warm     # populate the cache (runs every notebook at FULL). Do this before you teach.
+make refit    # CMP_REFIT=1 — force everything to recompute (after changing a model)
+```
+
+*Gotcha:* CausalPy result objects hold a `functools.partial` and **cannot be pickled**. Cache
+`result.idata` (an ArviZ `InferenceData`) instead — `load_or_run` raises a `TypeError` telling you so.
+
+---
+
 ## Interactive apps (marimo)
 
 Reactive explorables. For the uplift and confounding apps the expensive posterior is computed
 **once** and the sliders only re-derive the decision, so they respond instantly; the synthetic-control
 app re-fits on each interaction, but that's a fast SLSQP point fit plus placebo refits (~0.2 s), not a
-posterior. Each also opens as a plain
-notebook (`marimo edit`), and can be exported to in-browser **WASM** for the live
-lecture (`marimo export html-wasm`).
+posterior. Each also opens as a plain notebook (`marimo edit`).
 
 ```bash
+make app-design        # baseline rate / target lift / n → power, MDE, sample size; + the peeking simulation
 make app-uplift        # discount cost / confidence bar / base size → profit, targets, €VOI
 make app-confounding   # unobserved-confounder strength → ATE drift past the cost line & the decision flip
 make app-sc            # pick treated market & launch week → synthetic fit, placebo spaghetti, permutation p
+```
+
+### Shipping an app to students: `make site`
+
+`marimo export html-wasm` produces a **self-contained page that runs Python in the browser** — no
+install, no server, works offline in a lecture theatre. But the browser runtime (Pyodide) ships
+`numpy / scipy / pandas / matplotlib / statsmodels / scikit-learn / networkx / xarray` and **does not
+ship `pymc`, `pytensor`, `arviz`, `causalpy` or `pymc-marketing`.** That line falls exactly along this
+cookbook's classical/Bayesian seam, and it imposes two rules on any app meant for WASM export:
+
+1. **It must be self-contained** — it cannot `import cmp`, because local packages cannot be installed
+   in Pyodide. `apps/experiment_design.py` therefore inlines its own math (guarded by
+   `tests/test_design.py`, which tests the real `cmp.design` against R's `power.prop.test`).
+2. **It must not sample at slider time.** The entire classical layer (power, MDE, peeking, OLS/HC1,
+   2SLS, DiD, RDD) runs in the browser natively. For anything Bayesian, precompute the posterior
+   draws, ship them as data, and let the sliders re-derive only the *decision*.
+
+```bash
+make site      # -> site/experiment_design/  (open index.html, or serve the folder)
 ```
 
 ---

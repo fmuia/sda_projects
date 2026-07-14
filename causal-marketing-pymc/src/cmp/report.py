@@ -166,6 +166,10 @@ def table(df, key: str, *, caption: str, label: str | None = None, fmt: str = "%
     macro_name(key)
     BUILD.joinpath("tables").mkdir(parents=True, exist_ok=True)
     path = BUILD / "tables" / (key.replace(".", "_") + ".tex")
+    # A caption may carry LaTeX on purpose ($\times$, 90\,\%), so it is NOT escaped wholesale.
+    # But a bare "%" — "a 15% shift" — opens a LaTeX comment that eats the rest of the caption,
+    # closing brace and all, and the error then surfaces in a different file entirely.
+    caption = re.sub(r"(?<!\\)%", r"\\%", caption)
     body = df.to_latex(index=False, escape=True, float_format=lambda v: fmt % v,
                        column_format=align or ("l" + "r" * (df.shape[1] - 1)),
                        caption=caption, label=label or f"tab:{key.replace('.', ':')}",

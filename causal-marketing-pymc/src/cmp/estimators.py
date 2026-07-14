@@ -453,6 +453,232 @@ def synthetic_control(target, donors, pre, post, seed=1, draws=1000, tune=1000, 
     }
 
 
+def synthetic_control_ar1(target, donors, pre, post, seed=1, draws=1000, tune=1000,
+                          chains=4):
+    """Bayesian synthetic control with **AR(1) errors** — the correctly-specified
+    counterpart to `synthetic_control`.
+
+    Why this exists
+    ---------------
+    `synthetic_control` puts an *iid* Normal likelihood on the pre-period fit and
+    then draws *independent* noise per post-period week. That is wrong here, and
+    not by a little. The donor pool can rarely match the treated unit's factor
+    loadings exactly, and one of the shared factors is a **random walk** (the macro
+    shock in `dgp.geo_panel`). Whatever macro loading the weights fail to match is
+    left in the residual, so the residual is itself near-random-walk: strongly
+    positively autocorrelated, not iid.
+
+    That mistake is invisible in the *weekly* effect and fatal in the **cumulative
+    total**, which is the number the euro decision actually integrates. For an iid
+    error, Var(sum of H weeks) = H*sigma^2. For a positively autocorrelated error it
+    grows toward H^2*sigma^2 — because the errors do not cancel, they persist. An
+    iid likelihood therefore reports a total that is far too confident: in this DGP
+    it under-prices the 20-week total's sd by ~3x and the nominal 90% interval
+    covers the truth only about half the time.
+
+    The model
+    ---------
+    Same simplex (Dirichlet) weights, but the residual e_t = y_t - w.donors_t is
+    given an AR(1) law, e_t = rho*e_{t-1} + eps_t, eps ~ N(0, sigma). Substituting
+    e_t out gives a likelihood written entirely in observed quantities,
+
+        y_0     ~ Normal(mu_0, sigma / sqrt(1 - rho^2))          (stationary start)
+        y_t     ~ Normal(mu_t + rho*(y_{t-1} - mu_{t-1}), sigma)  for t >= 1
+
+    which is what we hand to PyMC (a `Potential` on a deterministic residual would
+    also work, but this keeps every term an honest `observed=`).
+
+    The counterfactual, honestly propagated
+    ---------------------------------------
+    The post-period counterfactual residual is **simulated forward** from the last
+    observed pre-period residual — e_{T+h} = rho*e_{T+h-1} + eps — rather than drawn
+    fresh each week. This is the whole point: it is what makes the errors persist
+    across the post window, so the cumulative total's uncertainty grows correctly
+    and the interval earns its nominal coverage. Conditioning on the last pre-period
+    residual (instead of starting from the stationary distribution) is also what
+    keeps the *early* post weeks appropriately tight.
+
+    The pre-period counterfactual band is the one-step-ahead predictive, so the
+    pre-period gap hovers around zero with an honest band rather than collapsing to
+    exactly zero.
+
+    Returns the same dict shape as `synthetic_control`, plus `rho_samples`, so the
+    two are drop-in comparable in the notebook.
+    """
+    import pymc as pm
+
+    J = donors.shape[0]
+    y_pre = np.asarray(target[pre], dtype=float)      # (T,)
+    D_pre = np.asarray(donors[:, pre], dtype=float)   # (J, T)
+
+    with pm.Model() as model:
+        w = pm.Dirichlet("w", a=np.ones(J))
+        sigma = pm.HalfNormal("sigma", 5)
+        # Stationary AR(1). Bounded away from |1| so sigma/sqrt(1-rho^2) stays finite;
+        # the posterior in this DGP piles up near the upper end, which is the finding.
+        rho = pm.Uniform("rho", -0.98, 0.98)
+
+        mu = pm.math.dot(w, D_pre)                    # (T,) mean blend, pre-period
+
+        # t = 0: stationary marginal of the AR(1) residual.
+        pm.Normal("obs0", mu=mu[0], sigma=sigma / pm.math.sqrt(1.0 - rho ** 2),
+                  observed=y_pre[0])
+        # t >= 1: one-step-ahead conditional. Note the residual y_{t-1} - mu_{t-1}
+        # is a function of w, so this term is what ties rho to the weights.
+        pm.Normal("obs", mu=mu[1:] + rho * (y_pre[:-1] - mu[:-1]), sigma=sigma,
+                  observed=y_pre[1:])
+
+        idata = pm.sample(
+            draws=draws, tune=tune, chains=chains, cores=chains,
+            random_seed=seed, progressbar=False, target_accept=0.95,
+        )
+
+    W_post = idata.posterior["w"].values.reshape(-1, J)        # (S, J)
+    sig_post = idata.posterior["sigma"].values.reshape(-1)     # (S,)
+    rho_post = idata.posterior["rho"].values.reshape(-1)       # (S,)
+    S = W_post.shape[0]
+
+    cf_mean = W_post @ np.asarray(donors, dtype=float)         # (S, W) mean blend, all weeks
+    target = np.asarray(target, dtype=float)
+    W_len = cf_mean.shape[1]
+    idx = np.arange(W_len)
+    pre_idx, post_idx = idx[pre], idx[post]
+
+    rng = np.random.default_rng(seed + 12345)
+    cf_pred = cf_mean.copy()
+
+    # --- pre-period: one-step-ahead predictive band --------------------------------
+    # e_t | e_{t-1} ~ N(rho*e_{t-1}, sigma), with the *observed* previous residual.
+    resid_pre = target[None, pre_idx] - cf_mean[:, pre_idx]    # (S, T) per-draw residual
+    eps = rng.standard_normal((S, len(pre_idx)))
+    cf_pred[:, pre_idx[0]] = (
+        cf_mean[:, pre_idx[0]]
+        + eps[:, 0] * sig_post / np.sqrt(1.0 - rho_post ** 2)   # stationary at t=0
+    )
+    cf_pred[:, pre_idx[1:]] = (
+        cf_mean[:, pre_idx[1:]]
+        + rho_post[:, None] * resid_pre[:, :-1]
+        + eps[:, 1:] * sig_post[:, None]
+    )
+
+    # --- post-period: PROPAGATE the residual forward (the actual fix) ---------------
+    # Start from the last residual we actually observed (the treated unit is still
+    # untreated at the end of the pre-period), then run the AR(1) recursion. The
+    # errors persist, so the *cumulative* effect's uncertainty compounds correctly.
+    e = resid_pre[:, -1].copy()                                # (S,) last observed residual
+    for h, t in enumerate(post_idx):
+        e = rho_post * e + rng.standard_normal(S) * sig_post
+        cf_pred[:, t] = cf_mean[:, t] + e
+
+    effect = target[None, :] - cf_pred
+    pre_rmse = float(np.sqrt(np.mean((target[None, :] - cf_mean).mean(0)[pre] ** 2)))
+    return {
+        "counterfactual_samples": cf_pred,
+        "counterfactual_mean": cf_mean,
+        "effect_samples": effect,
+        "weight_samples": W_post,
+        "rho_samples": rho_post,
+        "sigma_samples": sig_post,
+        "pre_rmse": pre_rmse,
+        "idata": idata,
+        "convergence": convergence_report(idata, var_names=["w", "sigma", "rho"]),
+    }
+
+
+def iv_binary_treatment(df, *, outcome: str, treatment: str, instrument: str,
+                        seed: int = 1, draws: int = 1000, tune: int = 1000, chains: int = 4,
+                        target_accept: float = 0.9):
+    """Bayesian IV with a **probit first stage** — for a BINARY endogenous treatment.
+
+    Why this exists (the nb11 counterpart of `synthetic_control_ar1`)
+    ----------------------------------------------------------------
+    CausalPy's Bayesian IV fits a joint *Gaussian* to (treatment, outcome). When the
+    treatment is binary — exposed / not exposed — that is a linear probability model
+    in disguise, and it is misspecified in a way you can see: its posterior predictive
+    puts ~a third of the replicated "exposures" outside [0, 1], i.e. at values the
+    variable cannot take. The 2SLS/Wald *point* estimate does not care (with a binary
+    instrument it is just a ratio of two slopes, and it is consistent regardless), but
+    the Bayesian posterior does: it inherits a small bias and under-covers.
+
+    The model — a recursive (triangular) system with a latent probit index
+    ---------------------------------------------------------------------
+        T* = a0 + a1*Z + u,     T = 1{T* > 0},      u ~ N(0, 1)
+        Y  = b0 + b*T  + e,                         e ~ N(0, sigma)
+        corr(u, e) = rho        <- the endogeneity. rho != 0 IS the confounding.
+
+    `u` has its variance fixed to 1 because a probit index is only identified up to
+    scale — the usual normalization, not a modelling choice.
+
+    The likelihood, honestly factored
+    ---------------------------------
+    Y is continuous and T is binary, so the joint density of one observation is
+    f(y, t) = f(e) * P(T = t | e), with e = y - b0 - b*t pinned by the outcome equation
+    (Jacobian 1). Conditioning the latent index error on e is what carries the
+    endogeneity:
+
+        u | e ~ N(rho * e / sigma,  1 - rho^2)
+        P(T = 1 | e) = Phi( (a0 + a1*Z + rho*e/sigma) / sqrt(1 - rho^2) )
+
+    so the log-likelihood is  logN(e; 0, sigma) + t*log(p) + (1-t)*log(1-p). That is
+    the whole model; there is no control-function two-step and no plug-in residual.
+
+    `b` is the ATE of the (constant-effect) treatment. With a binary instrument and a
+    binary treatment this is also the LATE, which is the estimand notebook 11 targets.
+
+    Returns dict with beta_samples (the effect), rho_samples, first_stage_samples,
+    idata and a convergence report.
+    """
+    import pymc as pm
+    import pytensor.tensor as pt
+
+    y = np.asarray(df[outcome], dtype=float)
+    t_obs = np.asarray(df[treatment], dtype=float)
+    z = np.asarray(df[instrument], dtype=float)
+
+    uniq = np.unique(t_obs)
+    if not set(uniq).issubset({0.0, 1.0}):
+        raise ValueError(
+            f"iv_binary_treatment needs a 0/1 treatment; '{treatment}' takes values {uniq[:5]}. "
+            "For a continuous endogenous regressor use the joint-Gaussian IV (cmp.estimators.iv)."
+        )
+
+    with pm.Model() as model:
+        # Outcome equation. Weakly informative on the scale of the data — NOT centred on
+        # the 2SLS point (see nb11's "PRIORS, PRICED" block for what that would cost).
+        b0 = pm.Normal("b0", 0.0, 50.0)
+        beta = pm.Normal("beta", 0.0, 50.0)          # the causal effect
+        sigma = pm.HalfNormal("sigma", 25.0)
+
+        # First stage, on the probit index scale.
+        a0 = pm.Normal("a0", 0.0, 5.0)
+        a1 = pm.Normal("a1", 0.0, 5.0)               # instrument strength
+
+        # Endogeneity. rho != 0 is exactly what makes OLS wrong.
+        rho = pm.Uniform("rho", -0.95, 0.95)
+
+        e = y - b0 - beta * t_obs                    # pinned by the outcome equation
+        index = a0 + a1 * z + rho * e / sigma        # E[u | e], shifted index
+        p = pm.math.invprobit(index / pm.math.sqrt(1.0 - rho ** 2))
+        p = pt.clip(p, 1e-9, 1 - 1e-9)
+
+        pm.Potential("loglik",
+                     pm.logp(pm.Normal.dist(0.0, sigma), e).sum()
+                     + (t_obs * pt.log(p) + (1.0 - t_obs) * pt.log(1.0 - p)).sum())
+
+        idata = pm.sample(draws=draws, tune=tune, chains=chains, cores=chains,
+                          random_seed=seed, progressbar=False, target_accept=target_accept)
+
+    post = idata.posterior
+    return {
+        "beta_samples": post["beta"].values.ravel(),
+        "rho_samples": post["rho"].values.ravel(),
+        "a1_samples": post["a1"].values.ravel(),
+        "sigma_samples": post["sigma"].values.ravel(),
+        "idata": idata,
+        "convergence": convergence_report(idata, var_names=["beta", "rho", "a1", "sigma"]),
+    }
+
+
 def placebo_in_space(sales, treated_idx, pre, post, pre_rmse=None, rmse_multiple=3.0):
     """Permutation inference: refit synthetic control treating each donor as
     if *it* were treated, and collect the placebo gaps. Following Abadie,

@@ -145,12 +145,14 @@ Sales are then the sum of a baseline, the two saturated channels, a direct seaso
 noise:
 
 \begin{equation}
-  \text{sales}_t \;=\; 100
-    \;+\; \underbrace{f\big(a_t(x^{\text{tv}};\, 0.4);\ 60,\, 50\big)}_{\text{TV: large, real}}
-    \;+\; \underbrace{f\big(a_t(x^{\text{bs}};\, 0.2);\ 8,\, 40\big)}_{\text{brand search: small, real}}
-    \;+\; \underbrace{35\, s_t}_{\text{the season, directly}}
-    \;+\; u_t,
-  \qquad u_t \sim \mathcal N(0,\, \nbSixDgpSigma^2).
+  \begin{aligned}
+    \text{sales}_t \;=\; 100
+      &\;+\; \underbrace{f\big(a_t(x^{\text{tv}};\, 0.4);\ 60,\, 50\big)}_{\text{TV: large, real}}
+       \;+\; \underbrace{f\big(a_t(x^{\text{bs}};\, 0.2);\ 8,\, 40\big)}_{\text{brand search: small, real}} \\[2pt]
+      &\;+\; \underbrace{35\, s_t}_{\text{the season, directly}}
+       \;+\; u_t,
+      \qquad u_t \sim \mathcal N(0,\, \nbSixDgpSigma^2).
+  \end{aligned}
   \label{eq:mmm:dgp}
 \end{equation}
 

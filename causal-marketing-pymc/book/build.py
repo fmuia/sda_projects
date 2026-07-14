@@ -70,6 +70,18 @@ CHAPTERS = [
 
 
 # ---------------------------------------------------------------------------- floats
+def escape_bare_percent(s: str) -> str:
+    r"""Escape a `%` that is not already escaped.
+
+    Captions are authored in the notebook and are deliberately allowed to carry LaTeX
+    (`$\times$`, `90\,\%`). But a *bare* `%` — as in "at the 15% shift" — starts a LaTeX comment,
+    which silently swallows the rest of the caption INCLUDING its closing brace. The failure then
+    surfaces hundreds of lines later as "File ended while scanning use of \caption@xdblarg", which
+    points at the wrong file entirely. So: escape bare `%`, leave `\%` alone.
+    """
+    return re.sub(r"(?<!\\)%", r"\\%", s)
+
+
 def generate_floats() -> int:
     """Turn every figure emitted by `cmp.report.figure` into a complete LaTeX float.
 
@@ -93,7 +105,7 @@ def generate_floats() -> int:
             "\\begin{figure}[htbp]\n"
             "  \\centering\n"
             f"  \\includegraphics[width={rec.get('width', r'\linewidth')}]{{{pdf}}}\n"
-            f"  \\caption{{{rec['caption']}}}\n"
+            f"  \\caption{{{escape_bare_percent(rec['caption'])}}}\n"
             f"  \\label{{{rec['label']}}}\n"
             "\\end{figure}\n"
         )
