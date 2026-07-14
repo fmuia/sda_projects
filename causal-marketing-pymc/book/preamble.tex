@@ -43,6 +43,10 @@
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{longtable}
+% max width=\linewidth SHRINKS a table that would overrun the text block and leaves a narrow one
+% alone (unlike \resizebox{\linewidth}, which would also blow small tables up). Applied by
+% build.py to every generated table, so a wide results table can never run into the margin.
+\usepackage{adjustbox}
 \usepackage{caption}
 \captionsetup{font=small, labelfont=bf, width=.92\linewidth}
 \usepackage{float}

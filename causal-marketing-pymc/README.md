@@ -12,6 +12,40 @@ data.
 
 ---
 
+## Two artifacts
+
+| | what it is |
+|---|---|
+| **`notebooks/`** (+ `reports/*.pdf`) | The lab. Runnable, exploratory; the PDFs are nbconvert transcripts, used as lecture hand-outs. |
+| **`book/`** → `book/build/book.pdf` | **The Book.** A self-contained, typeset treatment — numbered chapters, sections and equations, `booktabs` tables, captioned vector figures, named assumptions, a bibliography, and per-chapter offprints. Built from the *executed* notebooks. |
+
+### The book's one load-bearing rule
+
+**Every number in the book is injected from an executed notebook. Nothing is retyped.**
+
+    notebooks (executed) --cmp.report--> book/build/results/nbNN.json --> macros.tex --> book.pdf
+
+The notebooks *emit* their results (`cmp.report.value/table/figure`); the book *injects* them
+as LaTeX macros (`\nbSevenBayesSd`). Two properties follow, and both are the point:
+
+- a **stale** number is impossible — the macro is whatever the notebook last printed;
+- a **missing** number is a hard build failure, not a silent blank. The build refuses to ship
+  a PDF with a hole in it, because a hole is louder than a stale number.
+
+This exists because entire review rounds of this project were spent chasing prose that had
+drifted from the output it described. Hand-copying results into a second narrative would have
+industrialised that failure. (The single honest exception is flagged in place: Chapter 1's
+LaLonde \$1,800 experimental benchmark is *cited from the literature*, not computed here.)
+
+```bash
+make book          # -> book/build/book.pdf  +  book/build/ch09_geo_lift.pdf, ...
+```
+
+A fresh clone must execute the notebooks at `CMP_FAST=0` first — `book/build/` is generated,
+never committed. Architecture and the chapter template: **`book/BOOK_SPEC.md`**.
+
+---
+
 ## The learning path
 
 Read in this order — each step assumes the previous one:
@@ -38,10 +72,15 @@ Prefer to poke at it live? The three **[interactive apps](#interactive-apps-mari
 
 ---
 
-## Every notebook follows the same 7 steps
+## Every notebook follows the same contract
 
 A fixed pedagogical contract, so once you've read one you can read any of them:
 
+0. **Step 0 — the classical read.** Before any sampler: the same estimand, the same
+   identification, estimated with the simplest *correct* classical estimator — a point
+   estimate and an interval, with an explicitly chosen covariance (HC1 / cluster / HAC /
+   bootstrap). No likelihood, no priors, no chains. This is the honest benchmark the
+   Bayesian model has to justify itself against, and it is why `cmp.classical` exists.
 1. **Business question** — a concrete marketing decision, in plain language.
 2. **Simulate a ground truth** — a seeded process with a *known* effect (the core
    teaching device; there's a hook to swap in real data — and notebooks 07b/11b take it,
@@ -51,8 +90,31 @@ A fixed pedagogical contract, so once you've read one you can read any of them:
    *Kept separate from estimation.*
 4. **Estimate** — fit with the mapped PyMC-ecosystem library; get a posterior.
 5. **Validate** — recover-the-truth check + interval calibration.
+   **5x — point estimate vs posterior.** The head-to-head: where the two arms agree
+   (usually), where they differ, and *why*. It is allowed to conclude that Bayes bought
+   nothing, and in several notebooks it does.
 6. **Decide, in euros** — turn the effect into profit / ROI / P(worthwhile) / go-no-go.
 7. **Caveats** — the honest failure modes and assumptions.
+
+### What Step 0 turned up
+
+The classical arm performs far better than expected, and the notebooks now say so:
+
+- **Mostly the two agree** — Bernstein–von Mises: weak priors plus decent *n* means the
+  credible interval ≈ the confidence interval. On the Criteo data (11b) 2SLS and the
+  posterior agree to **0.04 pp — one hundredth of a standard error** — at 0.97× width.
+- **Where Bayes lost, the cause was a misspecified likelihood, not the paradigm.** In 07 an
+  iid likelihood on autocorrelated data under-prices a 20-week sum by **2.8×** (50% coverage
+  against a design-based 88%), because Var(Σe) → n²σ², not nσ². In 08 the error runs the
+  **other** way — an interval **6×** too *wide*. A paradigm cannot be systematically
+  overconfident and underconfident at once; a *specification* can.
+- **Why classical wins there:** it either uses no likelihood at all (randomization/placebo
+  inference) or a variance estimator *engineered to be agnostic* about the error structure
+  (HC / cluster / HAC / bootstrap). That is the frequentist toolkit's core competence.
+- **The prior does almost nothing. The likelihood is the whole ballgame.**
+- **What survives everywhere:** `P(effect > cost)` — which the classical arm structurally
+  cannot produce, and which every euro decision consumes. The rule the notebooks land on:
+  *use the posterior for the decision, and design-based inference for your confidence in it.*
 
 The two anchors additionally carry the full **three depths**: (a) estimator bake-off &
 failure modes, (b) identification rigour & sensitivity, (c) euro policy with parameter
@@ -199,6 +261,9 @@ boundary:
 
 - **`pymc-bart`, `bambi`, `pathmc`** require **pymc ≥ 6**.
 - **`causalpy` (0.8.1)** and **`pymc-marketing` (0.19.4)** still pin **pymc < 6**.
+
+`statsmodels` is a dependency of **both** environments: it is what `cmp.classical` (Step 0)
+is built on, so every notebook needs it regardless of which side of the pymc split it sits on.
 
 No single environment can satisfy both. Rather than hold the whole repo back to pymc 5
 (losing pymc-bart 0.12 / pathmc) or vendor patched forks, this repo ships **two

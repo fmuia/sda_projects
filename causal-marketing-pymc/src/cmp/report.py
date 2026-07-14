@@ -190,9 +190,13 @@ def table(df, key: str, *, caption: str, label: str | None = None, fmt: str = "%
     # centred and set one step down from the body text, with tighter column gutters. A results
     # table with seven columns does not fit an A4 text block at body size, and a table that
     # overruns the margin is a defect the chapter cannot fix from its side.
-    body = body.replace(r"\begin{tabular}",
-                        "\\centering\n\\small\n\\setlength{\\tabcolsep}{4.5pt}\n\\begin{tabular}",
-                        1)
+    # `adjustbox` shrinks a table only if it would overrun the text block, and leaves a narrow one
+    # alone. Without it LaTeX runs a wide results table into the margin instead of complaining.
+    body = body.replace(
+        r"\begin{tabular}",
+        "\\centering\n\\small\n\\setlength{\\tabcolsep}{4.5pt}\n"
+        "\\begin{adjustbox}{max width=\\linewidth}\n\\begin{tabular}", 1)
+    body = body.replace(r"\end{tabular}", "\\end{tabular}\n\\end{adjustbox}", 1)
     nb = _nb_of(key)
     store = _store(nb)
     _check_kind(store, key, "table")

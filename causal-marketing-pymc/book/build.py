@@ -101,6 +101,35 @@ def generate_floats() -> int:
     return n
 
 
+def fit_tables() -> int:
+    """Make every generated table fit the text block.
+
+    A results table with seven columns does not fit an A4 text block at body size, and LaTeX's
+    response is to run it into the margin rather than complain loudly — the worst offender here
+    overran by 101pt (over a third of an inch). `adjustbox`'s `max width` shrinks a table only if
+    it would overflow and leaves the rest untouched, which is why it is right where
+    \\resizebox{\\linewidth} would be wrong: that would also *enlarge* a two-column table to full
+    width.
+
+    Applied here, at build time, rather than in `cmp.report.table`, so that fixing the typography
+    does not mean re-executing fourteen notebooks (the MMM alone is a 40-minute sampler run).
+    """
+    n = 0
+    for path in sorted((BUILD / "tables").glob("*.tex")):
+        body = path.read_text()
+        if "adjustbox" in body:
+            continue
+        if r"\begin{tabular}" not in body:
+            continue
+        body = body.replace(r"\begin{tabular}",
+                            "\\begin{adjustbox}{max width=\\linewidth}\n\\begin{tabular}", 1)
+        body = body.replace(r"\end{tabular}",
+                            "\\end{tabular}\n\\end{adjustbox}", 1)
+        path.write_text(body)
+        n += 1
+    return n
+
+
 # ---------------------------------------------------------------------------- latex
 def _run(cmd: list[str], cwd: Path) -> subprocess.CompletedProcess:
     return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
@@ -224,8 +253,11 @@ def main() -> None:
                        if ln.startswith(r"\newcommand"))
         n_floats = generate_floats()
         n_tables = len(list((BUILD / "tables").glob("*.tex")))
+        n_fitted = fit_tables()
         print(f"macros.tex: {n_macros} numbers · {n_floats} figure floats · {n_tables} tables "
               f"— all from executed notebooks")
+        if n_fitted:
+            print(f"fitted {n_fitted} tables to the text block (adjustbox max width)")
 
         if not args.no_book:
             pdf = compile_tex("book", "book.tex")
