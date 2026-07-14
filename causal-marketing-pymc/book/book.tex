@@ -24,36 +24,24 @@
 
 \begin{document}
 
+% ---------------------------------------------------------------------------------------
+% Front matter.  Title, then the four things a reader is owed before Chapter 1: the
+% argument (preface), the book's one methodological commitment about itself (the numbers),
+% the symbols (notation), and how to run it (reproduction — the short version; Appendix C
+% is the long one).  \input rather than \include: these are not chapters and must not
+% start their own aux files.
+% ---------------------------------------------------------------------------------------
 \frontmatter
-\maketitle
-
-\chapter*{Preface}
-\addcontentsline{toc}{chapter}{Preface}
-
-This book is about a narrow and expensive question: \emph{did the marketing spend cause the
-sales, and was it worth the money?} It is written for the analyst who must answer it with the
-data a company actually has --- a weekly sales panel, a campaign flag, a cost line --- and who
-must then defend the answer to someone holding the budget.
-
-Each chapter takes one marketing decision and works it twice. First classically: the simplest
-correct estimator, a point estimate, an interval whose covariance assumption is stated out loud.
-Then Bayesianly: a likelihood, priors that are justified rather than defaulted, a posterior. The
-two answers are then laid side by side on the \emph{same} estimand, and the chapter says plainly
-where they agree, where they differ, and why. Usually they agree; the interesting chapters are the
-ones where they do not, and the book's central claim --- earned, not asserted --- is that when the
-Bayesian arm loses, the culprit is a \emph{misspecified likelihood}, not the Bayesian paradigm.
-The chapter you are about to read, if you are reading the pilot, is the sharpest instance of that
-claim in the book.
-
-Two conventions carry through. Every result is reported as a captioned table or figure and
-referred to by number; there is no pasted program output in these pages. And no number in the
-prose was typed by a human: each one is a macro injected from the notebook that computed it, so a
-figure in the text cannot drift from the figure in the output. A missing number is a compilation
-error, which is the property we wanted.
+\input{frontmatter/titlepage}
 
 \tableofcontents
 \listoffigures
 \listoftables
+
+\input{frontmatter/preface}
+\input{frontmatter/numbers}
+\input{frontmatter/notation}
+\input{frontmatter/reproduction}
 
 \mainmatter
 
@@ -68,18 +56,26 @@ error, which is the property we wanted.
 \include{chapters/point_vs_posterior}
 
 % ---------------------------------------------------------------------------------------
-% Part II · Methods.  (The remaining chapters are drafted in the notebooks and land in this
-% file as they are converted; the geo-lift chapter is the pilot and fixes the template for
-% all of them.)
+% Part II · Methods.  One chapter per notebook, numbered as BOOK_SPEC.md plans them: a
+% chapter keeps its number whether or not its neighbours have landed, so cross-references,
+% equation numbers and float numbers are stable across a half-written book.
+%
+% Chapters 3 (uplift) and 8 (media mix) are guarded by \IfFileExists: they are authored
+% concurrently, and a book that will not compile until every chapter is finished cannot be
+% read until every chapter is finished. The guard drops out of the source the moment both
+% files exist, and the counters around it are already correct for them.
 % ---------------------------------------------------------------------------------------
-% The geo-lift chapter is Chapter 9 of the planned book (BOOK_SPEC.md), and is numbered as
-% such: its cross-references, equation numbers and table numbers are the ones it will keep
-% when the chapters around it land. Advancing the counters is what makes the pilot a genuine
-% chapter of a whole rather than a standalone note that will have to be renumbered later.
 \setcounter{part}{1}
 \part{Methods}
+
+\setcounter{chapter}{2}
+\IfFileExists{chapters/uplift.tex}{\include{chapters/uplift}}{}
+
 \setcounter{chapter}{3}
 \include{chapters/segment_effects}
+
+\setcounter{chapter}{4}
+\include{chapters/price_elasticity}
 
 \setcounter{chapter}{5}
 \include{chapters/mediation}
@@ -87,15 +83,32 @@ error, which is the property we wanted.
 \setcounter{chapter}{6}
 \include{chapters/what_to_control}
 
+\setcounter{chapter}{7}
+\IfFileExists{chapters/mmm.tex}{\include{chapters/mmm}}{}
+
 \setcounter{chapter}{8}
 
 \include{chapters/geo_lift}
+\include{chapters/did}
 
 \setcounter{chapter}{10}
 \include{chapters/rdd}
 
 \setcounter{chapter}{11}
 \include{chapters/its}
+
+\setcounter{chapter}{12}
+\include{chapters/iv}
+
+% ---------------------------------------------------------------------------------------
+% Appendices.  A collects every planted truth in one place — which is what makes the book's
+% grading claims auditable; B documents the toolkit the notebooks are built on; C is the
+% reference version of the front matter's reproduction note.
+% ---------------------------------------------------------------------------------------
+\appendix
+\input{appendices/dgp}
+\input{appendices/cmp_api}
+\input{appendices/environments}
 
 \backmatter
 \printbibliography[heading=bibintoc, title={Bibliography}]

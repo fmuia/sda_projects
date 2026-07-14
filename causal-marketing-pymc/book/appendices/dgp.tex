@@ -1,0 +1,424 @@
+% =====================================================================================
+% Appendix A · The data-generating models.
+%
+% The equations below are the SAME equations as the chapters' §N.2 sections — they are
+% definitions of the simulated worlds, not results, and are therefore the one class of
+% literal this book permits in its source (see "A note on the numbers"). Every *planted
+% truth* is a macro, injected from the executed notebook, exactly as in the chapters.
+%
+% Chapters 3 (uplift) and 8 (media mix) are cross-referenced through the \ifcsname guard
+% below, so that this appendix typesets whether or not those chapters have landed: the
+% guard falls back to the plain chapter number, which is what \cref would print anyway.
+% =====================================================================================
+\chapter{The data-generating models}
+\label{app:dgp}
+
+\newcommand{\refuplift}{\ifcsname r@ch:uplift\endcsname\cref{ch:uplift}\else Chapter~3\fi}
+\newcommand{\refmmm}{\ifcsname r@ch:mmm\endcsname\cref{ch:mmm}\else Chapter~8\fi}
+
+A causal method cannot be graded on real data, because on real data the counterfactual is missing
+--- that is the entire problem. So every method in this book is first run against a world whose
+answer is known by construction, and only then trusted on a world whose answer is not. The claim
+each chapter then makes --- \emph{this estimator recovered the truth to within so much; that one
+did not; this interval covered on so many panels out of a hundred} --- is only as auditable as the
+truth it was graded against.
+
+This appendix is that audit. It collects, in one place and as display mathematics, every world the
+book plants. Nothing here is new: each model is the chapter's own \S N.2, and the chapter is where
+the modelling choices are argued for. What this appendix adds is the ability to read all thirteen
+worlds at once, and to check, without taking anything on trust, exactly what each estimator was
+marked against.
+
+Two conventions hold throughout. Every simulator is \textbf{seeded}, and the seed is fixed in the
+notebook, so a reader who runs the code gets the panel this book analysed and not a cousin of it.
+And the constants below are \textbf{definitions}, not measurements: they are the only literals this
+book's source permits. Every \emph{planted truth} --- the quantity the estimators are graded
+against --- is a macro, injected from the notebook that computed it, like every other number in
+these pages.
+
+% =====================================================================================
+\section{Potential outcomes, confounding, and DAGs}
+\label{app:dgp:fnd}
+
+\Cref{sec:fnd:dgm} builds three worlds, because the chapter has three jobs: to show confounding,
+to ground an estimator ladder, and to manufacture a collider.
+
+\textbf{The customer file.} Each of \nbZeroNCustomers{} customers carries features $x$ ---
+recency $R$, frequency $F$, monetary value $M$, tenure, engagement $E$ --- a baseline spend
+$\mu_0(x)$ and a planted heterogeneous effect $\tau(x)$:
+%
+\begin{equation}
+  Y \;=\; \mu_0(x) \;+\; \tau(x)\,T \;+\; \varepsilon,
+  \qquad \varepsilon \sim \mathcal N\!\left(0,\ 8^{2}\right).
+  \label{eq:app:fnd_uplift}
+\end{equation}
+%
+The simulator is run twice and \emph{only the assignment rule changes}:
+%
+\begin{align}
+  \text{randomized:}\quad    & T \sim \text{Bernoulli}(\tfrac12), \label{eq:app:fnd_rct}\\
+  \text{observational:}\quad & T \sim \text{Bernoulli}\Big(\sigma\big(1.8\,(E - 0.4)
+     + 1.2\,\tfrac{150 - R}{150} + 0.15\,(F - 5)\big)\Big). \label{eq:app:fnd_obs}
+\end{align}
+%
+The planted average effect is \eur{\nbZeroTrueAte} in \emph{both} worlds. Nothing about the effect
+changes between \cref{eq:app:fnd_rct} and \cref{eq:app:fnd_obs}; only the mechanism that assigns it
+does, and that alone is enough to break the naive estimator.
+
+\textbf{The one-confounder world}, on which the estimator ladder of \cref{sec:fnd:classical} and
+the posterior of \cref{ch:pvp} are both graded. Loyalty $L$ is observed and confounds; the trait
+$G$ is unobserved, moves spend, and never touches assignment --- so it is \emph{not} a confounder:
+%
+\begin{align}
+  L,\ G &\;\sim\; \mathcal N(0, 1), \qquad
+  T \;\sim\; \text{Bernoulli}\big(\sigma(0.8\,L)\big), \label{eq:app:fnd_dag_t}\\
+  Y &\;=\; 20 \;+\; 5\,L \;+\; 6\,T \;+\; 3\,G \;+\; \varepsilon,
+       \qquad \varepsilon \sim \mathcal N\!\left(0,\ 4^{2}\right). \label{eq:app:fnd_dag_y}
+\end{align}
+%
+The planted effect is \eur{\nbZeroTrueDag}. The coefficient $5$ on $L$ in
+\cref{eq:app:fnd_dag_y} and the coefficient $0.8$ on $L$ in \cref{eq:app:fnd_dag_t} are the two
+halves of the confounding; remove either and the naive estimator would be fine.
+
+\textbf{The zero-effect world}, in which any effect an estimator reports is manufactured rather
+than merely mismeasured:
+%
+\begin{equation}
+  T \sim \text{Bernoulli}(\tfrac12), \quad
+  Y = 20 + 0 \cdot T + \varepsilon, \quad \varepsilon \sim \mathcal N(0, 5^2), \quad
+  C = \mathbf 1\big\{\,1.2\,T + 1.2\,\tilde Y + \eta > 0.8\,\big\},
+  \label{eq:app:fnd_collider}
+\end{equation}
+%
+with $\eta \sim \mathcal N(0,1)$ and $\tilde Y$ spend standardized. $C$ --- ``responded to the
+campaign'' --- is a common effect of the treatment and the outcome. \Cref{eq:app:fnd_collider} is
+the smallest machine that manufactures a causal effect out of nothing.
+
+\begin{remark}
+\Cref{ch:pvp} plants no world of its own. It fits \crefrange{eq:app:fnd_dag_t}{eq:app:fnd_dag_y}
+twice --- once by ordinary least squares, once as a posterior --- which is precisely what makes its
+comparison a comparison.
+\end{remark}
+
+% =====================================================================================
+\section{Uplift targeting}
+\label{app:dgp:uplift}
+
+The world of \refuplift{} is a customer file with a known, deliberately awkward,
+\emph{heterogeneous} effect --- because the chapter's question is not \emph{does the discount
+work?} but \emph{whom should it be sent to?}, and those have different answers.
+
+Customers carry recency $R \sim U(5, 330)$, frequency $F \sim \text{Poisson}(5)$, monetary value
+$M \sim U(15, 180)$, tenure $\sim U(1,60)$ and engagement $E \sim \text{Beta}(2,3)$. Baseline spend
+is linear in them; the \emph{planted per-customer effect} is not, and its shape is the whole point
+of the chapter:
+%
+\begin{align}
+  \mu_0(x) &\;=\; \big[\,20 + 1.4\,F + 0.25\,M + 12\,E - 0.03\,R\,\big]_{+}, \label{eq:app:up_mu}\\
+  \tau(x)  &\;=\; \underbrace{42\, e^{-\left(\frac{R - 120}{70}\right)^{2}}
+                   \,\sigma(F - 3)\,\sigma\big(9(E - 0.28)\big)}_{\text{the persuadables}}
+              \;-\; \underbrace{24\,\sigma\big(9(0.22 - E)\big)\,\sigma\big(1.2(F - 6)\big)}
+                   _{\text{the sleeping dogs}}, \label{eq:app:up_tau}\\
+  Y &\;=\; \mu_0(x) \;+\; \tau(x)\,T \;+\; \varepsilon,
+       \qquad \varepsilon \sim \mathcal N\!\left(0,\ 8^{2}\right). \label{eq:app:up_y}
+\end{align}
+%
+\Cref{eq:app:up_tau} is planted to be \emph{non-monotone and negative in places}. A band of
+mid-recency, engaged, frequent buyers responds strongly; a pocket of disengaged frequent buyers is
+\emph{harmed} by the discount --- the sleeping dogs, whom an average-effect analysis cannot see
+and a targeting policy must not email. Assignment is either a coin flip or the same targeted
+propensity as \cref{eq:app:fnd_obs}, and an optional hidden confounder $U$ enters both the
+propensity logit and spend, with a single knob scaling each channel --- which is what the
+sensitivity analysis sweeps.
+
+% =====================================================================================
+\section{Segment effects}
+\label{app:dgp:seg}
+
+\Cref{sec:seg:dgm} draws \nbTwoN{} customers with a value tier $v_i \in \{0,1\}$, an engagement
+score $g_i \sim U(0,1)$, a background trend covariate $t_i$, and an email $e_i$ assigned by a fair
+coin. The planted per-customer effect is linear in the two moderators and in nothing else:
+%
+\begin{align}
+  \tau_i &\;=\; 3 \;+\; 9\,v_i \;+\; 8\,g_i, \label{eq:app:seg_tau}\\
+  Y_i &\;=\; \beta_0 \;+\; \tau_i\,e_i \;+\; \beta_2 v_i \;+\; \beta_5 g_i \;+\; \beta_6 t_i
+             \;+\; \varepsilon_i,
+       \qquad \varepsilon_i \sim \mathcal N\!\left(0,\ 6^{2}\right). \label{eq:app:seg_y}
+\end{align}
+%
+At the average engagement $g = 0.5$ the two tier effects are \eur{\nbTwoTrueLow} (low) and
+\eur{\nbTwoTrueHigh} (high) --- \emph{those} are the grades --- and the population average effect
+is \eur{\nbTwoTrueAte}. The contact cost, \eur{\nbTwoCost}, is planted \emph{between} the two, so
+that the pooling choice changes what the firm does rather than merely how it reports.
+
+% =====================================================================================
+\section{Price elasticity}
+\label{app:dgp:pe}
+
+\Cref{sec:pe:dgm} produces a region-week panel: $R = \nbThreeNRegions$ regions over
+\nbThreeNWeeks{} weeks, of which three are deliberately thinned so that shrinkage has something to
+do (\nbThreeNObs{} region-weeks in all). Each region's elasticity is drawn once and then fixed:
+%
+\begin{align}
+  \beta_r &\sim \mathcal N\!\left(-1.4,\ 0.35^{2}\right), \label{eq:app:pe_beta}\\
+  s_t &= 0.3 \sin\!\Big(\tfrac{2\pi t}{26}\Big), \quad g_t = 0.01\,t, \quad
+        C_{rt} \sim \mathcal N\!\left(20,\ 2^{2}\right), \quad
+        u_{rt} \sim \mathcal N(0,1), \label{eq:app:pe_latent}\\
+  \log P_{rt} &= \log 15 \;-\; 0.05\,\frac{C_{rt}}{20} \;+\; \kappa\, u_{rt} \;+\; \nu_{rt},
+        \label{eq:app:pe_price}\\
+  \log Q_{rt} &= 2.5 \;+\; \beta_r \log P_{rt} \;+\; 0.4\,\frac{C_{rt} - 20}{20} \;+\; s_t \;+\; g_t
+        \;+\; u_{rt} \;+\; \varepsilon_{rt}, \label{eq:app:pe_demand}
+\end{align}
+%
+with $\nu_{rt} \sim \mathcal N(0,\ 0.05^{2})$ and
+$\varepsilon_{rt} \sim \mathcal N(0,\ 0.08^{2})$.
+
+The competitor's price $C_{rt}$ appears in \emph{both} \cref{eq:app:pe_price} and
+\cref{eq:app:pe_demand}, which is exactly what makes it a confounder; season and trend appear only
+in demand, which makes them precision covariates rather than confounders. $\kappa$ is the
+\textbf{endogeneity switch}: at $\kappa = 0$ the same demand shock $u_{rt}$ is zeroed out and
+recovery is clean; turned on, it enters price and demand at once, and no pooling scheme can undo
+the simultaneity. The fleet-mean elasticity is $\nbThreeTrueFleet$ and the between-region spread is
+$\nbThreeTrueTau$.
+
+% =====================================================================================
+\section{Funnel mediation}
+\label{app:dgp:med}
+
+\Cref{sec:med:dgm} draws \nbFourNObs{} users through a linear structural chain, one equation per
+arrow of the funnel. The onboarding score $O$ and the acquisition channel quality $Q$ are
+exogenous:
+%
+\begin{align}
+  O,\ Q &\;\sim\; U(0,1), \label{eq:app:med_exog}\\
+  \text{engagement} &\;=\; 2.2\,O \;+\; 1.1\,Q \;+\; \varepsilon_1,
+        &\varepsilon_1 &\sim \mathcal N(0,\ 0.4^{2}), \label{eq:app:med_eng}\\
+  \text{activated} &\;=\; 1.6\,\text{engagement} \;+\; 0.6\,Q \;+\; \varepsilon_2,
+        &\varepsilon_2 &\sim \mathcal N(0,\ 0.4^{2}), \label{eq:app:med_act}\\
+  \text{converted} &\;=\; 0.9\,\text{activated} \;+\; 0.35\,\text{engagement} \;+\; \varepsilon_3,
+        &\varepsilon_3 &\sim \mathcal N(0,\ 0.3^{2}). \label{eq:app:med_conv}
+\end{align}
+%
+Two plants carry the chapter. There is \textbf{no $O \to \text{converted}$ arrow}, so the true
+natural direct effect is exactly $\nbFourTrueNde$ and every unit of onboarding's value travels
+through the funnel; because the system is linear, each route's effect is the product of its arrows'
+coefficients, giving $\nbFourTrueViaAct$ through activation and $\nbFourTrueViaEng$ through
+engagement alone, for a total of $\nbFourTrueTotal$. And \textbf{$Q$ feeds two stages}
+(\cref{eq:app:med_eng} and \cref{eq:app:med_act}), so it is a common cause of two mediators: fail
+to adjust for it and every path product built on the engagement-to-activation edge is poisoned.
+
+% =====================================================================================
+\section{What to control for}
+\label{app:dgp:ctrl}
+
+\Cref{sec:ctrl:dgm} draws \nbFiveN{} customers. The world is a superset of
+\crefrange{eq:app:fnd_dag_t}{eq:app:fnd_dag_y} --- the same confounder, the same planted
+\eur{\nbFiveTrueAte} --- with two \emph{post-treatment} columns added, because the chapter is about
+the variables an analyst is tempted to put in the model and must not:
+%
+\begin{align}
+  T &\;\sim\; \text{Bernoulli}\big(\sigma(0.8\,L)\big),
+      \qquad L,\ G \sim \mathcal N(0,1), \label{eq:app:ctrl_t}\\
+  Y &\;=\; 20 \;+\; 5\,L \;+\; 6\,T \;+\; 3\,G \;+\; \varepsilon,
+      \qquad \varepsilon \sim \mathcal N(0,\,4^{2}), \label{eq:app:ctrl_y}\\
+  \text{opened\_email} &\;\sim\; \text{Bernoulli}\big(\sigma(1.5\,T + 0.7\,G)\big),
+      \label{eq:app:ctrl_open}\\
+  \text{responded} &\;\sim\; \text{Bernoulli}\big(\sigma(1.2\,T + 0.05\,(Y - \bar Y))\big).
+      \label{eq:app:ctrl_resp}
+\end{align}
+%
+\Cref{eq:app:ctrl_resp} is a collider on $T$ and $Y$ --- caused by both, causing neither. And
+\cref{eq:app:ctrl_open} is the subtler trap: a collider on $T$ and the \emph{unobserved} $G$, so a
+graph drawn from the observed columns alone cannot see that it is one. Two auxiliary worlds of
+\nbFiveMiniN{} customers each isolate a mediator and the M-bias structure.
+
+% =====================================================================================
+\section{Incrementality and the media mix}
+\label{app:dgp:mmm}
+
+The world of \refmmm{} is the only one in the book whose simulator has the \emph{same functional
+form as the model that will be fitted to it} --- adstock carry-over and a Michaelis--Menten saturation
+curve --- which is what makes its failures instructive rather than trivial. Over 156 weeks, with
+$t$ the week index and $\text{season}_t = \sin(2\pi t / 52)$:
+%
+\begin{align}
+  \text{tv}_t &\;=\; \big[\,40 + 8\,\text{season}_t + \zeta_t\,\big]_{+},
+      \qquad \zeta_t \sim \mathcal N(0, 8^{2}), \label{eq:app:mmm_tv}\\
+  \text{search}_t &\;=\; \big[\,25 + 11\,\text{season}_t + \xi_t\,\big]_{+},
+      \qquad \xi_t \sim \mathcal N(0, 7^{2}), \label{eq:app:mmm_search}\\
+  A_c(t) &\;=\; x_{c,t} \;+\; \lambda_c\, A_c(t-1),
+      \qquad f_c(a) \;=\; \frac{\alpha_c\, a}{\kappa_c + a},
+      \label{eq:app:mmm_adstock}\\
+  \text{sales}_t &\;=\; 100 \;+\; f_{\text{tv}}\big(A_{\text{tv}}(t)\big)
+       \;+\; f_{\text{search}}\big(A_{\text{search}}(t)\big)
+       \;+\; \underbrace{35\,\text{season}_t}_{\text{the confounder}}
+       \;+\; \varepsilon_t, \label{eq:app:mmm_sales}
+\end{align}
+%
+with $\varepsilon_t \sim \mathcal N(0, 4^{2})$, carry-over rates $\lambda_{\text{tv}} = 0.4$ and
+$\lambda_{\text{search}} = 0.2$, and saturation constants
+$(\alpha, \kappa)_{\text{tv}} = (60, 50)$ against
+$(\alpha, \kappa)_{\text{search}} = (8, 40)$.
+%
+Seasonality is the confounder and it is planted to be one twice over: it lifts sales directly
+(the $35\,\text{season}_t$ term of \cref{eq:app:mmm_sales}) \emph{and} it drives spend --- brand
+search far more strongly than television (\cref{eq:app:mmm_search} against
+\cref{eq:app:mmm_tv}). So a naive attribution that omits it over-credits the channel that merely
+\emph{follows} demand, while adjusting for it --- which is what the backdoor criterion prescribes
+--- corrects the ranking. The saturation curves of \cref{eq:app:mmm_adstock} are what make the
+channels' true returns computable: television has a large real effect and brand search a small one,
+and both are known exactly, week by week, which is what lets the chapter grade a media-mix model's
+\emph{levels} rather than merely admire its fit.
+
+% =====================================================================================
+\section{Geo lift}
+\label{app:dgp:geo}
+
+\Cref{sec:sc:dgm} produces a weekly sales panel of \nbSevenNDmas{} markets over
+\nbSevenNWeeks{} weeks. Three latent factors are \emph{shared by every market} --- a secular trend,
+a seasonal cycle, and a macroeconomic random walk:
+%
+\begin{align}
+  g_t &= 0.4\,t, \qquad
+  s_t = 8\sin\!\Big(\tfrac{2\pi t}{26}\Big) + 4\sin\!\Big(\tfrac{2\pi t}{13}\Big), \label{eq:app:geo_gs}\\
+  m_t &= \sum_{u \le t} \eta_u, \qquad \eta_u \sim \mathcal N\!\left(0,\ 1.2^{2}\right),
+        \label{eq:app:geo_macro}\\
+  Y_{it} &= c_i \;+\; \lambda_{i1}\,g_t \;+\; \lambda_{i2}\,s_t \;+\; \lambda_{i3}\,m_t
+           \;+\; \varepsilon_{it},
+  \qquad \varepsilon_{it} \sim \mathcal N\!\left(0,\ 3^{2}\right), \label{eq:app:geo_y}
+\end{align}
+%
+with market baselines $c_i \sim U(80, 140)$ and factor loadings $\lambda_{ij} \sim U(0.6, 1.4)$.
+The campaign is planted in market $0$ alone, from week \nbSevenLaunchWeek{} onward, as a
+proportional lift of \pc{\nbSevenLiftPct} on that market's untreated level:
+%
+\begin{equation}
+  \Delta_t \;=\; 0.12 \,\big(c_0 + \lambda_{01} g_t + \lambda_{02} s_t + \lambda_{03} m_t\big)
+  \cdot \mathbf 1[\,t \ge \nbSevenLaunchWeek\,],
+  \qquad Y_{0t} \;\mathrel{+}=\; \Delta_t .
+  \label{eq:app:geo_lift}
+\end{equation}
+%
+Summed over the \nbSevenNPost{} post-launch weeks, the planted total lift is
+\keur{\nbSevenTrueTotal}. \Cref{eq:app:geo_macro} is the single most consequential line in this
+appendix: $m_t$ is a \emph{random walk}, so whatever share of it the donor weights fail to match
+leaks into the estimator's error as a persistent offset rather than as fresh weekly noise --- and
+that is why the Bayesian arm's iid likelihood underprices the uncertainty of the sum
+(\cref{sec:sc:compare}). A world planted with iid errors would have hidden the book's sharpest
+finding.
+
+% =====================================================================================
+\section{Staggered rollout}
+\label{app:dgp:did}
+
+\Cref{sec:did:dgm} draws \nbEightNStores{} stores, of which \nbEightNTreated{} receive the loyalty
+app ($D_s = 1$), over \nbEightNWeeks{} weeks with the launch in week \nbEightLaunch:
+%
+\begin{equation}
+  Y_{st} \;=\; \underbrace{\alpha_s}_{\text{store baseline}}
+  \;+\; \underbrace{60 \sin\!\Big(\tfrac{2\pi t}{12}\Big)}_{\text{shared seasonal tide}}
+  \;+\; \underbrace{400\, D_s\, \mathbf 1[\,t \ge 12\,]}_{\text{the app}}
+  \;+\; \varepsilon_{st},
+  \label{eq:app:did_y}
+\end{equation}
+%
+with $\alpha_s \sim \mathcal N(1000,\ 150^{2})$ and
+$\varepsilon_{st} \sim \mathcal N(0,\ 80^{2})$. The planted effect is \eur{\nbEightTrueEffect} per
+store per week.
+
+Two features are planted deliberately and both matter later. The seasonal term carries \emph{no
+store-specific loading}: the tide lifts every store by the same euros in the same week, so
+\textbf{parallel trends hold exactly, by construction} --- which is the only condition under which
+a flat pre-trend can be recognised as a true negative rather than hoped to be one. And the store
+baseline is \emph{large}: its standard deviation, \eur{\nbEightAlphaSd}, is nearly twice the weekly
+noise, \eur{\nbEightNoiseSd}. That single number is what the difference-in-differences contrast
+cancels, what an iid standard error charges the estimate for anyway, and what the pooled Bayesian
+likelihood is forced to swallow into its residual variance --- which is why that chapter's
+posterior comes out too \emph{wide}.
+
+% =====================================================================================
+\section{Threshold perks}
+\label{app:dgp:rdd}
+
+\Cref{sec:rd:dgm} draws \nbNineN{} customers with an annual spend $S_i$ --- the running variable
+--- concentrated around the cutoff $c = \eur{\nbNineCutoff}$, and grants the Gold perk sharply:
+%
+\begin{align}
+  S_i &\;\sim\; \mathcal N\!\left(100,\ 40^{2}\right)\ \text{clipped below at } 1,
+        \qquad D_i \;=\; \mathbf 1\!\left[\,S_i \ge c\,\right], \label{eq:app:rd_s}\\
+  p(S_i, D_i) &\;=\; \operatorname{clip}\!\Big(
+      \underbrace{0.45}_{\text{baseline}}
+      \;+\; \underbrace{0.0015\,(S_i - c)}_{\text{the confounder}}
+      \;+\; \underbrace{\tau\, D_i}_{\text{the perk}},\ 0.02,\ 0.98\Big), \label{eq:app:rd_p}\\
+  Y_i \mid S_i, D_i &\;\sim\; \text{Bernoulli}\big(p(S_i, D_i)\big),
+      \qquad \tau \;=\; 0.14 . \label{eq:app:rd_y}
+\end{align}
+%
+The slope $0.0015$ per euro is the \emph{smooth} part --- big spenders retain more anyway, and this
+term knows nothing about any perk --- and the jump $\tau = \nbNineTrueJump$\,pp is the
+\emph{causal} part, discontinuous by construction. Two properties that are facts here and
+\emph{assumptions} on real data: the smooth part passes through the threshold without a kink, and
+nobody manipulates $S$ to clear the tier.
+
+% =====================================================================================
+\section{The redesign}
+\label{app:dgp:its}
+
+\Cref{sec:its:dgm} produces \nbTenNDays{} days of a daily conversion rate, with the redesign
+landing on day $t^{*} = \nbTenRedesignDay$ for everyone at once --- no control group exists, and
+none ever will:
+%
+\begin{equation}
+  Y_t \;=\; \underbrace{0.10 + 0.00015\,t}_{\text{level {+} drift}}
+        \;+\; \underbrace{0.01 \sin\!\Big(\tfrac{2\pi t}{7}\Big)}_{\text{weekly cycle}}
+        \;+\; \underbrace{0.03\;\mathbf 1[\,t \ge t^{*}\,]}_{\text{the redesign}}
+        \;+\; \varepsilon_t,
+  \qquad \varepsilon_t \sim \mathcal N\!\left(0,\ 0.006^{2}\right).
+  \label{eq:app:its_y}
+\end{equation}
+%
+The planted effect is a \emph{pure level step} of \nbTenTrueLift\,pp on a base of
+\pc{\nbTenBaseRate}. The drift is the confounder, and it is planted small enough to be invisible on
+a chart and large enough to dominate a before-and-after comparison: at $0.00015$ per day it
+compounds across a pre-period into a bias that arithmetic alone can predict before any estimator
+runs. The weekly cycle is the series' one genuinely autocorrelated feature, and it exists so that a
+model which forgets it can be caught by a residual diagnostic.
+
+% =====================================================================================
+\section{Endogenous exposure}
+\label{app:dgp:iv}
+
+\Cref{sec:iv:dgm} draws \nbElevenN{} customers. Each carries an \textbf{unobserved} engagement
+$U_i$ --- the intent the ad auction can see and the analyst cannot --- and receives a
+\textbf{randomized} encouragement $Z_i$, a serving-priority lottery that makes the ad more likely
+to reach them but is not itself an ad:
+%
+\begin{align}
+  U_i &\sim \mathcal N(0, 1), \qquad Z_i \sim \text{Bernoulli}(\tfrac12), \label{eq:app:iv_u}\\
+  X_i &\sim \text{Bernoulli}\Big(\sigma\big(0.3 + 1.1\,Z_i + 0.8\,U_i\big)\Big), \label{eq:app:iv_x}\\
+  Y_i &= 50 \;+\; 15\,X_i \;+\; 12\,U_i \;+\; \varepsilon_i,
+        \qquad \varepsilon_i \sim \mathcal N\!\left(0,\ 6^{2}\right). \label{eq:app:iv_y}
+\end{align}
+%
+The planted effect of an exposure is \eur{\nbElevenTrue}. Everything the chapter is about is
+visible in where $U$ appears: it enters \emph{both} \cref{eq:app:iv_x} and \cref{eq:app:iv_y}, and
+that double appearance \emph{is} the self-selection. The instrument is the escape, and it is
+defined by an \emph{absence} --- $Z$ shifts exposure in \cref{eq:app:iv_x} and appears nowhere in
+\cref{eq:app:iv_y}. The exclusion restriction is not a property one can test; here, uniquely, it is
+a property one can \emph{read}.
+
+% =====================================================================================
+\section{The worlds that are not simulated}
+\label{app:dgp:real}
+
+Four sections of this book have no data-generating model, because their data was generated by the
+world. \Cref{sec:fnd:real} and \cref{sec:ctrl:real} use \citet{lalonde1986}'s job-training data, in
+\citeauthor{dehejia1999}'s composite \citep{dehejia1999}. \Cref{sec:sc:real} uses the geo experiment
+published with Google's geo-experiment methodology \citep{vaver2011, kerman2017}. \Cref{sec:iv:real}
+uses Criteo's advertising experiment \citep{diemert2018}.
+
+For these there is no planted truth, and the chapters do not pretend otherwise. What replaces it is
+whatever the data itself can supply: a published experimental benchmark; an estimator that
+randomization alone makes unbiased; a Wald estimate taken over the full file. That is a weaker
+grade than a simulator gives --- and it is the strongest grade real data can ever give, which is
+exactly why the simulated worlds above exist.

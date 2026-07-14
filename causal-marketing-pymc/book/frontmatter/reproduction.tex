@@ -1,0 +1,62 @@
+% =====================================================================================
+% Reproduction — the short version. The long one is Appendix C, which this points at.
+% No number appears here, so no macro is cited.
+% =====================================================================================
+\chapter*{Reproducing this book}
+\addcontentsline{toc}{chapter}{Reproducing this book}
+\markboth{Reproducing this book}{Reproducing this book}
+
+Everything in these pages is runnable. The analyses live in fourteen notebooks; the book is
+generated from them. \Cref{app:env} gives the full account --- exact commands, the notebook-to-chapter
+map, and what each environment variable changes. This page is the short one.
+
+\section*{Two environments, and why}
+
+The code ships \emph{two} Python environments, and the split is the single largest engineering
+decision behind the repository, so it is stated rather than hidden.
+
+\begin{description}[leftmargin=1.2em, style=nextline, font=\normalfont\bfseries]
+  \item[\code{cmp-core} --- pymc $\ge$ 6.] The foundations, the uplift and hierarchical models,
+  mediation, the choice of controls, and synthetic control --- plus the interactive apps and the
+  package tests.
+  \item[\code{cmp-legacy} --- pymc $<$ 6.] The chapters built on \code{causalpy} and
+  \code{pymc-marketing}: media mix, difference-in-differences, regression discontinuity,
+  interrupted time series, and instrumental variables.
+\end{description}
+
+The reason is not taste. As of writing, \code{pymc-bart}, \code{bambi} and \code{pathmc} require
+pymc~6, while \code{causalpy} and \code{pymc-marketing} still pin pymc~5. No single environment
+satisfies both. Holding the whole book back to pymc~5 would have cost the modern BART and
+path-analysis work; vendoring patched forks would have made the results unreproducible for the
+reader. Two environments is the honest cost of a genuinely split ecosystem, and when the two
+libraries move to pymc~6 the split collapses back into one.
+
+\section*{Two switches}
+
+\code{CMP\_FAST} (default \code{1}) runs every notebook in a teaching mode: short chains, few
+trees, under two minutes, suitable for a live rerun in front of a class. \textbf{Every number in
+this book comes from the full run, \code{CMP\_FAST=0}.} The fast mode is for teaching; it is not
+what anything here was graded on.
+
+\code{CMP\_REAL} (default \code{0}) gates the cells that fetch a real public dataset over the
+network, so that the offline test suite stays deterministic. It is set for the chapters that grade
+themselves against real data: \cref{ch:foundations} and \cref{ch:ctrl} on the LaLonde job-training
+benchmark, \cref{ch:geo} on Google's published geo experiment, and \cref{ch:iv} on Criteo's
+advertising experiment.
+
+\section*{Rebuilding the book}
+
+\begin{quote}
+\code{make book}
+\end{quote}
+
+That regenerates the macro file from the notebooks' emitted results, re-renders every figure and
+table, and typesets the book and the per-chapter offprints.
+
+One consequence of the injection rule (\emph{A note on the numbers}, above) deserves to be said
+plainly, because it will otherwise be met as a bug. \textbf{A fresh clone cannot build the book.}
+The generated directory holds no results until the notebooks have been executed, and a chapter that
+cites a result the notebooks have not emitted does not typeset a blank --- it halts the build. So
+the first step in any reproduction is to run the notebooks at full quality, in both environments,
+and only then to typeset. That the book refuses to compile from an empty results directory is the
+same property, seen from the other side, that guarantees no number in it is stale.

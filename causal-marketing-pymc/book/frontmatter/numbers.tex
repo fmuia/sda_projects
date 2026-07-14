@@ -1,0 +1,67 @@
+% =====================================================================================
+% A note on the numbers — the book's one methodological commitment about itself.
+%
+% The single honest exception (LaLonde's $1,800 experimental benchmark, cited rather than
+% computed) is stated here AND flagged in place in Chapter 1. It is itself emitted as a
+% macro, so even the cited number is not retyped.
+% =====================================================================================
+\chapter*{A note on the numbers}
+\addcontentsline{toc}{chapter}{A note on the numbers}
+\markboth{A note on the numbers}{A note on the numbers}
+
+\textbf{Every number in this book was injected from an executed notebook. None was retyped.}
+
+The claim is mechanical rather than aspirational, and it is worth one page because it changes what
+a reader is entitled to assume. Each analysis in this book lives in a runnable notebook, and each
+notebook \emph{emits} its results --- scalars, tables and figures --- as it computes them. The
+book then \emph{pulls them in}: a scalar becomes a macro, a table becomes a typeset
+\code{booktabs} float, a figure becomes a vector page-sized PDF with the caption that was written
+beside the computation that produced it. The prose cites the macro. So the sentence a reader meets
+in a chapter and the number the notebook printed cannot disagree, because they are the same
+object.
+
+Two properties follow, and the second is the one that matters.
+
+\emph{A stale number is impossible.} Re-run a notebook with a different seed, a longer chain or a
+corrected model, rebuild, and every figure in the prose that depends on it moves. There is no
+second copy of the result to fall out of date, because the prose never held a copy.
+
+\emph{A missing number is a compilation error.} If a chapter cites a result the notebooks did not
+emit, the typesetter halts and the book refuses to produce a PDF. This is deliberate and it is not
+a nuisance: a hole is louder than a stale number, and the failure mode this whole apparatus exists
+to prevent --- a paragraph that quietly describes an output the code stopped producing a year ago
+--- fails silently by construction unless something is built to make it fail loudly.
+
+The discipline extends to places where it is inconvenient. The epigraph that opens each chapter
+carries real numbers, and they are macros. The caption under each figure carries real numbers, and
+they were authored in the notebook, next to the computation, and travel with the figure. The
+summary tables were not laid out by hand at all; they are the notebook's own data frames, rendered.
+
+Three classes of literal do appear in the source, and they are literals precisely because they are
+\emph{not} results. The constants of each data-generating model --- the coefficients this book
+plants in its simulated worlds, collected in \cref{app:dgp} --- are definitions of the world, not
+measurements of it. The decision thresholds ($\Prob > 0.9$ for \textsc{go}, $< 0.5$ for
+\textsc{no-go}) and the interval level (90\,\%) are stated conventions, argued with in the text
+rather than estimated from data. And the priors are model statements, defended in the section that
+declares them.
+
+\section*{The one exception, stated}
+
+There is exactly one number in this book that was \emph{not} computed by the code that surrounds
+it, and it deserves to be named on its own page rather than discovered in a footnote.
+
+\Cref{ch:foundations} closes on \citet{lalonde1986}'s job-training data, where a randomized
+evaluation and an observational comparison exist side by side --- which is the only configuration
+in which a claim about adjustment can be graded on real data at all. The randomized benchmark ---
+the experimental effect of training on 1978 earnings, about \usd{\nbZeroLlBenchmark} --- is
+\textbf{cited from the published literature, not estimated here}. It is not recomputed from the
+file the notebook analyses, which carries the trainees and the non-experimental comparison group
+--- the observational arm, whose whole purpose is to be graded against the experiment. Everything
+else in that section is computed --- the naive comparison, the adjusted estimates, the overlap
+diagnostic, and the
+\usd{\nbZeroLlSwing} the estimate moves under adjustment. The benchmark that grades them is
+borrowed, and it is flagged as borrowed in the notebook, in the chapter, and here.
+
+Even that number is not retyped. It is emitted as a macro like every other, carrying a note that
+records its provenance as a citation. The exception is to the \emph{computation}, not to the
+injection.

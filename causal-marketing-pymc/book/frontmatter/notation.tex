@@ -1,0 +1,151 @@
+% =====================================================================================
+% Notation.
+%
+% Every symbol below was taken from the chapter that uses it, not invented for this table:
+% the estimand ladder and the potential-outcome notation are Chapter 1 §1.3, the
+% do-operator is Chapter 1 §1.4 and Chapter 7 §7.3, the simplex weights are Chapter 9 §9.3,
+% the instrument is Chapter 13 §13.2. The overloading warning at the end is a fact about
+% the chapters, not a preference.
+%
+% No number appears in this file, so no macro is cited: the interval level (90 %) is a
+% convention stated in the text, not a result.
+% =====================================================================================
+\chapter*{Notation}
+\addcontentsline{toc}{chapter}{Notation}
+\markboth{Notation}{Notation}
+
+The book uses one notation throughout, and the table below is it. Where a chapter needs a symbol of
+its own --- a donor weight, an adstock rate, a running variable --- it defines it in place; what is
+collected here is what recurs.
+
+\section*{Potential outcomes and estimands}
+
+\begin{center}
+\small
+\begin{longtable}{@{}l@{\hspace{1.5em}}p{0.68\linewidth}@{}}
+\toprule
+\textbf{Symbol} & \textbf{Meaning} \\
+\midrule
+\endhead
+$i$ & A unit: a customer, a market, a store, a region, a day. \\[2pt]
+$T_i \in \{0,1\}$ & The treatment: the email is sent, the campaign runs, the perk is granted.
+  Written $D$ where a chapter's treatment is a group or threshold indicator (\cref{ch:did},
+  \cref{ch:rdd}), $e$ where it is an email (\cref{ch:seg}), and $X$ where it is an ad exposure the
+  customer chose (\cref{ch:iv}). \\[2pt]
+$Y_i$ & The observed outcome: spend, revenue, conversion, retention. \\[2pt]
+$Y_i(1),\ Y_i(0)$ & The two \emph{potential outcomes} of unit $i$ --- what it would spend if
+  treated, and if not \citep{neyman1923, rubin1974}. Both exist before anything is done; the
+  treatment decides which is revealed, and $Y_i = T_i Y_i(1) + (1 - T_i) Y_i(0)$ is that fact,
+  called \emph{consistency}. The other branch is missing, always, for every unit: the fundamental
+  problem of causal inference \citep{holland1986}. \\[2pt]
+$\tau$ & The causal effect. Unqualified, it is the scalar estimand the chapter targets, and each
+  chapter's identification section says which of the four below that is. \\[2pt]
+ATE & $\E[Y(1) - Y(0)]$ --- the effect on a randomly chosen unit. \emph{Should we roll it out to
+  everyone?} \\[2pt]
+ATT & $\E[Y(1) - Y(0) \mid T{=}1]$ --- the effect on those actually treated. \emph{What did our
+  past sends earn?} The estimand of \cref{ch:did}, and of the synthetic control in
+  \cref{ch:geo}. \\[2pt]
+$\tau(x)$ & $\E[Y(1) - Y(0) \mid X{=}x]$ --- the CATE: the effect for units like $x$. \emph{Who
+  next?} The estimand of Chapter~3 and \cref{ch:seg}. \\[2pt]
+LATE & The effect on \emph{compliers} --- the units an instrument moves \citep{imbens1994,
+  angrist1996}. The honest scope of \cref{ch:iv}, and of any design in which exposure could be
+  encouraged but not assigned. \\[2pt]
+$\tau_t$ & A per-period effect, summed over a window to give the total the business actually buys
+  (\cref{ch:geo}, \cref{ch:its}). \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+\section*{Assignment, covariates, and the graph}
+
+\begin{center}
+\small
+\begin{longtable}{@{}l@{\hspace{1.5em}}p{0.68\linewidth}@{}}
+\toprule
+\textbf{Symbol} & \textbf{Meaning} \\
+\midrule
+\endhead
+$X$ & The measured covariates --- and, when \citeauthor{pearl1995}'s backdoor criterion is
+  satisfied, the \emph{adjustment set}: the variables conditioned on to close every backdoor path
+  from treatment to outcome \citep{pearl1995}. Written $Z$ in \cref{ch:ctrl} and
+  \cref{ch:pe}. \\[2pt]
+$U,\ G$ & An \emph{unobserved} confounder: present in the world, absent from the warehouse. What
+  sensitivity analysis prices, and what no diagnostic can see. \\[2pt]
+$e(x)$ & The \emph{propensity score} $\Prob(T{=}1 \mid X{=}x)$ \citep{rosenbaum1983}. Overlap
+  requires $0 < e(x) < 1$: every kind of unit could have gone either way. \\[2pt]
+$\perp$ & Independence. \emph{Unconfoundedness} is $\{Y(0), Y(1)\} \perp T \mid X$: within units
+  alike on $X$, who was treated says nothing further about what they would have done. Untestable,
+  and load-bearing everywhere it is assumed. \\[2pt]
+$do(T{=}t)$ & \citeauthor{pearl2009}'s intervention operator: \emph{setting} the treatment, as
+  against observing units that happen to have it \citep{pearl2009}. $\Prob(Y \mid do(T{=}t))$ is
+  what a decision consumes; $\Prob(Y \mid T{=}t)$ is what a dashboard reports; they coincide only
+  under an identification argument. \\[2pt]
+$\sigma(z)$ & The logistic function $1/(1 + e^{-z})$ --- how the simulated worlds of
+  \cref{app:dgp} turn a score into an assignment probability. \\[2pt]
+$\varepsilon,\ \eta,\ \nu$ & Structural noise, with its distribution always stated. \\[2pt]
+$\mathbf 1[\,\cdot\,]$ & The indicator: $1$ if the condition holds, $0$ otherwise. \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+\section*{Estimators, uncertainty, and decisions}
+
+\begin{center}
+\small
+\begin{longtable}{@{}l@{\hspace{1.5em}}p{0.68\linewidth}@{}}
+\toprule
+\textbf{Symbol} & \textbf{Meaning} \\
+\midrule
+\endhead
+$\hat\theta$ & The hat marks an \emph{estimate}, computed from data, as against the estimand it
+  targets: $\hat\tau$ estimates $\tau$. A subscript names the estimator
+  ($\hat\tau_{\text{naive}}$, $\hat\tau_{\text{AIPW}}$, $\hat\tau_{\text{DiD}}$), so that the rows
+  of a comparison table cannot be mistaken for competing truths. \\[2pt]
+$\hat{\mathrm{se}}$ & An estimated standard error --- always reported with the covariance
+  assumption that produced it (HC1, cluster, HAC, bootstrap). An interval built on the wrong
+  standard error is a confident lie, and \cref{app:cmp} is built to make that choice
+  unskippable. \\[2pt]
+$\E,\ \Var,\ \sd,\ \Prob$ & Expectation, variance, standard deviation, probability. \\[2pt]
+$p(\theta),\ p(\theta \mid D)$ & A model's prior over its parameters, and its posterior given the
+  data $D$. \\[2pt]
+$\hat R$, ESS & Sampler diagnostics: the potential scale-reduction factor and the effective sample
+  size \citep{vehtari2021}. Reported for every posterior in this book, so that no finding can be a
+  sampler artefact. \\[2pt]
+$\Prob(\tau > c \mid D)$ & The decision quantity: the posterior probability that the effect beats
+  its cost. Every euro rule in this book consumes it, and the classical arm structurally cannot
+  produce it (\cref{ch:pvp}). \\[2pt]
+$w \in \Delta^{J-1}$ & Donor weights on the unit simplex, $w_j \ge 0$ and $\sum_j w_j = 1$ --- the
+  constraint that stops a synthetic control from extrapolating (\cref{ch:geo}). \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+\section*{Interval conventions}
+
+\textbf{Unless stated otherwise, every interval in this book is a 90\,\% interval}, and the kind of
+interval is always named. A \emph{confidence} interval is a property of the procedure: 90\,\% of
+the intervals a procedure builds cover the truth across repeated samples, and the one printed on
+the page either contains the truth or does not. A \emph{credible} interval is a probability
+statement about the effect, conditional on the data, the model and the prior. A
+\emph{randomization} interval is obtained by inverting a permutation test, and assumes no shape for
+the errors at all. The three are never used interchangeably, and \cref{ch:pvp} is entirely about
+why.
+
+Where a chapter departs from 90\,\% it says so and says why --- a one-sided 95\,\% bar read off a
+90\,\% interval's tail, a 5--95\,\% posterior-predictive band --- and the departure is local to the
+passage that makes it.
+
+\section*{Two symbols that are deliberately overloaded}
+
+Two letters carry different jobs in different chapters. The book keeps each field's conventional
+usage rather than inventing a private one, so both are flagged here.
+
+$Z$ is the \textbf{adjustment set} in \cref{ch:ctrl} and \cref{ch:pe} --- the variables one
+conditions on. It is the \textbf{instrument} in \cref{ch:iv} --- a variable whose entire value lies
+in affecting the outcome \emph{only} through the treatment. Nothing but context distinguishes them,
+so each chapter defines its $Z$ on first use.
+
+$D$ is a \textbf{group indicator} in \cref{ch:did} (this store received the app) and a
+\textbf{threshold indicator} in \cref{ch:rdd} (this customer crossed the cutoff), and it is the
+\textbf{dataset} in \cref{ch:pvp}'s statements about repeated sampling. The first two are
+treatments; the third is data. The surrounding equation always makes clear which is meant.

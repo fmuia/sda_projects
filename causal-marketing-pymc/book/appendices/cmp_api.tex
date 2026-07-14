@@ -1,0 +1,231 @@
+% =====================================================================================
+% Appendix B · The cmp API.
+%
+% Documents src/cmp as it actually is — signatures, covariance choices and guardrails read
+% off the source, not remembered. No number appears here except the weak-instrument rule of
+% thumb (F < 10, a convention from the literature) and the default interval level (90 %,
+% a stated convention): neither is a result, so neither needs a macro.
+% =====================================================================================
+\chapter{The \code{cmp} API}
+\label{app:cmp}
+
+The notebooks are thin because a package sits under them. \code{cmp} is not a modelling framework
+and does not try to be one: it is the small set of things that would otherwise have been copied
+between fourteen notebooks and drifted --- the simulators, the estimators, the metrics, the euro
+policy helpers, and the reporting layer that puts the results into this book. This appendix
+documents what is in it, and, where a design choice was made that the reader could disagree with,
+says what the choice was and why.
+
+% =====================================================================================
+\section{\code{cmp.classical} --- the Step-0 estimators}
+\label{app:cmp:classical}
+
+Every method chapter opens its estimation work with a classical baseline: the same estimand and the
+same identification strategy as the Bayesian section that follows, estimated the simplest way that
+is still \emph{correct}. A point estimate, an interval, no likelihood, no priors, no sampler. That
+discipline is the reason \code{cmp.classical} exists, and it enforces two rules that are worth
+stating before the function list, because they are the whole design.
+
+\subsection*{Rule one: the covariance choice is explicit and non-defaultable}
+
+\begin{quote}
+\textbf{An interval built on the wrong standard error is not a weak result. It is a confident
+lie.}
+\end{quote}
+
+A point estimate can be right while its interval is off by a factor of five, and the reader of a
+deck cannot tell. \Citet{bertrand2004} showed exactly this for difference-in-differences: iid
+standard errors on serially correlated panels understate the uncertainty so badly that the
+literature spent a decade reporting significance it did not have. The same failure recurs, in
+different clothes, in every chapter of this book --- a time series that needs HAC, a geo panel
+whose errors are a persistent offset, a mediation estimate whose sampling distribution is not
+normal because it is a \emph{product}.
+
+So every estimator in \code{cmp.classical} makes the analyst say which covariance assumption is
+being made. The choice is a parameter, it is recorded on the returned object, it is printed in the
+notebook, and where it needs a companion argument --- a clustering column, a lag length --- the
+function \emph{raises} rather than choosing one quietly:
+
+\begin{quote}\footnotesize\ttfamily
+ols(df, formula, target, cov="cluster")\\
+\ \ -> ValueError: cov='cluster' requires\\
+\ \ \ \ \ cluster=<column name>
+\end{quote}
+
+That refusal is the module's only opinion, and it is deliberate. A default standard error is a
+decision made by whoever wrote the library, on data they never saw.
+
+\subsection*{Rule two: what comes back is a confidence interval, and it says so}
+
+Everything returns a \code{Classical} result: the estimand's name, the point estimate, the standard
+error, the interval, the level, \textbf{the covariance assumption in words}, the sample size, and a
+dictionary of method-specific diagnostics (the first-stage $F$, the bandwidth, the number of
+clusters). The default level is $\alpha = 0.10$ --- a 90\,\% interval --- which is the book's
+convention throughout.
+
+And it carries a method whose entire job is to state its own limits:
+
+\begin{quote}\small\ttfamily
+Classical.cannot\_say()
+\end{quote}
+
+which prints, in one consistent voice, what the interval does \emph{not} license: that there is a
+90\,\% probability the true effect lies inside it; that the number could be manipulated into
+$\Prob(\tau > c)$; that a go/no-go rule of the kind every chapter of this book ends on could be fed
+from it. It cannot, and \cref{ch:pvp} is the chapter that explains why. The guardrail exists because
+the temptation to read a confidence interval as a belief is not a beginner's error --- it is what
+almost everyone means when they read one aloud in a meeting --- and a library that let the
+notebooks each phrase the caveat their own way would have let the caveat erode.
+
+\subsection*{The estimators}
+
+\begin{center}
+\footnotesize
+\begin{longtable}{@{}l@{\hspace{1em}}p{0.38\linewidth}@{\hspace{1em}}p{0.28\linewidth}@{}}
+\toprule
+\textbf{Function} & \textbf{Estimand, and how} & \textbf{Covariance} \\
+\midrule
+\endhead
+\code{ols} & The coefficient named by \code{target} --- which the caller must name, because naming
+  it is what forces the analyst to say which coefficient \emph{is} the causal estimand under the
+  chapter's identification argument. &
+  \code{HC1} (the cross-section default), \code{cluster} (panels), \code{HAC} (time series), or
+  \code{nonrobust} --- and the last only when homoskedastic iid errors can be defended. \\[3pt]
+\code{diff\_in\_means} & The ATE, by subtraction. Valid under randomization and under nothing
+  else. &
+  Welch --- unequal variances across arms are not assumed away. \\[3pt]
+\code{did\_2x2} & The ATT, as the interaction in $y \sim g * p$. &
+  Cluster-robust on the unit, and not optionally: \citeauthor{bertrand2004}'s warning is compiled
+  into the function. \\[3pt]
+\code{event\_study} & Leads and lags around the launch, normalised at $k = -1$. The pre-period
+  coefficients are the parallel-trends \emph{evidence}; the post-period ones are the dynamic
+  ATT. &
+  Cluster-robust on the unit. \\[3pt]
+\code{iv\_2sls} & The LATE, by two-stage least squares, with the first-stage $F$ returned beside it
+  and flagged \code{weak} below the conventional $F < 10$. &
+  2SLS (homoskedastic), with the residual formed against the \emph{original} regressor --- see the
+  remark below. \\[3pt]
+\code{rd\_local\_linear} & The jump at the cutoff: local linear regression inside a bandwidth,
+  fitted separately on each side, triangular kernel by default. A LATE \emph{at} the threshold, and
+  nowhere else. &
+  \code{HC1}, with the bandwidth and the effective sample sizes on each side recorded. \\[3pt]
+\code{segmented\_its} & A level shift \emph{and} a slope change at the intervention, optionally
+  with a Fourier seasonal pair. Returns both, because a redesign that lifts the level and one that
+  bends the trend are different commercial events. &
+  Newey--West HAC. A daily series is autocorrelated, and an iid interval on one is fiction. \\[3pt]
+\code{mediation\_product} & The Baron--Kenny decomposition: indirect $= a b$, direct $= c$, total
+  $= ab + c$. &
+  Nonparametric bootstrap --- the indirect effect is a \emph{product} of two estimates, so its
+  sampling distribution is not normal and the delta method is only a first-order
+  approximation. \\[3pt]
+\code{bootstrap\_ci} & Any statistic at all, by percentile bootstrap. The classical escape hatch
+  when no closed form exists. &
+  Percentile bootstrap --- and still a confidence interval, not a belief. \\[3pt]
+\code{no\_pooling} & The model fitted \emph{separately} in each group. Thin groups therefore get
+  wild, wide estimates --- which is precisely the noise Bayesian partial pooling shrinks, and the
+  reason \cref{ch:seg} can show what shrinkage buys. &
+  \code{HC1} within each group. \\[3pt]
+\code{complete\_pooling} & One estimate for everybody. Maximally precise, and maximally wrong if
+  the groups genuinely differ. &
+  \code{HC1}. \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+The last two are a matched pair, and they are in the library for a reason that is pedagogical
+rather than computational: they \emph{bracket} the bias--variance trade-off that partial pooling
+interpolates between. A hierarchical model is much easier to argue about when both of the things it
+sits between are on the table.
+
+\begin{remark}[A bug the discipline caught]
+\code{iv\_2sls} forms its residual against the \emph{original} endogenous regressor, not against
+its first-stage fitted value. This is the 2SLS rule, and getting it wrong has a direction that is
+worth knowing: a hand-rolled second stage --- regress $X$ on $Z$, keep $\hat X$, regress $y$ on
+$\hat X$ --- returns the right point estimate and a standard error that is \emph{too wide}, because
+%
+\[
+  y - \hat X b \;=\; (y - X b) \;+\; (X - \hat X) b ,
+\]
+%
+so the naive residual sum of squares charges the estimate for first-stage prediction error that is
+not part of the structural noise. An earlier version of this function's documentation asserted the
+opposite --- that the naive interval would be too narrow --- and a notebook caught it by
+\emph{computing} it. The correction is recorded here because it is a small, exact instance of the
+book's larger method: the numbers are not asked to agree with the prose; the prose is required to
+agree with the numbers.
+\end{remark}
+
+% =====================================================================================
+\section{\code{cmp.report} --- how the numbers get into this book}
+\label{app:cmp:report}
+
+Three functions, and they are the mechanism behind \emph{A note on the numbers}.
+
+\begin{description}[leftmargin=1.2em, style=nextline, font=\normalfont\ttfamily\small]
+  \item[report.value(key, v, fmt=...)] Records a scalar \emph{and returns it}, so the call can wrap
+  the expression that computed it rather than trailing after it. The key \code{"nb07.sc\_total"}
+  becomes the macro \code{\textbackslash nbSevenScTotal}, and rounding is decided here, at the emit
+  site, next to the computation, once.
+
+  \item[report.table(df, key, caption=...)] Writes a pandas frame as a \code{booktabs} float. No
+  results table in this book was laid out by hand.
+
+  \item[report.figure(fig, key, caption=...)] Saves a second, page-sized copy of a matplotlib
+  figure as a vector PDF in book style --- larger type, no in-figure title, because in a book the
+  caption does that work. The caption is authored in the notebook, beside the computation, and
+  travels with the figure.
+\end{description}
+
+Two implementation details are load-bearing rather than tidy, and both were forced by failures.
+
+\emph{Results are sharded per notebook.} Each notebook writes only its own file. A single shared
+results store would be a read--modify--write race the moment two notebooks ran at once --- and they
+do --- in which one notebook's emit silently drops another's keys, and the book then fails to
+compile for a reason that points nowhere near the cause.
+
+\emph{A key names exactly one kind of result.} Re-emitting the same key as a figure when it was
+registered as a value raises immediately, at the emit site, rather than deleting a macro that a
+chapter cites and letting the failure surface three hundred pages away as an undefined control
+sequence.
+
+% =====================================================================================
+\section{The rest of the package}
+\label{app:cmp:rest}
+
+\begingroup\sloppy
+\begin{description}[leftmargin=1.2em, style=nextline, font=\normalfont\bfseries]
+  \item[\code{cmp.dgp}] The seeded simulators --- one per chapter, collected as mathematics in
+  \cref{app:dgp}. Each returns the data \emph{and} the planted truth, because a simulator that did
+  not hand back the answer would be of no use for grading.
+
+  \item[\code{cmp.estimators}] The Bayesian and machine-learning arms behind a uniform interface:
+  S- and T-learners, BCF, the AIPW doubly-robust estimator, the Dirichlet-simplex synthetic control
+  and its SLSQP point-fit twin, placebo-in-space refits, the first-stage $F$, a McCrary-style
+  density check, and thin wrappers over \code{causalpy} for difference-in-differences, regression
+  discontinuity, interrupted time series and instrumental variables. \code{convergence\_report}
+  returns $\hat R$, the effective sample size and the divergence count for every posterior in the
+  book, which is why no chapter reports a finding it has not first shown to be free of sampler
+  artefacts.
+
+  \item[\code{cmp.metrics}] How an estimator is graded: PEHE, bias, \textbf{interval coverage}
+  across fresh samples, Qini and AUUC, uplift by decile, reliability, sharpness, and the E-value for
+  sensitivity to unmeasured confounding. \code{interval\_coverage} is the one that earns its keep
+  --- it is the function that catches an interval which is nominally ninety and actually fifty.
+
+  \item[\code{cmp.policy}] The euro layer: profit curves, cost and confidence sweeps, the value of
+  perfect information, break-even, the policy bake-off (treat-all, random, model, oracle) on
+  \emph{realised} profit, and \code{go\_no\_go}, which applies the decision rule of
+  \cref{ch:pvp} to a set of posterior draws. Every one of these consumes a posterior; none of them
+  can be fed from a confidence interval.
+
+  \item[\code{cmp.plots}] Shared styling and the recurring figures --- DAGs, overlap, recovery
+  scatters, placebo spaghetti, forest plots, event studies, Qini and reliability curves, the
+  decision histogram. Every figure in this book was drawn by these functions and re-emitted in book
+  style.
+
+  \item[\code{cmp.data}] The real-dataset loaders, fetched and never vendored, cached on first use:
+  Hillstrom's randomized email test, the LaLonde/Dehejia--Wahba job-training file, the IHDP
+  semi-synthetic benchmark, Google's published geo experiment, and Criteo's advertising experiment.
+  Each carries its licence note in its docstring.
+\end{description}
+\endgroup

@@ -1,0 +1,210 @@
+% =====================================================================================
+% Appendix C · Environments and reproduction.
+%
+% The detailed version of the front matter's short note. Kept separate rather than merged
+% because the front matter must be readable in one sitting and this is a reference: an
+% environment table, a notebook-to-chapter map, and the build pipeline.
+%
+% No number here is a result — the pymc version boundary and the dataset sizes are facts
+% about the software and the files, not measurements — so no macro is cited.
+% =====================================================================================
+\chapter{Environments and reproduction}
+\label{app:env}
+
+Everything in this book is runnable, and this appendix is what it takes to run it. The short
+version is in the front matter, under \emph{Reproducing this book}; what follows is the
+reference.
+
+% =====================================================================================
+\section{Why there are two environments}
+\label{app:env:split}
+
+The single largest engineering decision behind the code is that it ships \emph{two} Python
+environments rather than one, and the reason is not preference. As of writing, the PyMC ecosystem
+is genuinely split across the \code{pymc 5} $\to$ \code{6} boundary: \code{pymc-bart},
+\code{bambi} and \code{pathmc} require pymc~$\ge$~6, while \code{causalpy} and
+\code{pymc-marketing} still pin pymc~$<$~6. No single environment satisfies both.
+
+Three responses were available. Hold the whole book back to pymc~5, and lose the modern BART and
+path-analysis work that two chapters are built on. Vendor patched forks, and hand the reader a
+result they cannot reproduce from the public packages. Or ship two environments, and say so. The
+third is what this book does, and it is stated here rather than buried in a lockfile because a
+reader who tries to install one environment and run everything in it will otherwise conclude,
+reasonably and wrongly, that something is broken.
+
+\begin{center}
+\footnotesize
+\begin{tabular}{@{}l@{\hspace{1em}}c@{\hspace{1em}}l@{\hspace{1em}}p{0.34\linewidth}@{}}
+\toprule
+\textbf{Environment} & \textbf{pymc} & \textbf{Built by} & \textbf{Powers} \\
+\midrule
+\code{cmp-core} & $\ge$ 6 & \code{uv sync} &
+  Notebooks 00--05, 07, 07b; the interactive apps; the package tests. \\[3pt]
+\code{cmp-legacy} & $<$ 6 & \code{make env-legacy} &
+  Notebooks 06, 08--11, 11b --- everything built on \code{causalpy} or
+  \code{pymc-marketing}. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The two live side by side in \code{.venv} and \code{.venv-legacy}, and neither is a subset of the
+other. \code{cmp.estimators} imports \code{pymc} and \code{pymc-bart} \emph{lazily}, so the package
+itself imports cleanly under both. Each notebook declares the kernel it needs, and the test suite
+routes each notebook to the right interpreter, so \code{make test} drives both from a single
+command. When \code{causalpy} and \code{pymc-marketing} move to pymc~6, the split collapses: delete
+the legacy requirements file and bump the pins.
+
+\begin{quote}\small
+\code{uv sync} --- build the core environment.\\
+\code{make env-legacy} --- build the legacy one.\\
+\code{make kernels} --- register both as Jupyter kernels.
+\end{quote}
+
+% =====================================================================================
+\section{Two environment variables}
+\label{app:env:flags}
+
+\subsection*{\code{CMP\_FAST} --- teaching mode}
+
+Default \code{1}. Short chains, few trees, small placebo counts: every notebook runs in under about
+two minutes, which is what makes a live rerun possible in front of a class and a full notebook test
+suite possible in continuous integration.
+
+\textbf{Every number in this book comes from \code{CMP\_FAST=0}} --- the full run: long chains, the
+full seed loops, the full placebo distributions. The fast mode is a teaching device and nothing in
+these pages was graded on it.
+
+\subsection*{\code{CMP\_REAL} --- fetch the real data}
+
+Default \code{0}. The book's default data is \emph{simulated}, for the reason \cref{app:dgp} exists:
+a method has to be graded against a known truth before it can be trusted where there is none. It
+also keeps the repository offline and deterministic.
+
+Setting \code{CMP\_REAL=1} enables the cells that fetch a real public dataset over the network.
+Nothing has to be supplied by the reader; the files are public, they are fetched rather than
+vendored, and they are cached under \code{\textasciitilde/.cache/cmp} so that the download happens
+once.
+
+\begin{center}
+\footnotesize
+\begin{tabular}{@{}l@{\hspace{1em}}p{0.34\linewidth}@{\hspace{1em}}p{0.30\linewidth}@{}}
+\toprule
+\textbf{Chapter} & \textbf{Dataset} & \textbf{What replaces the planted truth} \\
+\midrule
+\cref{ch:foundations}, \cref{ch:ctrl} & LaLonde / NSW job training, in the
+  Dehejia--Wahba composite &
+  A published \emph{experimental} benchmark, cited (see \emph{A note on the numbers}). \\[3pt]
+\cref{ch:geo} & Google's published geo experiment: 100 geos, one campaign window &
+  A randomized, matched-pairs estimate --- unbiased by construction. \\[3pt]
+\cref{ch:iv} & Criteo's advertising experiment (a one-time download of a few hundred
+  megabytes) &
+  A full-file Wald estimate, plus disjoint-fold stability. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Chapter~3's real-data section runs on Hillstrom's randomized email test, which has no ground-truth
+CATE --- real customers have one future each --- and is therefore graded on what a randomized
+experiment \emph{can} grade: the average effect, and the realised profit of a targeting policy.
+
+% =====================================================================================
+\section{The notebooks, and the chapters they became}
+\label{app:env:map}
+
+Fourteen notebooks; thirteen chapters. The two real-data companions fold into their parent
+chapters as an \emph{On real data} section rather than standing alone, because the point they make
+is about the method, not about the dataset.
+
+\begin{center}
+\footnotesize
+\begin{longtable}{@{}l@{\hspace{0.8em}}c@{\hspace{0.8em}}p{0.15\linewidth}@{\hspace{0.8em}}p{0.28\linewidth}@{}}
+\toprule
+\textbf{Notebook} & \textbf{Env} & \textbf{Chapter} & \textbf{The decision} \\
+\midrule
+\endhead
+\code{00\_foundations} & core & \cref{ch:foundations}, \cref{ch:pvp} &
+  Did the email work, and what is a posterior for? \\
+\code{01\_uplift\_targeting} & core & Chapter~3 & Who should get the discount? \\
+\code{02\_segment\_effects} & core & \cref{ch:seg} & Does the offer work better for some
+  segments? \\
+\code{03\_price\_elasticity} & core & \cref{ch:pe} & How should each region be priced? \\
+\code{04\_funnel\_mediation} & core & \cref{ch:med} & Which funnel stage deserves the
+  investment? \\
+\code{05\_what\_to\_control\_for} & core & \cref{ch:ctrl} & Which variables belong in the
+  model? \\
+\code{06\_incrementality\_mmm} & legacy & Chapter~8 & Is the spend \emph{causing} the sales? \\
+\code{07\_geo\_lift} & core & \cref{ch:geo} & Did the regional campaign work? \\
+\code{07b\_geo\_lift\_real} & core & \cref{sec:sc:real} & The same question, on a real
+  randomized geo experiment. \\
+\code{08\_rollout\_did} & legacy & \cref{ch:did} & Did the loyalty rollout work? \\
+\code{09\_threshold\_perk\_rdd} & legacy & \cref{ch:rdd} & Does the Gold perk retain
+  people? \\
+\code{10\_redesign\_its} & legacy & \cref{ch:its} & Did the site redesign help? \\
+\code{11\_endogenous\_exposure\_iv} & legacy & \cref{ch:iv} & Ad exposure is self-selected ---
+  what is its true effect? \\
+\code{11b\_endogenous\_exposure\_real} & legacy & \cref{sec:iv:real} & The same question, on a
+  real advertising experiment. \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+\noindent\emph{The two \code{b} notebooks carry a \code{\_data} suffix on disk:}
+\begin{quote}\footnotesize
+\code{07b\_geo\_lift\_real\_data.ipynb}\\
+\code{11b\_endogenous\_exposure\_real\_data.ipynb}
+\end{quote}
+
+% =====================================================================================
+\section{Building the book}
+\label{app:env:build}
+
+\begin{quote}\small\ttfamily
+make book
+\end{quote}
+
+which is \code{python book/build.py}, and which does four things in order:
+
+\begin{enumerate}[leftmargin=*, itemsep=.3em]
+  \item merges the notebooks' emitted result shards and writes one \code{\textbackslash newcommand}
+        per number into the generated macro file;
+  \item turns every emitted figure into a complete float --- caption, label and all --- so that no
+        caption in this book was written anywhere but beside the computation it describes;
+  \item runs the typesetter and the bibliography engine to produce the book; and
+  \item produces the \emph{offprints}: one PDF per chapter, carrying the book's own chapter,
+        equation and float numbers --- an offprint, not a second edition --- so that a reader
+        handed \cref{ch:geo} alone finds its tables and equations numbered exactly as they are
+        here.
+\end{enumerate}
+
+Two behaviours of that script are worth knowing because they look like defects and are not.
+
+\textbf{It refuses to ship a PDF with a hole in it.} A chapter citing a number the notebooks did
+not emit produces an undefined macro. The typesetter would happily continue and print a blank; the
+build script reads the log, finds the undefined macro, and exits with an error naming it. A hole is
+louder than a stale number, and the whole apparatus of \emph{A note on the numbers} rests on that
+refusal.
+
+\textbf{A fresh clone cannot build the book.} The generated directory holds nothing until the
+notebooks have run, so the first step of any reproduction is to execute them at full quality
+(\code{CMP\_FAST=0}), in both environments, with \code{CMP\_REAL=1} for the chapters that grade
+themselves on real data. Only then does the book typeset. That the book will not compile against an
+empty results directory is the same property, viewed from the other side, that guarantees no number
+in it is stale.
+
+\begin{quote}\small
+\code{make test} --- executes every notebook headless, in the right environment, and runs the
+package unit tests.\\
+\code{make test-fast} --- the unit tests alone.
+\end{quote}
+
+\begin{remark}[There is no index]
+This book has no index, and the omission is deliberate rather than pending. An index worth having
+requires index entries placed in the prose --- \emph{this} occurrence of ``parallel trends'' is the
+one a reader should be sent to, not the eleven others --- and entries have to be authored, chapter
+by chapter, by someone who knows which occurrence is the definition. An index generated
+mechanically from a keyword list sends the reader to the wrong page with the full authority of
+typography, and is worse than no index at all. The table of contents is detailed to the section, the
+list of figures and the list of tables are complete, and the cross-references are live. When the
+entries are written, the pipeline gains one pass and the index appears; until then, this is the
+honest state.
+\end{remark}

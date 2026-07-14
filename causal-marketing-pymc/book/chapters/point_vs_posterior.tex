@@ -458,9 +458,11 @@ on \pc{\nbSevenTotalCov} of panels, against \pc{\nbSevenRiCov} for the design-ba
 interval on the same panels.
 
 That, alone, could be read as an indictment of Bayesian inference. It is not, and the proof is
-that Chapter~10's difference-in-differences errs in the \textbf{opposite} direction: its posterior
-interval is too \emph{wide}, not too narrow. A paradigm cannot be systematically overconfident and
-systematically underconfident at the same time. A \emph{specification} can be wrong in either
+that Chapter~10's difference-in-differences errs in the \textbf{opposite} direction: its pooled
+posterior interval comes back \nbEightBayesOverCluster$\times$ \emph{wider} than the clustered
+classical one --- and \nbEightPooledOverScatter$\times$ the estimator's true seed-to-seed scatter
+--- because the store baseline was left in $\sigma$. Too wide, not too narrow. A paradigm cannot be
+systematically overconfident and systematically underconfident at the same time. A \emph{specification} can be wrong in either
 direction, and specifications are what differ between those two chapters. The diagnosis is
 therefore precise, and so is the repair: give the model the error structure it actually has (an
 AR(1) or random-walk residual, as in Bayesian structural time series \citep{brodersen2015}), or
@@ -554,7 +556,8 @@ trust.
 
   \item \textbf{Where Bayes lost, the likelihood was misspecified --- not the paradigm.} Chapter~9's
         iid likelihood underprices a \nbSevenNPost-week sum by \nbSevenUnderprice$\times$ and covers
-        at \pc{\nbSevenTotalCov}; Chapter~10's errs the \emph{other} way, too wide. A paradigm
+        at \pc{\nbSevenTotalCov}; Chapter~10's errs the \emph{other} way, returning an interval
+        \nbEightBayesOverCluster$\times$ too wide. A paradigm
         cannot be overconfident and underconfident at once; a specification can. Repair the
         likelihood \citep{brodersen2015}, or repair the posterior \citep{mueller2013}. Do not repair
         your faith in Bayes.
