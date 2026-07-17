@@ -62,7 +62,10 @@ to measure it rather than to apologise for it: the counterfactual is a \emph{for
 a window where nothing can check it.
 
 A wrong answer costs in both directions. Roll back a redesign that works and the firm walks away
-from \eur{\nbTenPersValuenodecay} a year of conversion value. Keep one that does not, and it has
+from somewhere between \eur{\nbTenPersValuethreem} and \eur{\nbTenPersValuenodecay} of conversion
+value in the coming year --- and the width of that range, not either of its endpoints, is this
+chapter's finding: it is set by a novelty half-life the observed window bounds from below but does
+not pin down (\cref{sec:its:euro}). Keep a redesign that does not work, and the firm has
 paid \eur{\nbTenCost} for a coincidence and will build the next one on the same false lesson. The
 chapter estimates the lift classically, re-estimates it as a posterior, puts the two on the same
 estimand --- and then breaks the assumption that both of them rest on, to show that neither
@@ -194,8 +197,11 @@ launch. Tested by placebo-in-time: refitting with a fake redesign at day \nbTenF
 The launch date was not chosen \emph{because} of the metric. Redesigns rarely ship on random days;
 they ship because conversion looked bad. If a transient dip triggered the launch, the pre-period
 fit inherits the dip and the natural rebound is booked as lift --- regression to the mean wearing
-a causal costume. The placebo-date sweep of \cref{sec:its:valid} probes it (a real dip would make
-nearby fake dates light up), but the decisive check is institutional: ask what triggered the date.
+a causal costume. This one is testable, and \cref{sec:its:wrong} tests it on a series where a
+\pp{\nbTenRtmDip} dip over the \nbTenRtmDipLen{} days before launch triggers a redesign worth
+\emph{nothing}: the placebo-date sweep, flat on the clean pre-period, fires on the dipped one
+(\cref{fig:its:rtm}). But the decisive check is institutional and it costs no statistics at all:
+ask what triggered the date.
 \end{assumption}
 
 \begin{assumption}[Weak dependence of the errors]\label{as:its:dep}
@@ -266,12 +272,13 @@ To report the summary the posterior reports --- the mean post-period gap of
 %
 \begin{equation}
   \bar\Delta \;=\; \delta \;+\; \gamma \cdot \overline{(t - t^{*})^{+}}
-             \;=\; \delta \;+\; 29.5\,\gamma ,
+             \;=\; \delta \;+\; \nbTenMPost\,\gamma ,
   \label{eq:its:recentre}
 \end{equation}
 %
-the mean of $(t - t^{*})^{+}$ over the \nbTenNPost{} post days being $29.5$. Rather than
-delta-method that combination, the slope term is simply \emph{re-centred} --- subtract $29.5$ from
+the mean of $(t - t^{*})^{+}$ over the \nbTenNPost{} post days being $\nbTenMPost$. Rather than
+delta-method that combination, the slope term is simply \emph{re-centred} --- subtract
+$\nbTenMPost$ from
 $(t - t^{*})^{+}$ on the post days --- after which the coefficient on the post indicator \emph{is}
 $\bar\Delta$ and the fit hands over its standard error directly. Same regression, reparameterised
 so that the estimand is a coefficient. It gives $\pp{\nbTenClAvg}$, 90\,\% interval
@@ -290,12 +297,19 @@ autocorrelation-consistent --- which allows the residuals to correlate up to a c
 charges the estimate for that correlation.
 
 The lag is a choice, and it is made twice over. Substantively, \textbf{lag~7 is one full weekly
-cycle}, the natural dependence horizon of a daily web series. Mechanically, the common rule of
-thumb $\lfloor 4(n/100)^{2/9} \rfloor$ returns \nbTenHacLagRule{} at $n = \nbTenNDays$, so the
-choice made here is the \emph{more} conservative one, and the estimate is in any case insensitive
-to it: the standard error on $\bar\Delta$ moves from \nbTenHacSeLagfour{} at lag~4 to
-\nbTenHacSeLagseven{} at lag~7, \nbTenHacSeLagfourteen{} at lag~14 and
-\nbTenHacSeLagtwentyone{} at lag~21 --- a decision that changes no decision.
+cycle}, the natural dependence horizon of a daily web series, and that is the defence of the choice
+made here. Mechanically, the automatic rule of thumb $\lfloor 4(n/100)^{2/9} \rfloor$
+\citep{newey1994} returns \nbTenHacLagRule{} at $n = \nbTenNDays$. It is tempting to call the
+longer bandwidth the more conservative one; the measurement says otherwise, and the measurement
+wins. The standard error on $\bar\Delta$ falls \emph{monotonically} with the bandwidth --- from
+\nbTenHacSeLagfour{} at lag~4 to \nbTenHacSeLagseven{} at lag~7, \nbTenHacSeLagfourteen{} at
+lag~14 and \nbTenHacSeLagtwentyone{} at lag~21. That is what a bandwidth does when there is no
+serial correlation left to find: the Bartlett-weighted higher-lag autocovariances contribute
+nothing but estimation noise, which happens here to be negative on net, so admitting a longer
+dependence horizon buys a \emph{narrower} interval rather than a wider one. A longer lag is a
+hedge against dependence, not a guarantee of a wider interval, and the two must not be confused.
+The estimate is in any case insensitive to the whole range --- a decision that changes no
+decision, though not in the direction the slogan predicts.
 
 The textbook slogan is that HAC widens the interval. On this series it does not, and the honest
 thing to do with a slogan that fails is to say why rather than to bury the measurement. The HAC
@@ -322,7 +336,21 @@ appears anywhere in the iid formula, so it cannot be perceived, and what gives w
 one thing the analyst cares about. The iid interval's coverage falls from
 \pc{\nbTenArCovIidZero} to \pc{\nbTenArCovIidEight} --- at $\rho = 0.8$ a nominal ninety is closer
 to a coin flip than to its label --- while the HAC interval holds \pc{\nbTenArCovHacZero} to
-\pc{\nbTenArCovHacEight}.
+\pc{\nbTenArCovHacEight} (\cref{fig:its:hac} draws both columns).
+
+The last column of \cref{tab:its:hac} runs the same gauntlet a third time, with the Bayesian model
+of \cref{sec:its:bayes} --- \nbTenArBayesReps{} MCMC fits per row, on the first \nbTenArBayesReps{}
+of the same seeds --- and it is the column that decides what the Bayesian arm is actually for. The
+credible interval's coverage falls from \pc{\nbTenArCovBayesZero} to \pc{\nbTenArCovBayesEight}: it
+tracks the \emph{iid} column, not the HAC one. That is not a defect of the posterior; it is
+\cref{eq:its:lik} being read out loud. The likelihood is iid Normal, serial correlation appears
+nowhere in it, and with \nbTenNPre{} days and effectively flat priors the posterior is the iid OLS
+sampling distribution in Bayesian clothing (Bernstein--von Mises again). There is no ``HAC
+posterior'' to switch on. \textbf{The Bayesian repair for dependent errors is AR structure in the
+likelihood; the classical repair is a different covariance estimator for the same likelihood.} Same
+disease, same diagnosis, two dialects of the cure --- and this is the general lesson the book's
+synthetic-control chapter learned the hard way, where an iid likelihood laid over autocorrelated
+residuals under-covered exactly like this.
 
 Two lessons, and the second is the one practitioners skip. First: \textbf{HAC is insurance that
 costs almost nothing when the residuals are clean and is the difference between a 90\,\% interval
@@ -371,16 +399,27 @@ doing all of it. (On a differently scaled outcome --- raw daily revenue in euros
 defaults would distort or slow the fit, and one would rescale the outcome or tighten the priors.
 A default is only defensible once it has been checked against the units.)
 
-The counterfactual for a post-redesign day is the posterior predictive of \cref{eq:its:lik}
-evaluated at $t \ge t^{*}$, and the effect is the posterior of the pointwise gap:
+The counterfactual for a post-redesign day is the posterior of the fitted \emph{mean} of
+\cref{eq:its:lik}, evaluated at $t \ge t^{*}$, and the effect is the posterior of the pointwise gap:
 %
 \begin{equation}
-  \hat\Delta_t \;=\; Y_t - \widehat{Y_t(0)},
-  \qquad \widehat{Y_t(0)} \;\sim\; p\big(\tilde Y_t \mid \mathbf y_{<t^{*}}\big),
+  \hat\Delta_t \;=\; Y_t - \widehat{\E[Y_t(0)]},
+  \qquad \widehat{\E[Y_t(0)]} \;=\; x_t^{\top}\beta, \quad
+         \beta \sim p\big(\beta \mid \mathbf y_{<t^{*}}\big),
   \qquad t \ge t^{*} .
   \label{eq:its:gap}
 \end{equation}
 %
+The counterfactual subtracted in \cref{eq:its:gap} is the noise-free line $x_t^{\top}\beta$, not a
+posterior-predictive draw of a \emph{new day} $\tilde Y_t \sim p(\tilde Y_t \mid \mathbf
+y_{<t^{*}})$; that is what CausalPy computes, and it is the right object. The estimand is an effect
+\emph{size}, and adding a day's observation noise $\varepsilon_t$ to the counterfactual would
+inflate the interval on $\bar\Delta$ with scatter that belongs to neither potential outcome. The
+predictive band --- mean \emph{plus} $\sigma$ --- is used exactly once in this chapter, in
+\cref{sec:its:valid}'s backtest, which is the one place a \emph{day-level forecast} is graded
+against days that were actually observed, and where the day's noise is therefore part of what must
+be covered.
+
 Each draw of $(\beta, \sigma)$ yields a whole counterfactual path, hence a whole path of gaps,
 hence posterior \emph{distributions} for both $\bar\Delta$ and $C_T$ rather than single numbers.
 The band widens with the horizon --- visibly, in \cref{fig:its:its} --- which is the model saying
@@ -431,20 +470,24 @@ purpose. Refit the \emph{same data} with the seasonal pair deleted --- \code{con
 it is the reason the ACF panel is not decoration. The damage is instructive: the unmodelled sine
 lands in the residual, so $\hat\sigma$ inflates from \pp{\nbTenResidSd} to \pp{\nbTenResidSdBad}
 ($\nbTenResidSdRatio\times$) and the credible interval widens with it, from \pp{\nbTenOkWidth} to
-\pp{\nbTenBadWidth} ($\nbTenBadWidthRatio\times$), while the point estimate barely moves
-(\pp{\nbTenBadAvg}) --- only because the weekly cycle happens to nearly average out over a
-post-window of \nbTenNPost{} days, which is a whole number of weeks. With a ragged window, or with
-seasonality larger relative to the effect, the point estimate moves too. When the lag-7 bar jumps
-the band, fix the formula before trusting either the number or the band.
+\pp{\nbTenBadWidth} ($\nbTenBadWidthRatio\times$), while the point estimate barely moves, from
+\pp{\nbTenBayesAvg} to \pp{\nbTenBadAvg}. That last fact is luck, and it should not be reported as
+structure. The unmodelled weekly sine happens to \emph{very nearly cancel} over these particular
+\nbTenNPost{} days --- which are not a whole number of weeks, and nothing about the window
+guarantees the cancellation. Lengthen it, shift the launch date within the week, or make the
+seasonality larger relative to the effect, and the point estimate moves as well as the band. When
+the lag-7 bar jumps the band, fix the formula before trusting either the number or the band.
 
 \input{build/floats/nb10_diag}
 
 \subsection*{Earning the extrapolation: a backtest}
 
 The whole method is a forecast, so the forecast is rehearsed where it can still be graded. Hold out
-the last \nbTenHold{} pre-period days, refit on days $0$ to $\nbTenRedesignDay - \nbTenHold - 1$
+the last \nbTenHold{} pre-period days, refit on days $0$ to $\nbTenBtFitEnd$
 only, and extrapolate across the holdout exactly as the real fit extrapolates past $t^{*}$. The
-90\,\% posterior-predictive band covers \nbTenBtCovered{} of \nbTenHold{} held-out days
+90\,\% posterior-predictive band --- the one place in the chapter where the day's own noise
+$\sigma$ belongs inside the band, because it is days, not effects, that are being graded ---
+covers \nbTenBtCovered{} of \nbTenHold{} held-out days
 (\pc{\nbTenBtCovPct}, against a nominal 90) with a mean forecast error of \pp{\nbTenBtErr}
 (\cref{fig:its:backtest}, left). The level--trend--weekly shape extrapolates \nbTenHold{} days
 ahead without drifting.
@@ -515,7 +558,7 @@ demonstrate.
 \subsection*{The mirage: the cumulative-impact interval was not the payoff}
 
 The obvious pitch for Bayes here is the \emph{derived} quantity. \Cref{sec:its:euro} needs the
-realized 60-day euro figure with an interval attached, and the posterior hands it over: push every
+realized \nbTenNPost-day euro figure with an interval attached, and the posterior hands it over: push every
 draw of $C_T$ through the euro conversion and read off the quantiles. It looks like exactly the
 sort of thing a posterior is for --- and it is a mirage.
 
@@ -557,24 +600,33 @@ Bayes did not rescue the estimate here; the estimate was never in danger. It bou
 make a probability statement about the effect.
 
 It is worth being explicit about what did \emph{not} go wrong, because a neighbouring chapter of
-this book turns on exactly that failure. In the synthetic-control chapter the Bayesian interval
-under-covered badly, and the diagnosis was a \emph{misspecified likelihood} --- an iid error term
-laid over a random walk --- for which \citet{mueller2013} supplies the principled repair: rescale
+this book turns on exactly that failure. In the synthetic-control chapter the \emph{first}
+Bayesian interval under-covered badly --- \pc{\nbSevenTotalCov} where ninety was nominal --- and
+the diagnosis was a \emph{misspecified likelihood}: an iid error term laid over a random walk.
+Respecifying the residuals as an AR(1) restored coverage to \pc{\nbSevenTotalCovArone}, and where
+a respecification is not available \citet{mueller2013} supplies the principled repair: rescale
 the posterior by a sandwich covariance and its frequentist coverage returns. None of that applies
-here. The residuals of \cref{eq:its:lik} really are close to white (\cref{sec:its:valid}), the
-posterior's scale is right, and its coverage across fresh series is \pc{\nbTenSeedCovPct}. The
-Bayesian arm of this chapter is not overconfident about \emph{sampling noise}. It is
-overconfident about nothing at all --- and it still gets \cref{sec:its:wrong} completely wrong,
-which is the point.
+here --- \emph{on this data-generating process}. The residuals of \cref{eq:its:lik} really are
+close to white (\cref{sec:its:valid}), the posterior's scale is right, and its coverage across
+fresh series is \pc{\nbTenSeedCovPct}. That clean bill of health is a property of the DGP, not of
+the paradigm, and \cref{tab:its:hac} is the receipt: rebuild the same series with AR(1) errors and
+the very same posterior's coverage slides to \pc{\nbTenArCovBayesEight} --- the misspecified
+likelihood of the synthetic-control chapter, reproduced here on demand. So the correct statement is
+narrow: the Bayesian arm of this chapter is not overconfident about \emph{sampling noise} because
+the noise it was handed is the noise it assumes. And it still gets \cref{sec:its:wrong} completely
+wrong, which is the point.
 
 \subsection*{And what nothing bought}
 
 The ledger, stated in both directions. Bayes did \textbf{not} buy a better point estimate (they
 agree to \pp{\nbTenEstDiff}). It did \textbf{not} buy a tighter interval (the half-widths agree to
 $\nbTenHalfRatio\times$, with neither arm reliably sharper). It did \textbf{not} buy the
-realized-euro interval (a linear rescaling of the classical one). And, as the next section shows,
-it did \textbf{not} buy identification --- which is the only one of the four that would have
-mattered.
+realized-euro interval (a linear rescaling of the classical one). It did \textbf{not} buy
+robustness to autocorrelated errors: through \cref{tab:its:hac}'s gauntlet the credible interval's
+coverage decays with the \emph{iid} column, to \pc{\nbTenArCovBayesEight}, because
+\cref{eq:its:lik}'s likelihood \emph{is} iid --- the repair there is AR terms in the model, not a
+posterior. And, as the next section shows, it did \textbf{not} buy identification --- which is the
+only one of the five that would have mattered.
 
 % =====================================================================================
 \section{The decision, in euros}
@@ -593,21 +645,32 @@ The cumulative posterior $C_T = \nbTenCumBayes$ pp-days converts directly into
 with no persistence assumption invoked. (And, per \cref{sec:its:compare}, computable to within
 \eur{\nbTenEurGap} from the classical arm alone.)
 
-\subsection*{Projected: a bet on a parameter the data cannot identify}
+\subsection*{Projected: a bet on a clock that has not started}
 
-A redesign lift is rarely permanent --- \textbf{novelty fades}. Projecting a 60-day lift flat
-across a year contradicts this chapter's own message about extrapolation, so the projection is made
-against an explicit decay. If the effect decays with a novelty half-life $h$, the year is worth
+A redesign lift is rarely permanent --- \textbf{novelty fades}. Projecting a \nbTenNPost-day lift
+flat across a year contradicts this chapter's own message about extrapolation, so the projection is
+made against an explicit decay. And a decay curve needs a clock, which needs a zero: \textbf{the
+decay is anchored at \nbTenDecayAnchor}. The lift is held at its measured level through the days
+that were actually watched, and fades only from there. If it then decays with a novelty half-life
+$h$, the \emph{coming} year is worth
 %
 \begin{equation}
-  \text{effective days} \;=\; \sum_{t=0}^{364} 0.5^{\,t/h},
+  \text{effective days} \;=\; \sum_{t=0}^{H-1} 0.5^{\,t/h},
   \qquad
-  \text{annual value} \;=\; \bar\Delta \cdot \text{\nbTenVisitors} \cdot \text{\eur{\nbTenConvValue}}
+  \text{next-year value} \;=\; \bar\Delta \cdot \text{\nbTenVisitors} \cdot \text{\eur{\nbTenConvValue}}
                             \cdot \text{effective days},
   \label{eq:its:decay}
 \end{equation}
 %
-and the decision rule --- the convention used throughout this book --- is applied to the posterior:
+with a horizon of $H = \nbTenHorizon$ days and $t$ counted from the end of the observed window. The anchoring is not a decorative detail, and
+getting it wrong is not a rounding error: discount an \emph{already realized} average from day zero
+all over again and the arithmetic collapses into absurdity --- one can then ``project'' a year worth
+less than the \nbTenNPost{} days already banked. \Cref{tab:its:persistence} therefore prices the
+\emph{next} \nbTenHorizon{} days --- the renewal question --- and never re-prices the window in the
+bank.
+
+The next subsection defends that anchor with the data rather than asserting it. First, the decision
+rule --- the convention used throughout this book --- applied to the posterior:
 %
 \begin{equation}
   \Prob(\text{value} > \text{cost})\ \begin{cases}
@@ -627,17 +690,68 @@ the half-life.
 \input{build/floats/nb10_euro}
 
 The verdict is \textbf{\nbTenPersVerdictnodecay} under every scenario except one, and the exception
-is the instructive row: under a one-month novelty burn-out the lift is gone before it has paid, and
-$\Prob(\text{value} > \text{cost}) = \nbTenPersPonem$ --- \nbTenPersVerdictonem. Notice what has
-happened to the decision. It no longer hinges on \emph{whether} the redesign worked
-($\Prob(\bar\Delta > 0) = \nbTenPPos$) but on \emph{how long the lift persists} --- a parameter a
-60-day posterior structurally cannot identify, because decay reveals itself only over a longer
-horizon. The \textsc{keep} call survives down to a half-life of about \nbTenHalflifeNinety{} days
-and dies below \nbTenHalflifeFifty{} (\cref{fig:its:euro}, right).
+is the instructive row: under a one-month novelty burn-out starting now, the coming year returns
+\eur{\nbTenPersValueonem} against an annual cost of \eur{\nbTenCost}, so
+$\Prob(\text{value} > \text{cost}) = \nbTenPersPonem$ --- \nbTenPersVerdictonem. The
+\textsc{keep} call survives down to a half-life of about \nbTenHalflifeNinety{} days and dies below
+\nbTenHalflifeFifty{} (\cref{fig:its:euro}, right).
 
-The honest deliverable is therefore not an annualised number. It is the persistence table plus a
-\textbf{monitoring plan}: re-estimate at day 120 and day 180 and see which row of
-\cref{tab:its:persistence} the business is living in.
+That row must be read for what it is, because it is the easiest sentence in the chapter to
+mis-report to a board. It does \emph{not} say the redesign failed to pay for itself. It paid:
+\pc{\nbTenEurRealizedPctCost} of the build is already banked from the observed window alone, and
+even under the burn-out scenario the first year \emph{from launch} --- the \nbTenNPost{} days
+realized plus a fading remainder --- returns \eur{\nbTenPersLifetimeOnem}, with
+$\Prob(\text{value} > \text{cost}) = \nbTenPLifetimeOnem$. What the row says is narrower and far
+more useful: \textbf{if novelty burns out on a one-month clock from here, a second year at
+\eur{\nbTenCost} is not worth buying.} That is a renewal decision, not a post-mortem, and the
+verdict column names it as one.
+
+\subsection*{What the window already knows about the half-life}
+
+It is tempting to write that the half-life is a parameter a \nbTenNPost-day window cannot identify.
+That is too generous to the analyst, and the chapter has already printed the evidence against it.
+A novelty fade anchored at \emph{launch} would be visible \emph{inside} the observed window, and two
+instruments measure it.
+
+The first is $\gamma$, the slope-change coefficient of \cref{eq:its:seg}, reported in
+\cref{sec:its:classical} as $\nbTenClSlope$\,pp/day with a 90\,\% interval of
+$[\nbTenClSlopeLo,\ \nbTenClSlopeHi]$. A launch-anchored one-month half-life, scaled so that its
+\nbTenNPost-day average reproduces the lift actually measured, implies a gap falling at
+$\nbTenDecaySlopeOnem$\,pp/day --- far steeper than the \emph{lower} end of that interval, let
+alone its centre. A three-month half-life implies $\nbTenDecaySlopeThreem$\,pp/day, still outside
+it. The second instrument is
+sharper still, because the decay factors out of it exactly: split the post-window in half and take
+$R = \bar\Delta_{\text{late}} / \bar\Delta_{\text{early}}$, which under a launch-anchored half-life
+$h$ must equal $0.5^{\,\nbTenNPost/(2h)}$ --- $\nbTenDecayImpliedOnem$ for one month,
+$\nbTenDecayImpliedThreem$ for three, $1$ for no decay at all. The posterior of $R$ is
+$\nbTenDecayRatio$, 90\,\% credible interval
+$[\nbTenDecayRatioLo,\ \nbTenDecayRatioHi]$, giving $\Prob(R \le \nbTenDecayImpliedOnem) =
+\nbTenPDecayOnem$ and $\Prob(R \le \nbTenDecayImpliedThreem) = \nbTenPDecayThreem$.
+
+So the short half-lives are not scenarios the data has failed to rule out. \textbf{They are ruled
+out --- as descriptions of a fade that has already begun.} The second post-month is not half the
+first; the gap has no downward slope; nothing in the window is decaying. What the window cannot say
+is whether a fade starts in month three, and no amount of data from before month three ever could.
+That is the precise residue of ignorance the persistence table sweeps, and stating it precisely is
+the difference between an honest table and a shrug.
+
+\subsection*{The monitoring plan}
+
+The decision no longer hinges on \emph{whether} the redesign worked ($\Prob(\bar\Delta > 0) =
+\nbTenPPos$) but on \emph{when the fade begins}. That is not an estimation problem, and no
+estimator repairs it. It is a measurement schedule, and it is the honest deliverable: the
+persistence table plus a \textbf{monitoring plan}.
+
+Re-estimate the same mean gap on the next two windows of \nbTenNPost{} days --- beginning on day
+\nbTenMonitorFirst{} and on day \nbTenMonitorSecond, that is \nbTenNPost{} and $2 \times
+\nbTenNPost$ days after the ones already observed --- and compare each realised mean gap with what
+the rows of \cref{tab:its:persistence} predict for that window. They predict different things, which
+is the whole point of running the exercise: over the first monitoring window, no decay leaves the
+gap at \pp{\nbTenBayesAvg}, a six-month half-life brings it to \pp{\nbTenMonitorGapSixm}, three
+months to \pp{\nbTenMonitorGapThreem}, and a one-month burn-out to \pp{\nbTenMonitorGapOnem}. A
+single re-estimate separates all four. The first window that comes in below the row the business
+budgeted for is the signal to re-price the renewal --- not to roll back a build that has already
+been paid for.
 
 \subsection*{Headroom: what to do with an untestable assumption}
 
@@ -672,7 +786,9 @@ report?
 \input{build/tables/nb10_shocktab}
 \input{build/floats/nb10_shockfig}
 
-Both of them report the sum, \pp{\nbTenShockSum}, and both report it \emph{confidently}. The
+Both of them report the sum, \pp{\nbTenShockSum}, and both report it \emph{confidently}
+(\cref{tab:its:shock}; \cref{fig:its:shock} draws the four intervals against the truth and against
+the truth-plus-shock, and is the single figure to remember from this chapter). The
 Bayesian ITS returns \pp{\nbTenShockBayes} with a 90\,\% credible interval of
 $[\pp{\nbTenShockBayesLo},\ \pp{\nbTenShockBayesHi}]$, which excludes the true
 \pp{+\nbTenTrueLift}. The classical segmented regression, refit on the very same series with its
@@ -728,29 +844,53 @@ disguised as a model.
 
 \subsection*{Regression to the mean --- the subtle version of the same failure}
 
-\Cref{as:its:date} fails quietly and often. Redesigns ship because conversion \emph{looked bad};
-if a transient dip triggered the launch, the pre-period fit is dragged down by the dip and the
-natural rebound is booked as redesign lift. This is \cref{as:its:shock} in another costume --- the
-``other term'' at $t^{*}$ is the mean-reversion of the metric itself --- and it is more insidious
-because it requires no external event at all. Always ask \emph{why this date}. If the metric
-triggered the launch, exclude or explicitly model the dip window, and expect the placebo-date sweep
-of \cref{fig:its:diag} to light up near it.
+\Cref{as:its:date} fails quietly and often, and unlike the concurrent shock it fails
+\emph{cheaply}: it requires no external event at all. Redesigns ship because conversion
+\emph{looked bad}; if a transient dip triggered the launch, the pre-period fit is dragged down by
+the dip and the natural rebound is booked as redesign lift. This is \cref{as:its:shock} in another
+costume --- the ``other term'' at $t^{*}$ is the mean-reversion of the metric itself.
+
+It is worth planting, because the damage is the largest in the chapter. Take a series in which the
+redesign is worth \emph{exactly nothing}, and drag conversion down by \pp{\nbTenRtmDip} over the
+\nbTenRtmDipLen{} days before launch --- the bad month that got the redesign green-lit. The
+segmented regression of \cref{eq:its:seg}, unchanged, returns \pp{\nbTenRtmEst} with a 90\,\%
+interval of $[\pp{\nbTenRtmLo},\ \pp{\nbTenRtmHi}]$ (\cref{fig:its:rtm}). Against the
+\pp{\nbTenBeLift} break-even of \cref{sec:its:euro} that is a confident \textsc{keep}, at
+\eur{\nbTenCost}, on a redesign that does nothing at all. Exclude the trigger window from the fit
+--- or model it --- and the estimate falls back to \pp{\nbTenRtmFixed},
+$[\pp{\nbTenRtmFixedLo},\ \pp{\nbTenRtmFixedHi}]$: the dip was never a rival explanation of the
+lift, it was a misspecification of the pre-period.
+
+And here, at last, is a failure the data \emph{can} see. The placebo-date sweep of
+\cref{sec:its:valid} is flat on the clean pre-period, where the largest fake effect is
+\pp{\nbTenRtmCleanPlaceboMax}. Run the identical sweep on the dip-triggered series and the fake
+dates near the dip fire, up to \pp{\nbTenRtmPlaceboMax} in absolute value --- \emph{before} the
+real launch date is ever analysed (\cref{fig:its:rtm}, right). That is the whole argument for
+running a placebo sweep rather than filing one: it is not a formality that collects a green tick,
+it is the one instrument in this chapter that detects an endogenous launch date. Always ask
+\emph{why this date}; the sweep asks it for you.
+
+\input{build/floats/nb10_rtmfig}
 
 \subsection*{A misspecified pre-period model}
 
 \Cref{as:its:form} fails loudly, which makes it the least dangerous of the three. Deleting the
 weekly cycle from the formula sends the lag-7 residual ACF to \nbTenAcfBadSeven{} and inflates the
 credible interval by $\nbTenBadWidthRatio\times$ (\cref{sec:its:valid}). The instrument works. The
-point estimate survived here only because the post-window happened to be a whole number of weeks;
-do not count on that twice.
+point estimate survived here only because the leftover weekly sine happened to very nearly cancel
+over this particular window --- it moved from \pp{\nbTenBayesAvg} to \pp{\nbTenBadAvg} --- and
+nothing about the window guaranteed that. Do not count on it twice.
 
 \subsection*{Persistent residuals}
 
 \Cref{as:its:dep} fails silently under an iid standard error, whose coverage falls to
 \pc{\nbTenArCovIidEight} at $\rho = 0.8$ (\cref{tab:its:hac}) while its reported precision does not
-move at all. HAC repairs most of it, to \pc{\nbTenArCovHacEight}, and structure --- an explicit AR
-term, or a state-space model --- repairs more. The relevant discipline is simply that the
-covariance assumption must be \emph{made}, out loud, and never accepted by default.
+move at all. It fails just as silently under \cref{eq:its:lik}'s posterior, whose credible interval
+falls to \pc{\nbTenArCovBayesEight} on the same series --- an iid likelihood is an iid likelihood,
+whichever paradigm reads it. HAC repairs most of the classical damage, to \pc{\nbTenArCovHacEight};
+structure --- an explicit AR term, or a state-space model --- repairs more, and is the only repair
+available on the Bayesian side. The relevant discipline is simply that the covariance assumption
+must be \emph{made}, out loud, and never accepted by default.
 
 % =====================================================================================
 \section{Takeaways}
@@ -803,10 +943,27 @@ covariance assumption must be \emph{made}, out loud, and never accepted by defau
         the headroom.
 
   \item \textbf{The decision stopped being about the effect and started being about its
-        half-life.} At $\Prob(\bar\Delta > 0) = \nbTenPPos$ and a lift
-        $\nbTenLiftOverBe\times$ break-even, \textsc{keep} survives every persistence scenario but a
-        one-month burn-out. The deliverable is therefore \cref{tab:its:persistence} plus a
-        monitoring plan --- not an annualised number that quietly assumes the answer.
+        half-life --- and a decay curve needs a clock.} At $\Prob(\bar\Delta > 0) = \nbTenPPos$ and
+        a lift $\nbTenLiftOverBe\times$ break-even, \textsc{keep} survives every persistence
+        scenario but a one-month burn-out. Anchor the decay explicitly (here: \nbTenDecayAnchor),
+        or the table will quietly re-discount euros that are already banked. And do not claim the
+        half-life is unidentifiable: a fade anchored at \emph{launch} would have shown up inside the
+        window --- the late/early gap ratio is \nbTenDecayRatio{} against the
+        \nbTenDecayImpliedOnem{} a one-month burn-out requires --- so what is open is \emph{when} a
+        fade starts, not whether one is already running. The deliverable is therefore
+        \cref{tab:its:persistence} plus a monitoring plan --- re-estimate on the next two windows of
+        \nbTenNPost{} days, from day \nbTenMonitorFirst{} and day \nbTenMonitorSecond, where the
+        rows predict \pp{\nbTenBayesAvg}, \pp{\nbTenMonitorGapSixm}, \pp{\nbTenMonitorGapThreem} and
+        \pp{\nbTenMonitorGapOnem} respectively --- not an annualised number that quietly assumes the
+        answer.
+
+  \item \textbf{The placebo sweep is not a formality; it is the one diagnostic that catches an
+        endogenous launch date.} Plant a \pp{\nbTenRtmDip} dip in the \nbTenRtmDipLen{} days before
+        a redesign worth \emph{nothing} and the segmented regression books the rebound as
+        \pp{\nbTenRtmEst} --- a confident \textsc{keep} against a \pp{\nbTenBeLift} break-even. The
+        sweep, flat on the clean series, fires on the dipped one (\cref{fig:its:rtm}) before the
+        real date is ever analysed. Ask why the launch date was chosen; if the metric chose it,
+        drop or model the trigger window.
 \end{enumerate}
 
 \notebooknote{%

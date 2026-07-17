@@ -20,43 +20,43 @@
 \label{ch:up}
 
 \begin{quote}\small
-\emph{A discount email costs \eur{\nbOneCost} to put in front of one customer, and there are
-\nbOneNCustomers{} customers on the list. Its average effect is \eur{\nbOneTrueAte} per
-customer --- positive, and recovered to the cent by three different classical estimators. Act
-on that average and email everyone, and the campaign \textbf{destroys \eur{\nbOneTreatAllLoss}}:
-\pc{\nbOneShareSleeping} of the list are \emph{sleeping dogs} whom the email actively harms, and
-only \pc{\nbOneShareProfitable} of them are worth what it costs to reach. So the object the
-business needs is not the average effect but the \emph{ranking} the average conceals, and this
-chapter builds it, grades it, and prices it. On that ranking a Bayesian causal forest does beat the
-classical gradient-boosted T-learner --- AUUC \nbOneHhAuucB{} against \nbOneHhAuucA{} --- but an
-attribution ladder that changes one ingredient at a time finds the credit belongs to the
-\textbf{base learner}, while BCF's own celebrated machinery, its shrink-toward-homogeneity prior
-and its propensity input, buys \nbOneAttrBcfBuys{} --- and \emph{costs} \nbOneAttrBcfCosts{}. And
-at the till the posterior's targeting rule is worth \nbOneBayesEdge{} euros against the best
-classical rule on the board: \pc{\nbOneBayesEdgePct} of the \eur{\nbOneOracleProfit} oracle prize.
-The Bayesian layer bought essentially no extra euros here, and \cref{sec:up:compare} says so out
-loud.}
+\emph{A discount email costs \eur{\nbOneCost} to send to one customer, and the list holds
+\nbOneNCustomers{} customers. Its average effect is \eur{\nbOneTrueAte} per customer --- positive, and
+recovered to within a euro by three classical estimators (\eur{\nbOneOlsEst}, \eur{\nbOneLinEst},
+\eur{\nbOneAipwEst}). That average can issue only two instructions, and both are wrong. The naive
+comparison reads \eur{\nbOneNaiveEst}, sits above the cost, and says \emph{email everyone}; the campaign
+then \textbf{destroys \eur{\nbOneTreatAllLoss}}. The correct average sits below the cost and says
+\emph{email nobody}, which earns nothing and forgoes the whole \eur{\nbOneOracleProfit} on the table.
+Estimating the average better fixes neither instruction. \pc{\nbOneShareProfitable} of the list clears
+the cost of a send; \pc{\nbOneShareSleeping} are \emph{sleeping dogs} the email actively harms. The
+business needs the \emph{ranking} the average hides, not the average. This chapter builds that ranking,
+grades it, and prices it: a per-customer rule that captures \pc{\nbOneCapture} of the
+\eur{\nbOneOracleProfit} on offer, on a decision where emailing everyone instead \textbf{loses
+\eur{\nbOneTreatAllLoss}}.}
 \end{quote}
 
 % =====================================================================================
 \section{The decision}
 \label{sec:up:decision}
 
-A retailer holds a list of \nbOneNCustomers{} customers and a discount offer. Putting that offer
-in front of one customer costs \eur{\nbOneCost}, all in --- the creative, the send, and the margin
-given away by the discount itself. The question on the table is not whether to run the campaign.
-It is \textbf{whom to send it to}.
+A retailer holds a list of \nbOneNCustomers{} customers and a discount offer. Reaching one customer
+costs \eur{\nbOneCost}, all in --- the creative, the send, and the discounted margin. The question is
+not whether to run the campaign. It is \textbf{whom to send it to}.
 
 The reflex is to estimate the average effect of the email on spend and compare it with the cost.
-That reflex is answered fully in \cref{sec:up:classical}, and the answer is unambiguous: the
-average effect is \eur{\nbOneTrueAte}, comfortably below the \eur{\nbOneCost} of reaching one
-customer, but comfortably positive. It is also, as a guide to action, close to worthless --- and
-worse than worthless if the cost had come in a euro lower, because then the average would have
-said \emph{send it to everyone}, and \cref{tab:up:rules} prices what that instruction does.
+\Cref{sec:up:classical} does this in full. The average effect is \eur{\nbOneTrueAte}, well above zero
+and well below the \eur{\nbOneCost} cost of a send. As a guide to action it is nearly worthless.
+Treating everyone earns $n\,(\text{ATE} - c)$, so the break-even \emph{is} the average itself. Below
+\eur{\nbOneTrueAte} a contact it says send to everyone; above it, send to nobody. Here it says send to
+nobody, which earns zero. Move the cost a little and it flips to \emph{send to everyone}, which
+\cref{tab:up:rules} prices at a loss of \eur{\nbOneTreatAllLoss}. Both instructions are wrong. Neither
+is repaired by a more precise average: \pc{\nbOneShareProfitable} of the list clears the
+\eur{\nbOneCost} cost while \pc{\nbOneShareSleeping} are actively harmed, and one number cannot serve
+two groups that want opposite treatment.
 
-The reason is that customers are not alike, and the way they differ is not a nuisance to be
-averaged over. It is the entire commercial opportunity. Sort customers by what they would do in
-each of the two futures --- emailed and not emailed --- and four types appear.
+Customers are not alike, and the way they differ is the whole commercial opportunity, not a nuisance
+to average over. Sort them by what they would do in each future --- emailed and not emailed --- and
+four types appear.
 
 \begin{center}\small
 \begin{tabular}{@{}lll@{}}
@@ -73,30 +73,29 @@ each of the two futures --- emailed and not emailed --- and four types appear.
 \end{tabular}
 \end{center}
 
-Only the \emph{persuadables} are worth paying to reach: the email is what tips them over. The
-\emph{sure things} would have bought anyway, so the discount handed to them is pure margin
-given away. The \emph{lost causes} were never going to buy, so the send is wasted. And the
-\emph{sleeping dogs} are the type that makes this chapter necessary: for them the effect is
-\textbf{negative}. Reminding a habitual, disengaged customer of a subscription they had stopped
-thinking about prompts an unsubscribe, a return, a cancelled auto-renewal. Emailing a sleeping
-dog is not merely wasteful. It \emph{destroys} value that would otherwise have existed.
+Only the \emph{persuadables} are worth paying to reach: the email tips them over. The \emph{sure
+things} would have bought anyway, so the discount is margin given away. The \emph{lost causes} were
+never going to buy, so the send is wasted. The \emph{sleeping dogs} make this chapter necessary: for
+them the effect is \textbf{negative}. Remind a disengaged customer of a subscription they had stopped
+thinking about, and you prompt an unsubscribe, a return, a cancelled auto-renewal. Emailing a sleeping
+dog is worse than wasteful. It \emph{destroys} value that would otherwise exist.
 
 Three consequences follow, and they organise the chapter.
 
-\textbf{First, a response model is the wrong tool.} A model that predicts \emph{who buys after
-being emailed} cannot separate a persuadable from a sure thing: both bought. The two types are
-distinguishable only by their \emph{effect}, and the effect is never observed for anybody.
+\textbf{First, a response model is the wrong tool.} A model that predicts \emph{who buys after being
+emailed} cannot tell a persuadable from a sure thing: both bought. The two differ only in their
+\emph{effect}, and the effect is never observed.
 
-\textbf{Second, the average is the wrong estimand.} A positive average effect is perfectly
-compatible with a segment on which the campaign is destroying money, and here it is exactly that:
-\pc{\nbOneShareSleeping} of this list has $\tau_i < 0$, and their planted effects sum to
-\nbOneSleepingLoss{} euros --- value the campaign would erase if it reached them. The
-\eur{\nbOneTrueAte} average is real, correctly estimated, and hides them completely. This is why Chapter~2's discipline --- get the estimand right before
-admiring the estimator --- has teeth here.
+\textbf{Second, the average is the wrong estimand.} A positive average is fully compatible with a
+segment where the campaign destroys money, and here it is: \pc{\nbOneShareSleeping} of the list has
+$\tau_i < 0$, and their planted effects sum to \nbOneSleepingLoss{} euros the campaign would erase if
+it reached them. The \eur{\nbOneTrueAte} average is real, correctly estimated, and hides them. This is
+why \Cref{ch:pvp}'s discipline --- get the estimand right before admiring the estimator --- has teeth
+here.
 
-\textbf{Third, the deliverable is a policy, not a number.} What the business buys is a
-\emph{targeting rule}: a function that says, of each customer, mail or do not mail. Its value is
-measured in euros, on the customers it actually contacts, and \cref{sec:up:euro} measures it.
+\textbf{Third, the deliverable is a policy, not a number.} The business buys a \emph{targeting rule}:
+a function that says, for each customer, mail or do not mail. Its value is measured in euros, on the
+customers it contacts, and \cref{sec:up:euro} measures it.
 
 % =====================================================================================
 \section{The data-generating model}
@@ -132,6 +131,10 @@ decides who was emailed in the first place:
     \label{eq:up:y}
 \end{align}
 %
+The constants above are \emph{definitions} of the simulated world, not estimated results ---
+\crefrange{eq:up:mu}{eq:up:y} are their complete specification, and \cref{tab:up:params} collects them
+for reference. Every number the rest of the chapter reports is measured against them.
+\input{build/tables/nb01_params}
 Four things are planted here on purpose, and each one is load-bearing.
 
 \textbf{The effect is heterogeneous, and it changes sign.} \Cref{eq:up:tau} is a positive
@@ -164,6 +167,28 @@ matter.
 low-signal-to-noise problem by nature --- one is subtracting two noisy surfaces to recover a
 small difference --- and that fact, not any philosophical preference, is what decides which
 estimator wins in \cref{sec:up:compare}.
+
+\paragraph{A worked handful.} The four types of \cref{sec:up:decision} stop being abstract the
+moment \cref{eq:up:tau} is evaluated at a few concrete customers. Take five spanning them --- a
+persuadable, a sure thing, a lost cause, a sleeping dog, and a \emph{straddler} whose effect sits
+right on the cost line. For customer $i$ the ideal decision is a single comparison,
+%
+\begin{equation}
+  \pi^\star(x_i) \;=\; \mathbf 1\big[\,\tau_i - c \;>\; 0\,\big],
+  \qquad c = \eur{\nbOneCost},
+  \label{eq:up:oracle}
+\end{equation}
+%
+mail exactly when the planted effect clears the cost of the send, and the euros that send earns are
+$\tau_i - c$ itself. Reading $\tau(x)$ off \cref{eq:up:tau} makes the split visible
+(\cref{tab:up:types}): the persuadable clears the line and is mailed; the lost cause and the sure
+thing sit near zero and are held (the sure thing would have bought anyway, so the discount is margin
+given away); and the sleeping dog has $\tau_i - c < 0$, so mailing it does not merely waste $c$ ---
+it \emph{subtracts} $c - \tau_i$ from the total. The one type no point comparison can settle is the
+straddler, whose effect sits close enough to $c$ that its sign is genuinely uncertain: the customer
+\cref{sec:up:euro} pays to test rather than to guess.
+
+\input{build/tables/nb01_worked_types}
 
 \input{build/floats/nb01_types}
 
@@ -205,7 +230,7 @@ where $\pi(x) \in \{0, 1\}$ is the policy --- mail or do not mail --- and $c = \
 is the cost of a contact. \Cref{eq:up:ate} is what \cref{sec:up:decision} rejected as the
 decision object. \Cref{eq:up:cate} is what the rest of the chapter estimates.
 \Cref{eq:up:policy} is what the business is actually buying, and it is a \emph{functional} of
-$\tau(\cdot)$, not a parameter of any model --- which is why Chapter~2's remark about
+$\tau(\cdot)$, not a parameter of any model --- which is why \Cref{ch:pvp}'s remark about
 propagating uncertainty through nonlinear functionals comes due here, in euros.
 
 Note what \cref{eq:up:policy} rewards. It does not reward getting $\tau(x)$ right; it rewards
@@ -268,7 +293,7 @@ identifies the CATE as a contrast of two observable regression surfaces:
 what it is \emph{not}: it is not a model, not a prior, and not a sampler. Everything after it is
 statistics. The confounding is defeated by \emph{comparing emailed against not-emailed customers
 who look alike}, and every estimator below --- the classical ones and the Bayesian one --- is a
-different way of estimating the same two conditional means. This is Chapter~2's central
+different way of estimating the same two conditional means. This is \Cref{ch:pvp}'s central
 discipline, restated: \textbf{the graph decides what enters the model; the machinery only prices
 the coefficients}.
 
@@ -282,44 +307,47 @@ honest standard errors, a per-customer effect, a ranking, and even a per-custome
 with no likelihood, no prior and no chain anywhere in it. That is the bar \cref{sec:up:bayes}
 must clear, and it is deliberately not a strawman.
 
-\subsection*{The average effect, five ways --- and the first is a trap}
+\subsection*{The average effect, six ways --- and the first is a trap}
 
-The simplest estimator there is, the difference in means
+The simplest estimator, the difference in means
 $\bar y_{\text{emailed}} - \bar y_{\text{not emailed}}$ with a Welch standard error, is
-\emph{exactly right} under randomization. Here the assignment came from the selection rule
-\cref{eq:up:prop}, so it is exactly wrong --- and wrong \emph{confidently}. It returns
-\eur{\nbOneNaiveEst} against a
-planted \eur{\nbOneTrueAte} --- an error of \nbOneNaiveErr{} euros, nearly doubling the truth ---
-inside a 90\,\% interval of $[\eur{\nbOneNaiveLo},\ \eur{\nbOneNaiveHi}]$ that misses it entirely.
-That is the textbook shape of \emph{precisely wrong}.
+\emph{exactly right} under randomization. Here assignment came from the selection rule
+\cref{eq:up:prop}, so it is exactly wrong, and confidently so. It returns \eur{\nbOneNaiveEst}
+against a planted \eur{\nbOneTrueAte} --- an error of \nbOneNaiveErr{} euros, nearly double the truth
+--- inside a 90\,\% interval of $[\eur{\nbOneNaiveLo},\ \eur{\nbOneNaiveHi}]$ that misses it. This is
+the shape of \emph{precisely wrong}.
 
-To make the diagnosis unmissable, the identical estimator is run on a \textbf{randomized twin} of
-the same world --- the same customers, the same planted $\tau(x)$, \cref{eq:up:prop} replaced by a
-coin flip. It returns \eur{\nbOneRctEst}. Same estimator, same arithmetic, opposite verdicts:
-\textbf{what broke was the identification, not the estimator}.
+Run the identical estimator on a \textbf{randomized twin} of the world --- same customers, same
+planted $\tau(x)$, \cref{eq:up:prop} replaced by a coin flip --- and it returns \eur{\nbOneRctEst}.
+Same estimator, same arithmetic, opposite verdicts: \textbf{what broke was the identification, not the
+estimator}.
 
-Adjustment repairs it, three ways (\cref{tab:up:ate}):
+Adjustment repairs it, three ways (\cref{tab:up:ate}, whose sixth row carries the Bayesian posterior
+of \cref{sec:up:bayes} so the average reads in one place):
 
 \begin{itemize}[leftmargin=*]
   \item \textbf{OLS with the features}, $y \sim T + x$, with an HC1 heteroskedasticity-robust
-        covariance \citep{white1980, mackinnon1985} --- because spend variance differs by arm and
-        by customer type, and an iid standard error would be a fiction. It gives
-        \eur{\nbOneOlsEst}.
-  \item \textbf{OLS, Lin-interacted}, $y \sim T \times (x - \bar x)$. Because the covariates are
-        centred, the coefficient on $T$ is the ATE; because each arm gets its own slopes, the
-        estimator stays consistent for the ATE \emph{even though $\tau(x)$ is heterogeneous}
-        \citep{lin2013}. Plain additive OLS silently assumes one common effect and, under real
-        heterogeneity, targets a variance-weighted average instead --- a subtle bias the
-        interaction removes for the price of \nbOneNFeatures{} coefficients. It gives
-        \eur{\nbOneLinEst}.
+        covariance \citep{white1980, mackinnon1985}. Spend variance differs by arm and by customer
+        type, so an iid standard error would be a fiction. It gives \eur{\nbOneOlsEst}.
+  \item \textbf{OLS, Lin-interacted}, $y \sim T \times (x - \bar x)$. Centring the covariates makes
+        the coefficient on $T$ the ATE; giving each arm its own slopes keeps the estimator consistent
+        for the ATE even when $\tau(x)$ is heterogeneous --- \textbf{under randomized assignment}, and
+        whatever the functional form \citep{lin2013}. That scope matters here. On this
+        \emph{observational} panel the adjustment carries the identification, and \cref{eq:up:mu} is
+        not linear (it clips at zero), so a linear adjustment only approximates and nothing promises
+        consistency. The residual error is not assumed away; the next subsection measures it, at
+        \nbOneLinPanelBias{} euros and \nbOneLinPanelSes{} standard errors from zero. Plain additive
+        OLS is worse: it assumes one common effect and, under real heterogeneity, targets a
+        variance-weighted average --- a bias the interaction removes for \nbOneNFeatures{} extra
+        coefficients. It gives \eur{\nbOneLinEst}.
   \item \textbf{AIPW}, the doubly-robust estimator, at \eur{\nbOneAipwEst} with a
         \nbOneNBootAipw-resample bootstrap interval of
         $[\eur{\nbOneAipwLo},\ \eur{\nbOneAipwHi}]$.
 \end{itemize}
 
 AIPW deserves its algebra, because ``doubly robust'' is otherwise a slogan. It averages one
-\emph{influence-function} score per customer --- read it as that customer's individual
-contribution to the average effect, engineered so that an error in either model washes out:
+\emph{influence-function} score per customer --- that customer's contribution to the average effect,
+built so an error in either model washes out:
 %
 \begin{equation}
   \hat\psi_i \;=\; \underbrace{\hat\mu_1(x_i) - \hat\mu_0(x_i)}_{\text{outcome-model guess}}
@@ -331,14 +359,13 @@ contribution to the average effect, engineered so that an error in either model 
   \label{eq:up:aipw}
 \end{equation}
 %
-If the outcome models are right, the residuals $y_i - \hat\mu_{T_i}(x_i)$ are mean-zero and the
-correction terms vanish on average, leaving the correct first term. If instead the propensity is
-right, the inverse-weighted residuals repair exactly the bias the outcome models leave behind.
-\emph{Either} model being correct suffices; only both being wrong breaks it \citep{robins1994}.
-The estimator here is \textbf{cross-fitted} \citep{chernozhukov2018}: the boosted-tree outcome
-models and the logistic propensity are fitted on $K-1$ folds and scored out of fold, so an
-adaptive learner never grades its own homework --- the own-observation bias that would otherwise
-make \cref{eq:up:aipw}'s residuals too small.
+If the outcome models are right, the residuals $y_i - \hat\mu_{T_i}(x_i)$ are mean-zero, the
+correction terms vanish on average, and the first term stands. If instead the propensity is right,
+the inverse-weighted residuals repair the bias the outcome models leave. \emph{Either} model being
+correct suffices; only both wrong breaks it \citep{robins1994}. The estimator here is
+\textbf{cross-fitted} \citep{chernozhukov2018}: the boosted-tree outcome models and the logistic
+propensity are fitted on $K-1$ folds and scored out of fold, so no learner grades its own homework
+and \cref{eq:up:aipw}'s residuals are not shrunk by own-observation bias.
 
 \input{build/tables/nb01_ate}
 
@@ -447,7 +474,7 @@ redrawn. It is centred on $\hat\tau(x)$, not on $\tau_i$. Every replicate refits
 on the same information, so a systematically shrunken estimate stays shrunken in all
 \nbOneNBootCate{} of them, and the band tightens \textbf{around the wrong value} without a hint of
 complaint. \Cref{sec:up:euro}'s rule needs $\Prob(\tau_i > c)$ --- a probability about
-\emph{this customer's effect} --- and Chapter~2 settles that the classical arm has no
+\emph{this customer's effect} --- and \Cref{ch:pvp} settles that the classical arm has no
 such object to offer. Whether that distinction costs real money, or is a philosopher's quibble,
 this chapter will not assert. \Cref{sec:up:compare} measures it, in euros.
 
@@ -493,35 +520,33 @@ than baseline structure, so the model reports it only when the data insist. It i
 effects are more nearly constant than baselines are --- defensible, common, and, on this data,
 tested in \cref{sec:up:compare} and found wanting.
 
-Inference is by the particle-Gibbs sampler PGBART in PyMC \citep{salvatier2016}: \nbOneBcfDraws{}
+One specification note, because the chapter's central negative finding leans on it. \code{pymc-bart}
+centres each forest's prior at the mean of the response it is handed, and here the treatment forest is
+handed the \emph{outcome}. Its prior therefore sits at the outcome level, not at zero as in the clean
+Hahn--Murray--Carvalho form where the $\tau$ prior shrinks toward \emph{no effect}. In
+\cref{eq:up:bcfprior} the shrinkage comes from the halved tree count, not from a zero-centred
+treatment prior. Every verdict below is scoped to \emph{this} parameterisation of BCF.
+
+Inference is by the particle-Gibbs sampler PGBART \citep{quiroga2022}, implemented in
+\code{pymc-bart} on top of PyMC \citep{salvatier2016}: \nbOneBcfDraws{}
 post-warmup draws across \nbOneBcfChains{} chains, with $m = \nbOneBcfTrees$ trees on the
 prognostic surface. The diagnostics scoped to the model's continuous scalars give
 $\hat R = \nbOneBcfRhat$ and a minimum bulk effective sample size of \nbOneBcfEss{}
-\citep{vehtari2021}. Against the bands this book applies to a tree sampler --- $\le 1.01$ a clean
-pass, $1.01$--$1.02$ tolerated, anything above that an investigate signal --- the verdict computed
-on this run is \textbf{\nbOneBcfRhatVerdict}. That verdict is itself printed rather than asserted,
-and for a reason the next remark makes uncomfortable: it has not been the same on consecutive runs
-of this identical model.
+\citep{vehtari2021}. For a tree sampler these scalars are a weaker signal than they look, so the
+convergence verdict is computed and printed rather than eyeballed: on this run it is
+\textbf{\nbOneBcfRhatVerdict}. The band that produces that word --- and why $\hat R$ is a poor proxy
+for what the chapter actually reads off the model, the treatment surface --- is set out with a
+worked example in \cref{app:up:tol}.
 
-\begin{remark}[What ``converged'' means for a tree sampler, and what it does not]
-Divergences are a NUTS concept and do not apply to a particle-Gibbs sampler; $\hat R$ and ESS do.
-But the scalar being monitored is the observation-noise standard deviation, and it is coupled to a
-sum of \nbOneBcfTrees{} trees whose \emph{individual} structures are exchangeable, so a chain can
-explore a perfectly good posterior over functions while its scalar summaries mix slowly. Raising
-the draw count grinds $\hat R$ down only slowly here, and the diagnostic is a poor proxy for what
-the chapter actually reads off the model: the treatment surface.
-
-That is a reason to reach for a different backstop, not to wave the number through. The backstop
-is the \nbOneNSeeds-seed refit of \cref{sec:up:valid}, which grades the \emph{estimates} rather
-than the sampler and finds them \nbOneStabVerdict. And the deeper point stands regardless:
-\textbf{a converged sampler would not be a reproducible one either}. \code{pymc-bart} is not
-seed-stable in this environment --- two consecutive full runs of identical source have moved this
-model's PEHE by more than a fifth and flipped a coverage winner line. Every BART-derived number in
-this chapter is therefore injected from the run that produced the PDF in front of you, never
-typed, and every comparison between two of them is judged against a measured tolerance rather than
-an eyeball. That is not a caveat bolted on at the end. It is why \cref{sec:up:compare} is built
-the way it is.
-\end{remark}
+Two facts about \code{pymc-bart} make that caution load-bearing. First, the real backstop for
+convergence is not $\hat R$ but the \nbOneNSeeds-seed refit of \cref{sec:up:valid}, which grades the
+\emph{estimates} rather than the sampler and finds them \nbOneStabVerdict. Second, and more
+uncomfortable, the sampler is not seed-stable in this environment: two full runs of identical source
+have moved this model's PEHE by more than a fifth. So no BART-derived number is ever typed into this
+chapter --- every one is injected from the run that produced the PDF in front of you --- and every
+comparison between two of them is judged against a \emph{measured} tolerance rather than by eye. That
+tolerance is constructed in \cref{app:up:tol}, and it is why \cref{sec:up:compare} is built the way
+it is.
 
 \subsection*{Model criticism, before any effect is read off}
 
@@ -534,8 +559,18 @@ The second is a genuine posterior predictive check (\cref{fig:up:ppc}): replicat
 drawn from the \emph{fitted} model --- each from its own draw's mean surface and noise scale ---
 and their spend distribution laid over the real one. \pc{\nbOnePpcCov} of observed spend falls
 inside the replicates' 5--95\,\% range, against the 90\,\% a calibrated model would give:
-\nbOnePpcVerdict. A model that cannot generate the data it was trained on has no business being
-read for effects, however tight its intervals.
+\nbOnePpcVerdict. Split by arm --- the sharper version, because $\tau(x)$ \emph{is} the difference
+between the two arms' surfaces --- the same check gives \pc{\nbOnePpcCovTreated} among the emailed
+and \pc{\nbOnePpcCovControl} among the not-emailed, so the pooled pass is not concealing a one-arm
+misfit. A model that cannot generate the data it was trained on has no business being read for
+effects, however tight its intervals.
+
+Bank that pass with its scope attached, because it is a weak test and the chapter does not pretend
+otherwise. A flexible sum-of-trees mean surface with a free noise scale reproduces the marginal of
+spend almost by construction; a check the model can barely fail is not evidence that it has the
+\emph{heterogeneity} right, and no marginal check --- pooled or arm-split --- can see per-customer
+error in $\tau(x)$. The strict test is the truth-graded coverage by decile of
+\cref{sec:up:valid}, which the simulator makes possible and which this model does \emph{not} pass.
 
 \input{build/floats/nb01_overlap}
 \input{build/floats/nb01_ppc}
@@ -590,14 +625,18 @@ descending staircase from \eur{\nbOneDecTopTrue} of true effect in the top predi
 \eur{\nbOneDecBotTrue} in the bottom.
 
 The coverage is where the interesting problem is. Overall, the nominal 90\,\% credible interval
-covers \pc{\nbOneBcfCovNinety} of customers --- mildly overconfident, and unremarkable. Split by
+covers \pc{\nbOneBcfCovNinety} of customers --- on its nominal target, and unremarkable. Split by
 decile of the \emph{true} effect and the average dissolves into a shape: coverage sags at the
 extremes, and on the \textbf{top} decile --- the customers a targeting rule is about to spend
 money on --- it falls to \pc{\nbOneBcfTopDec}. Read the reliability panel of \cref{fig:up:recovery}
-alongside it and the mechanism is visible: the shrink-toward-homogeneity prior of
-\cref{eq:up:bcfprior} pulls the biggest effects \emph{down}, and the posterior then reports a
-narrow interval around the shrunken value. \textbf{The model is most confident, and most wrong,
-exactly where the euros are.}
+alongside it and the mechanism is visible, and it is a failure of \emph{location} rather than of
+width: the shrink-toward-homogeneity prior of \cref{eq:up:bcfprior} pulls the biggest effects
+\emph{down}, and the interval, centred on the shrunken value, no longer reaches back to the truth.
+The widths are printed rather than assumed: on that top decile BCF's mean 90\,\% credible interval
+is \eur{\nbOneBcfTopdecWidth}, \nbOneTopdecWidthVerdict{} the classical bootstrap band's
+\eur{\nbOneBootTopdecWidth}, so what carries the miss is the shrunken \emph{centre} and not an
+appeal to sharpness. \textbf{The model is most confident, and most wrong, exactly where the euros
+are.}
 
 \input{build/floats/nb01_recovery}
 \input{build/floats/nb01_qini}
@@ -611,53 +650,65 @@ deviation of \eur{\nbOneStabSd}: \nbOneStabVerdict.
 But those \nbOneNSeeds{} refits also measure something the chapter cannot politely ignore. Across
 them, PEHE ranges from \eur{\nbOneStabPeheLo} to \eur{\nbOneStabPeheHi} and AUUC from
 \nbOneStabAuucLo{} to \nbOneStabAuucHi. Some of that is fresh data and some of it is the sampler,
-and \cref{sec:up:bayes}'s remark is the reason the two cannot be cleanly separated here. The
-operational consequence is a rule this chapter obeys without exception: \textbf{no BART-derived
-number is ever compared with another by eye}. Every head-to-head below is judged against twice the
-paired-bootstrap standard error of the gap --- resample the same customers for both arms, watch
-the gap move, and refuse to name a winner unless the gap is bigger than its own noise. A
-comparison that cannot return ``too close to call'' will always manufacture a winner.
+and \cref{sec:up:bayes} is the reason the two cannot be cleanly separated here. The operational
+consequence is a rule this chapter obeys without exception: \textbf{no BART-derived number is ever
+compared with another by eye}. Every head-to-head below is judged against a measured tolerance ---
+twice the paired-bootstrap standard error of the gap, plus the sampler's own fit-to-fit wobble
+wherever a BART refit sits on one side of the comparison --- so a gap smaller than its own noise
+prints as ``too close to call'' rather than as a winner. \Cref{app:up:tol} constructs that
+tolerance and works an example on the PEHE head-to-head.
 
 % =====================================================================================
-\section{Point estimate versus posterior}
+\section{Which model do we trust for the targeting rule?}
 \label{sec:up:compare}
 
 \input{build/tables/nb01_compare}
 
-\subsection*{On the average, they agree --- say it plainly}
+The rule the business ships thresholds a per-customer probability, $\Prob(\tau_i > c \mid D)$, so
+this section asks one question and answers it forward: \emph{which model should the decision trust
+to produce that number and to rank customers?} The two arms are put on the same estimands, the
+places they agree are banked, the places they differ are audited ingredient by ingredient, and the
+choice of decision model falls out at the end.
+
+\subsection*{First, the average: the two arms agree}
 
 \Cref{tab:up:ate} and \cref{tab:up:compare} put the two arms on the same estimands. On the ATE,
-the classical estimators and the BCF posterior land on the same effect, all of them within a euro
+the classical estimators and the BCF posterior land on the same effect --- the posterior mean is the
+last row of \cref{tab:up:ate}, printed there with its credible interval so that the agreement can be
+read off one table rather than assembled from two --- all of them within a euro
 of the planted \eur{\nbOneTrueAte}. \textbf{The Bayesian layer did not find a better number, and
 it could not have.} With \nbOneNCustomers{} customers, fully observed confounders and weak priors,
 a correctly adjusted regression is already consistent and there was nothing left on the table.
-This is Bernstein--von Mises --- Chapter~2's proposition --- arriving on schedule, and it is the
+This is Bernstein--von Mises --- \Cref{ch:pvp}'s proposition --- arriving on schedule, and it is the
 ordinary case in this book. If you came expecting ``going Bayesian'' to fix a biased estimate,
 \cref{sec:up:classical} is the correction: what fixed the bias was adjusting for the
 \nbOneNFeatures{} features, and OLS does that for free.
 
-\subsection*{On the CATE the arms separate --- and then the interesting question begins}
+\subsection*{On the per-customer effect they separate --- so we audit the ranking}
 
-On the per-customer effect they do come apart, and \cref{tab:up:compare} records it. The
-head-to-head, judged against twice the paired-bootstrap standard error of each gap, names
-\textbf{\nbOneHhPeheWin} on PEHE (\nbOneHhPeheA{} against \nbOneHhPeheB, a gap of
-\nbOneHhPeheGap{} against a tolerance of \nbOneHhPeheTol) and \textbf{\nbOneHhAuucWin} on AUUC
-(\nbOneHhAuucA{} against \nbOneHhAuucB). But a winner is not an explanation, and this is where an
-earlier draft of this chapter went wrong in a way worth preserving as a warning.
+On the per-customer effect the two arms do come apart, and \cref{tab:up:compare} records it. The
+head-to-head, judged against the measured tolerance, names \textbf{\nbOneHhPeheWin} on PEHE
+(\nbOneHhPeheA{} against \nbOneHhPeheB, a gap of \nbOneHhPeheGap{} against a tolerance of
+\nbOneHhPeheTol) and \textbf{\nbOneHhAuucWin} on AUUC (\nbOneHhAuucA{} against \nbOneHhAuucB). A
+winner, though, is not yet a reason to trust one model over the other. Before the decision leans on
+BCF's ranking we have to know \emph{what} in BCF produced it.
 
-BCF differs from the classical GBM T-learner in \textbf{three} ways at once: (i) it averages over
-a \emph{posterior} of tree ensembles instead of committing to a single point fit; (ii) it applies
-a shrink-toward-homogeneity prior to the treatment surface; (iii) it feeds in the propensity
-$\hat e(x)$. A two-horse race cannot say which of the three did the work --- and the tempting
-story, the flattering one, is that it was (ii) and (iii): \emph{the Bayesian causal machinery}.
-The earlier draft banked exactly that story. It is disprovable, so the notebook disproves it.
+BCF differs from the classical GBM T-learner in \emph{four} ways at once: (i) it averages over a
+\emph{posterior} of tree ensembles instead of committing to a single point fit; (ii) it applies a
+shrink-toward-homogeneity prior to the treatment surface --- in this implementation, half as many
+trees on it; (iii) it feeds in the propensity $\hat e(x)$; and (iv) it fits \emph{one} joint
+additive surface, $f_{\text{prog}} + f_\tau T$, where the T-learner fits two independent forests. A
+two-horse race cannot say which of the four did the work, and the flattering guess --- that the
+credit belongs to (ii) and (iii), the specifically \emph{causal} machinery a vendor sells --- is
+exactly the one a buyer should be most sceptical of. So we isolate each ingredient before trusting
+the ranking.
 
-\subsection*{The attribution ladder}
+\subsection*{Due diligence: the attribution ladder}
 
-Fit a third model: a \textbf{BART T-learner}. Two arms, subtract --- \cref{eq:up:tlearner} exactly
---- but with a sum-of-trees \emph{posterior} as the base learner in place of the gradient-boosting
-point fit. It has ingredient (i) and \emph{neither} (ii) nor (iii): no shrink prior, no propensity
-input. That completes a ladder in which each rung changes \emph{one} thing:
+Fit a third model: a \textbf{BART T-learner}. Two arms, subtract --- \cref{eq:up:tlearner} exactly ---
+but with a sum-of-trees \emph{posterior} as the base learner in place of the gradient-boosting point
+fit. It has ingredient (i) and none of (ii), (iii), (iv). That gives a ladder. Read each rung by what
+it moves:
 
 \begin{center}\small
 \begin{tabular}{@{}lll@{}}
@@ -667,17 +718,35 @@ input. That completes a ladder in which each rung changes \emph{one} thing:
 (1) GBM T-learner $\to$ (2) BART T-learner
   & point fit $\to$ posterior
   & \textbf{the base learner} \\
+(1) GBM T-learner $\to$ (1b) bagged GBM
+  & one fit $\to$ the mean of many
+  & \textbf{averaging alone} \\
 (2) BART T-learner $\to$ (3) BCF
-  & $+$ shrink prior, $+$ propensity
-  & \textbf{BCF's own machinery} \\
+  & $+$ shrink prior, $+$ propensity,
+  & \textbf{BCF's package}, \\
+  & $+$ one joint surface
+  & not any one ingredient \\
 \bottomrule
 \end{tabular}
 \end{center}
 
+Rung (2) $\to$ (3) is a \emph{bundle}. Three ingredients move together there, and no verdict below can
+name which one is responsible; the ladder credits or debits BCF \emph{as specified}. Isolating the
+prior alone would take a fourth fit --- BCF with an unhalved treatment forest, the propensity still
+fed in --- and this chapter does not run it. What points at the prior \emph{specifically} is
+\cref{fig:up:recovery}'s reliability panel, where the largest effects are visibly flattened.
+
 \input{build/tables/nb01_ladder}
 
-\Cref{tab:up:ladder} is the result, with every gap judged against twice its paired-bootstrap
-standard error. The verdicts, computed by the notebook and cited here rather than re-argued:
+\Cref{tab:up:ladder} is the result. Every gap is judged against the measured tolerance of
+\cref{app:up:tol}: twice its paired-bootstrap standard error, plus, on the BCF rung, the sampler's own
+fit-to-fit wobble that the paired bootstrap cannot see. That wobble is real. The BCF in
+\cref{tab:up:ladder} is an equal-compute \emph{refit} of the model \cref{tab:up:compare} reports ---
+same specification, same customers, a different seed --- and the two fits disagree by
+\eur{\nbOneBcfSeedPeheWobble} of PEHE and \nbOneBcfSeedCovWobble{} points of overall coverage, purely
+from the sampler. That disagreement also reconciles the two tables: they show two fits of one model.
+Folding it into the tolerance lets a gap smaller than the sampler's noise print as ``too close to
+call''. The verdicts, computed by the notebook and cited rather than re-argued:
 
 \begin{itemize}[leftmargin=*]
   \item \textbf{Rung (1) $\to$ (2), the base learner.} On PEHE the winner is
@@ -685,7 +754,14 @@ standard error. The verdicts, computed by the notebook and cited here rather tha
         \nbOneRungBlPeheGap{} against a tolerance of \nbOneRungBlPeheTol). On AUUC it is
         \textbf{\nbOneRungBlAuucWin} (\nbOneRungBlAuucA{} against \nbOneRungBlAuucB, gap
         \nbOneRungBlAuucGap, tolerance \nbOneRungBlAuucTol).
-  \item \textbf{Rung (2) $\to$ (3), BCF's own machinery.} On PEHE: \textbf{\nbOneRungBcfPeheWin}
+  \item \textbf{Rung (1) $\to$ (1b), averaging alone.} The same gradient-boosting T-learner,
+        averaged over the \nbOneNBootCate{} bootstrap refits the classical arm already computed:
+        model averaging with the base learner held fixed and no Bayes anywhere. On PEHE the winner
+        is \textbf{\nbOneRungBagPeheWin} (\nbOneRungBagPeheA{} against \nbOneRungBagPeheB); on AUUC,
+        \textbf{\nbOneRungBagAuucWin} (\nbOneRungBagAuucA{} against \nbOneRungBagAuucB). This is the
+        control that keeps rung (1) $\to$ (2) honest: whatever averaging alone does not deliver, the
+        rest of that rung --- a different ensemble, with a regularizing tree prior --- is what did.
+  \item \textbf{Rung (2) $\to$ (3), BCF's package.} On PEHE: \textbf{\nbOneRungBcfPeheWin}
         (\nbOneRungBcfPeheA{} against \nbOneRungBcfPeheB, gap \nbOneRungBcfPeheGap, tolerance
         \nbOneRungBcfPeheTol). On AUUC: \textbf{\nbOneRungBcfAuucWin} (\nbOneRungBcfAuucA{} against
         \nbOneRungBcfAuucB). On overall coverage: \textbf{\nbOneRungBcfCovWin}. And on the axis
@@ -694,39 +770,32 @@ standard error. The verdicts, computed by the notebook and cited here rather tha
         \nbOneRungBcfTopdecGap{} against a tolerance of \nbOneRungBcfTopdecTol).
 \end{itemize}
 
-The notebook's own summary, computed from those verdicts: the base learner buys
-\textbf{\nbOneAttrBaselearner}; BCF's extra machinery buys \textbf{\nbOneAttrBcfBuys}, and it
-costs \textbf{\nbOneAttrBcfCosts}. In one sentence, and again the notebook's rather than this
-chapter's: the Bayesian edge over the classical arm is \nbOneAttrVerdict.
+The notebook's summary, from those verdicts: the base learner buys \textbf{\nbOneAttrBaselearner};
+BCF's package buys \textbf{\nbOneAttrBcfBuys} and costs \textbf{\nbOneAttrBcfCosts}. In one sentence,
+the notebook's: the Bayesian edge over the classical arm is \nbOneAttrVerdict.
 
-That verdict deserves to be stated without spin. The ingredient that moves the needle is the one
-nobody sells: \textbf{a sum-of-trees posterior in place of a single point fit}. Averaging over an
-ensemble of plausible tree structures, rather than committing to one, is worth real accuracy when
-the signal is thin --- and it is thin here: \nbOneNCustomers{} customers, \eur{8} of noise per
-observation, and effects mostly in single digits. That is the \emph{ordinary} Bayesian gain, the
-one \citet{chipman2010} and \citet{hill2011} would have predicted, and there is nothing exotic
-about it. What BCF's specifically \emph{causal} machinery adds on top of it, the ladder prices at
-\textbf{\nbOneAttrBcfBuys} --- and \cref{sec:up:dgm}'s remark already said why it might come to
-that: the propensity trick exists to absorb targeted selection, and with the confounders
-\emph{fully observed} and overlap good, there is nothing left for $\hat e(x)$ to fix.
+State the verdict plainly. What moves the needle is the ingredient nobody sells: \textbf{a
+sum-of-trees posterior in place of a single point fit}. Rung (1) $\to$ (1b) keeps that from
+over-reaching --- it prices the averaging alone, base learner held fixed --- and what remains of rung
+(1) $\to$ (2) is the ensemble itself: many shallow, mutually-correcting trees under a regularizing
+prior, integrated rather than fitted. That buys real accuracy when the signal is thin, and it is thin
+here: \nbOneNCustomers{} customers, \eur{8} of noise per observation, effects mostly in single digits.
+This is the \emph{ordinary} Bayesian gain \citet{chipman2010} and \citet{hill2011} would have
+predicted, nothing exotic. BCF's specifically \emph{causal} package adds \textbf{\nbOneAttrBcfBuys} on
+top, and \cref{sec:up:dgm}'s remark said why: the propensity trick absorbs targeted selection, and
+with the confounders \emph{fully observed} and overlap good, there is nothing left for $\hat e(x)$ to
+fix.
 
-That is not a defeat for Bayesian inference. It is a Bayesian analysis correctly attributing its
-own success, which is a great deal more useful than a win.
+The point for the decision is not who \emph{wins}. It is that the ranking's accuracy is real and
+\emph{attributable} to the base learner, so the decision can lean on the ranking on its merits and
+price BCF's causal package separately. The next two subsections do that pricing: the intervals, then
+the euros.
 
-\begin{remark}[The double standard, named so it is not repeated]
-An earlier draft of this chapter dismissed a \emph{larger} PEHE gap as noise where it pointed away
-from Bayes, and banked a \emph{smaller} one as a measured Bayesian win where it pointed toward it.
-Neither gap was stable. One tolerance, applied by code, to every comparison, in both directions:
-that is what the printed $2\times$SE band is for, and it is why several of the verdicts above are
-allowed to read ``too close to call''. If a future re-run ever puts BCF beyond the tolerance on
-rung (2) $\to$ (3), \emph{that} --- and only that --- licenses crediting the prior.
-\end{remark}
+\subsection*{The intervals: BCF is least trustworthy where the rule spends money}
 
-\subsection*{On the intervals, the average hides a disaster}
-
-Overall coverage is the least interesting line in \cref{tab:up:compare}: both arms sit in the
-mid-to-high eighties, both mildly overconfident, and the head-to-head returns
-\textbf{\nbOneHhCovWin} (\pc{\nbOneBootCov} against \pc{\nbOneBcfCovNinety}). Read that line as
+Overall coverage is the least interesting line in \cref{tab:up:compare}: the classical band
+under-covers at \pc{\nbOneBootCov}, the posterior lands on \pc{\nbOneBcfCovNinety}, and the
+head-to-head returns \textbf{\nbOneHhCovWin}. Read that line as
 ``the same, to within the noise'' whichever name it prints --- the gap has landed on both sides of
 its tolerance across consecutive full runs of identical source, which is a lesson in why this
 chapter computes its verdicts instead of typing them.
@@ -734,37 +803,54 @@ chapter computes its verdicts instead of typing them.
 Split by decile of the true effect and the arms come apart, and this one is not marginal. On the
 top decile the winner is \textbf{\nbOneHhTopdecWin} (\pc{\nbOneBootTopDec} against
 \pc{\nbOneBcfTopDec}), a gap of \nbOneHhTopdecGap{} against a tolerance of \nbOneHhTopdecTol. The
-cause is not a bug. Shrinkage toward homogeneity pulls the largest $\tau_i$ down, and the
-posterior then reports a \emph{narrow} interval around the shrunken value. The classical arm,
+cause is not a bug, and it is a failure of \emph{location}: shrinkage toward homogeneity pulls the
+largest $\tau_i$ down, and the interval --- \eur{\nbOneBcfTopdecWidth} wide on that decile,
+\nbOneTopdecWidthVerdict{} the classical band's \eur{\nbOneBootTopdecWidth} --- is centred on the
+shrunken value and no longer reaches back to the truth. The classical arm,
 having no shrinkage to apply, is less accurate on average and more honest at the extreme.
 
 Now put that next to the ladder, because together they are the sharpest thing in this chapter. The
-prior that costs the top decile its coverage is the same prior the ladder found buying
+shrinkage that costs the top decile its coverage belongs to the package the ladder found buying
 \nbOneAttrBcfBuys. \textbf{On this world it is close to all cost and no benefit --- and that is
-known because it was measured, not because it sounds humble.} A prior is a claim about the world.
-This world declines it.
+known because it was measured, not because it sounds humble.} A prior is a claim about the world,
+and this world declines \emph{this} one --- the halved treatment forest of
+\cref{eq:up:bcfprior}, in the parameterisation \cref{sec:up:bayes} disclosed. The ladder debits the
+package; what points at the shrinkage in particular is \cref{fig:up:recovery}'s reliability panel,
+where the largest effects are visibly flattened.
 
-\subsection*{What the posterior bought, in euros --- and it is not much}
+\subsection*{In euros: does the posterior's rule beat the best classical rule?}
 
 \input{build/tables/nb01_rules}
 
-\Cref{tab:up:rules} is the only grade that pays anyone. Seven targeting rules, priced on the known
-truth. Emailing everyone \emph{destroys} \eur{\nbOneTreatAllLoss}. Every model-driven rule recovers
-the great majority of the oracle's \eur{\nbOneOracleProfit}. And then look at the two rules that
+\Cref{tab:up:rules} is the only grade that pays anyone, and its first two rows are what the
+\emph{average} can instruct: email everyone, which destroys \eur{\nbOneTreatAllLoss} and is what the
+naive \eur{\nbOneNaiveEst} recommends, or email nobody, which is what the correct \eur{\nbOneTrueAte}
+recommends and which earns zero against an oracle prize of \eur{\nbOneOracleProfit}. Every
+model-driven rule recovers the great majority of that prize. And then look at the rules that
 use their uncertainty: the posterior's honest rule, $\Prob(\tau_i > c) > 0.8$, and the classical
 \textbf{bootstrap exceedance share} --- the fraction of resamples in which $\hat\tau^*(x)$
 happened to exceed \eur{\nbOneCost} --- thresholded at the identical $0.8$. They finish
 \emph{level}. The posterior rule earns \nbOneBayesEdge{} euros against the best classical rule on
 the board: \pc{\nbOneBayesEdgePct} of the oracle prize.
 
+One objection has to be met before that number is banked, because the ladder has just been unkind to
+the model it is read off. The euros above come from BCF's posterior, and BCF is the arm the ladder
+debits --- including on top-decile coverage, which is the very quantity $\Prob(\tau_i > c)$
+integrates. So \cref{tab:up:rules} prices the identical rule on the \textbf{BART T-learner's}
+posterior as well: it contacts \nbOneBartRuleN{} customers, realises \eur{\nbOneBartRuleProfit}, and
+beats the best classical rule by \nbOneBartRuleEdge{} euros. The Bayesian arm's \emph{best} euro
+number, not merely its first, is therefore on the board --- and the conclusion is unmoved. BCF
+remains the chapter's decision model because its propensity input is what targeted selection would
+require, and because nothing in the euros turns on the choice.
+
 \textbf{On this decision, at this $n$, the Bayesian layer bought essentially no extra euros. Say
-it out loud.} Both confidence-aware rules also beat targeting on either arm's bare \emph{point}
+it out loud.} Every confidence-aware rule also beats targeting on either arm's bare \emph{point}
 estimate, which over-contacts (\nbOnePointRuleN{} customers against the honest rule's
 \nbOneBayesRuleN) because a point estimate cannot tell a confident \eur{9} from a coin-flip
 \eur{9}. That gap --- between point-targeting and confidence-targeting --- is real and worth euros.
 The gap between the \emph{Bayesian} and the \emph{classical} way of being confidence-aware is not.
 
-\subsection*{So what is the durable argument?}
+\subsection*{The durable reason to prefer the posterior: a probability you can act on}
 
 It is \cref{tab:up:calibration}, and it is not a philosopher's quibble.
 
@@ -782,7 +868,7 @@ sweep, its straddler set and its value-of-information integral are every one of 
 list were redrawn. It is centred on $\hat\tau(x)$, not on $\tau_i$; it inherits the learner's
 shrinkage in every single replicate, so it structurally cannot warn anyone that it is biased ---
 the top-decile coverage above is that failure, made visible; and nothing licenses reading it as a
-degree of belief about a person. Chapter~2 makes the general statement; this table is what
+degree of belief about a person. \Cref{ch:pvp} makes the general statement; this table is what
 it looks like when a marketing team runs into it.
 
 That it \emph{performs} nearly as well here as a decision heuristic is the honest and
@@ -790,18 +876,23 @@ uncomfortable finding, and this chapter reports it rather than hiding it. What i
 \emph{interpreted}, \emph{dialled} against a stated risk appetite, or fed to a value-of-information
 integral without silently changing the meaning of every euro that comes out.
 
-\subsection*{The ledger}
+\subsection*{So which model does the rule trust?}
 
-Bayes did not buy the ATE: \cref{sec:up:classical} had it, three ways, with honest standard errors.
-It did not buy immunity from \cref{as:up:unconf}: \cref{sec:up:wrong}'s hidden confounder drags the
-posterior exactly as far as it drags OLS. It did not buy calibrated intervals on the biggest
-effects --- there it is \emph{worse} than the bootstrap. It did not buy a pile of euros. And, per
-the ladder, it did not vindicate BCF's prior or its propensity trick, neither of which beats a
-plain BART T-learner here. What it bought is (a) a better estimate of $\tau(x)$ than the classical
-point fit, earned by the \emph{base learner}, and (b) the decision quantity itself: a per-customer
-probability a CMO can threshold, sweep and price. On a smaller list, or a noisier outcome, the
-averaging margin grows. On this one, be honest: the classical arm got remarkably close, and the
-specifically Bayesian-\emph{causal} machinery got nothing.
+Assemble the findings as a decision rather than a scorecard. The rule ships on
+$\Prob(\tau_i > c \mid D)$, a per-customer probability, so the chosen model has to do two things:
+rank customers well, and produce that probability honestly. On the ranking, \cref{tab:up:ladder} is
+decisive --- the accuracy is real and it belongs to the \emph{base learner}, a sum-of-trees
+posterior in place of a point fit, while BCF's specifically causal package adds no ranking accuracy
+and, as the euros above showed, no euros. On the probability, \cref{tab:up:calibration} is decisive
+the other way --- only a posterior yields $\Prob(\tau_i > c \mid D)$ at all, and the classical
+exceedance share, however close its decisions land here, is simply not that object. So the rule runs
+on a Bayesian posterior, and it runs there for the base learner and the decision quantity, not for
+the two ingredients still on probation: with the confounders fully observed the propensity input has
+nothing to fix, and the shrink-toward-homogeneity prior costs the top decile its coverage in exactly
+the place the rule spends money. Adjustment, not Bayes, is what defeated the confounding
+(\cref{sec:up:classical}); a hidden confounder would drag the posterior exactly as far as it drags
+OLS (\cref{sec:up:wrong}); and on a smaller list or a noisier outcome the base learner's averaging
+margin only grows. \Cref{sec:up:euro} prices all of this in euros and turns it into a test.
 
 % =====================================================================================
 \section{The decision, in euros}
@@ -824,7 +915,7 @@ not a yes. So the rule this chapter recommends thresholds the \emph{probability}
 where $\tau_i^{(s)}$ are the posterior draws of customer $i$'s effect. The threshold $0.8$ is a
 convention and can be argued with --- it is a statement of risk appetite, and
 \cref{fig:up:voi} prices moving it. The \emph{object} on the left cannot be argued with: it is
-Chapter~2's $\Prob(\tau > c \mid D)$, per customer, and the classical arm
+\Cref{ch:pvp}'s $\Prob(\tau > c \mid D)$, per customer, and the classical arm
 cannot produce it.
 
 Applied here, \cref{eq:up:rule} contacts \nbOneNTargeted{} of \nbOneNCustomers{} customers
@@ -842,6 +933,16 @@ sure things and sleeping dogs, so \textbf{its peak is the optimal stopping point
 \pc{\nbOneStopFrac}, earn \eur{\nbOneStopProfit}. This is the single most useful artefact in the
 chapter for an operator, because it converts a model into an instruction --- ``email the top
 \pc{\nbOneStopFrac} of the ranked list'' --- and prices what the next customer down is worth.
+
+Three euro figures in this section sit within a few euros of one another, and they are \emph{three
+different objects}. Do not read them as one number quoted thrice. The shipped rule of \cref{eq:up:rule}
+thresholds a \emph{probability} at \nbOneConfBar{} and realises \eur{\nbOneModelProfit} --- a policy
+you can run on the real list, because $\Prob(\tau_i > c \mid D)$ survives production. This curve instead
+ranks by the \emph{point} prediction and reads its peak off the \emph{known} truth, so it lands a
+little higher, at \eur{\nbOneStopProfit}, and is a simulator-only ceiling, not a shippable rule. The
+confidence sweep below traces the shipped rule's value as the bar turns, peaking on a plateau at that
+same \eur{\nbOneModelProfit}. Rule value, hindsight ceiling, sweep plateau: near in euros, distinct in
+kind.
 
 Note what the curve is \emph{not}: it is not a forecast. Its shape is realised on the known truth,
 which is available here and nowhere else. In production the same curve is estimated from a
@@ -869,10 +970,19 @@ And that is what the notebook finds: of \eur{\nbOneVoiTotal} of total value of i
 \eur{\nbOneVoiStraddlers} sits on the \nbOneNStraddlers{} straddlers --- \pc{\nbOneStraddlerShare}
 of the list (\cref{fig:up:voi}). \textbf{That is not an abstraction; it is a test design.} The
 follow-up is a small randomized A/B test \emph{on the straddlers}, not a blanket send, and
-\cref{eq:up:voi} is an upper bound on what such a test can be worth --- it prices \emph{perfect}
-information, and a finite experiment resolves only part of the uncertainty. A test costing many
-times \eur{\nbOneVoiStraddlers} to settle an \eur{\nbOneVoiStraddlers} question is not caution. It
-is an expensive way to feel careful.
+\cref{eq:up:voi} bounds what such a test can be worth \emph{under this posterior} --- it prices
+\emph{perfect} information, and a finite experiment resolves only part of the uncertainty.
+
+That scope clause is doing work, and it cuts the other way from the one a reader expects. Both the
+integral and the straddler set are read off BCF's own draws, and \cref{sec:up:compare} measured those
+draws as under-covering the top decile of true effect at \pc{\nbOneBcfTopDec} against a nominal
+90\,\%. Intervals that are too narrow cross the cost line \emph{less} often than honest ones would,
+so \nbOneNStraddlers{} straddlers and \eur{\nbOneVoiStraddlers} of value are a \textbf{floor}: a
+better-calibrated posterior would report more genuinely undecided customers, not fewer, and the test
+would be worth more, not less. The number is safe to spend against; it is not safe to economise
+against. What it does rule out is the other error: a test costing many times
+\eur{\nbOneVoiStraddlers} to settle an \eur{\nbOneVoiStraddlers} question is not caution. It is an
+expensive way to feel careful.
 
 \input{build/floats/nb01_voi}
 
@@ -891,7 +1001,7 @@ sensitivity is the finding and must be reported as one.
 \Cref{eq:up:rule} is read off the same posterior whose top-decile coverage
 \cref{sec:up:compare} just measured at \pc{\nbOneBcfTopDec}. The decision quantity lives in the arm
 whose uncertainty is least trustworthy \emph{exactly where the rule spends money} --- the same
-tension Chapter~9 meets on a geo panel and states as a rule: use the posterior for the
+tension \Cref{ch:geo} meets on a geo panel and states as a rule: use the posterior for the
 decision, and design-based inference for your confidence in it. Here that means: ship the
 targeting rule, and \emph{test the straddlers}. The straddler experiment is not a nicety. It is
 the design-based leg of a decision whose model-based leg is known to be overconfident.
@@ -985,57 +1095,250 @@ to call''.
 \label{sec:up:take}
 
 \begin{enumerate}[leftmargin=*, itemsep=.45em]
-  \item \textbf{The ATE is the wrong object, and a positive one can be an instruction to destroy
-        value.} The average effect here is \eur{\nbOneTrueAte}, correctly estimated by three
-        classical estimators, and acting on it by emailing everyone loses \eur{\nbOneTreatAllLoss}
-        --- because \pc{\nbOneShareSleeping} of the list are sleeping dogs the campaign actively
-        harms. The business object is the CATE $\tau(x)$ and the \emph{ranking} it induces, and the
+  \item \textbf{The ATE is the wrong object, whichever way it points.} The average effect is
+        \eur{\nbOneTrueAte}, correctly estimated by three classical estimators, and it issues only two
+        instructions. Below the cost it says email nobody, forgoing the whole \eur{\nbOneOracleProfit}
+        the ranking would earn. Above the cost --- what the naive \eur{\nbOneNaiveEst} says --- it says
+        email everyone, which earns $n(\text{ATE} - c)$, here \eur{\nbOneTreatAllLoss} \emph{destroyed}.
+        A better average repairs neither, because \pc{\nbOneShareProfitable} of the list clears the cost
+        while \pc{\nbOneShareSleeping} are sleeping dogs the campaign harms, and the two want opposite
+        treatment. The business object is the CATE $\tau(x)$ and the \emph{ranking} it induces; the
         deliverable is a policy: mail the top-$k$ (\cref{tab:up:rules}).
 
   \item \textbf{Heterogeneous effects do not require Bayes.} A T-learner --- two regressions and a
-        subtraction --- ranks customers at AUUC \nbOneGbmTAuuc{} of the oracle, with a bootstrap
-        band for free. What it requires is the identification argument
-        (\crefrange{as:up:unconf}{as:up:sutva}) and a base learner flexible enough for the true
-        $\tau(x)$: swap the trees for a straight line and AUUC collapses to \nbOneOlsTAuuc.
+        subtraction --- ranks customers at AUUC \nbOneGbmTAuuc{} of the oracle, with a bootstrap band
+        for free. It needs the identification argument (\crefrange{as:up:unconf}{as:up:sutva}) and a
+        base learner flexible enough for the true $\tau(x)$: swap the trees for a straight line and
+        AUUC collapses to \nbOneOlsTAuuc.
 
-  \item \textbf{You cannot score a CATE model directly, and Qini is why uplift is possible in
-        production.} $\tau_i$ is never observed, so PEHE is a luxury of the simulator. AUUC/Qini
-        borrows the randomization: within the top-$k$ slice, treated and control are exchangeable,
-        so their difference in means estimates that slice's effect with no counterfactual. It
-        grades the \emph{ranking} only --- it is blind to a model that flattens every magnitude,
-        and \cref{fig:up:flatten} shows one that does.
+  \item \textbf{You cannot score a CATE model directly, and Qini is why uplift works in production.}
+        $\tau_i$ is never observed, so PEHE is a luxury of the simulator. AUUC/Qini borrows the
+        randomization: within the top-$k$ slice, treated and control are exchangeable, so their
+        difference in means estimates that slice's effect with no counterfactual. It grades the
+        \emph{ranking} only, and is blind to a model that flattens every magnitude
+        (\cref{fig:up:flatten}).
 
-  \item \textbf{Attribute the win before you bank it.} The ladder (\cref{tab:up:ladder}) changes
-        one ingredient at a time, and its computed verdict is that the Bayesian edge over the
-        classical arm is \nbOneAttrVerdict. In numbers: the base learner buys
-        \nbOneAttrBaselearner; BCF's shrink-toward-homogeneity prior and propensity input buy
-        \nbOneAttrBcfBuys{} --- and \emph{cost} \nbOneAttrBcfCosts. With the confounders fully
-        observed and overlap good, the propensity trick has nothing left to fix. \textbf{Do not
-        credit a prior for a result the base learner produced.}
+  \item \textbf{Attribute the win before you bank it.} The ladder (\cref{tab:up:ladder}) prices one
+        rung at a time, and its verdict is that the Bayesian edge over the classical arm is
+        \nbOneAttrVerdict. In numbers: the base learner buys \nbOneAttrBaselearner; BCF's package ---
+        its shrink prior, its propensity input and its joint additive surface, which move together and
+        are judged together --- buys \nbOneAttrBcfBuys{} and \emph{costs} \nbOneAttrBcfCosts. With the
+        confounders fully observed and overlap good, the propensity trick has nothing to fix.
+        \textbf{Do not credit a prior for what the base learner produced}, and do not credit one
+        ingredient for the verdict on a bundle of four.
 
-  \item \textbf{The intervals are worst exactly where the money is.} BCF's 90\,\% credible
-        intervals cover \pc{\nbOneBcfCovNinety} of customers overall but only
-        \pc{\nbOneBcfTopDec} on the top decile of true effect, against the bootstrap's
-        \pc{\nbOneBootTopDec} --- the head-to-head names \nbOneHhTopdecWin. Shrinkage pulls the
-        biggest effects down and then reports a narrow interval around the shrunken value. The
-        model is most confident, and most wrong, about the customers it is about to spend money on.
+  \item \textbf{The intervals are worst exactly where the money is.} BCF's 90\,\% credible intervals
+        cover \pc{\nbOneBcfCovNinety} of customers overall but only \pc{\nbOneBcfTopDec} on the top
+        decile of true effect, against the bootstrap's \pc{\nbOneBootTopDec}; the head-to-head names
+        \nbOneHhTopdecWin. Shrinkage pulls the biggest effects down, and the interval --- of ordinary
+        width (\eur{\nbOneBcfTopdecWidth}, \nbOneTopdecWidthVerdict{} the classical band's
+        \eur{\nbOneBootTopdecWidth}) --- is centred on the shrunken value and does not reach the truth.
+        The model is most confident, and most wrong, about the customers it is about to spend money on.
 
-  \item \textbf{On the euros, the Bayesian layer bought almost nothing --- and the reason to prefer
-        it is not the euros.} The posterior rule beats the best classical rule by
-        \nbOneBayesEdge{} euros, \pc{\nbOneBayesEdgePct} of the oracle prize
-        (\cref{tab:up:rules}). What the posterior alone can produce is
-        $\Prob(\tau_i > c \mid D)$ --- a probability about \emph{the customer}, which can be
-        thresholded against a risk appetite, swept, and integrated into a value of information.
-        The bootstrap exceedance share performs nearly as well and \emph{is not that object}
-        (\cref{tab:up:calibration}); it is the scatter of an estimator across datasets that were
-        never collected, and it inherits its own shrinkage in every replicate.
+  \item \textbf{On the euros, the Bayesian layer bought almost nothing --- and the reason to prefer it
+        is not the euros.} The posterior rule beats the best classical rule by \nbOneBayesEdge{} euros,
+        \pc{\nbOneBayesEdgePct} of the oracle prize; the same rule on the BART T-learner's posterior ---
+        the model the ladder prefers --- beats it by \nbOneBartRuleEdge{} euros (\cref{tab:up:rules}),
+        so the verdict does not turn on which Bayesian model is asked. What the posterior alone
+        produces is $\Prob(\tau_i > c \mid D)$: a probability about \emph{the customer}, which can be
+        thresholded against a risk appetite, swept, and fed to a value of information. The bootstrap
+        exceedance share performs nearly as well and \emph{is not that object}
+        (\cref{tab:up:calibration}); it is the scatter of an estimator across datasets never collected,
+        and it inherits its own shrinkage in every replicate.
 
-  \item \textbf{Act where you are sure; measure where you are not.} \eur{\nbOneVoiStraddlers} of
-        the \eur{\nbOneVoiTotal} value of information sits on the \nbOneNStraddlers{} straddlers
-        whose interval crosses the cost line (\pc{\nbOneStraddlerShare} of the list). So the
-        follow-up is a randomized test \emph{on the straddlers} --- which is also the design-based
-        leg the overconfident top decile demands. Ship the rule; test the doubt.
+  \item \textbf{Act where you are sure; measure where you are not.} \eur{\nbOneVoiStraddlers} of the
+        \eur{\nbOneVoiTotal} value of information sits on the \nbOneNStraddlers{} straddlers whose
+        interval crosses the cost line (\pc{\nbOneStraddlerShare} of the list). So the follow-up is a
+        randomized test \emph{on the straddlers}. That test is also the design-based leg the
+        overconfident top decile demands, and, because that overconfidence narrows the intervals that
+        define a straddler, a \emph{floor} on the test's worth, not a ceiling. Ship the rule; test the
+        doubt.
 \end{enumerate}
+
+% =====================================================================================
+\clearpage
+\section*{Appendix 3.A\quad Formal machinery}
+\label{app:up:tol}
+\addcontentsline{toc}{section}{Appendix 3.A\quad Formal machinery}
+
+The body states each idea plainly, gives the euro result, and points here. This appendix carries the
+formal version of each --- the estimand ladder, the meta-learners, BCF's parameterisation, the grading
+metrics, and the tree-sampler tolerances --- every one with the worked example the body refers to.
+Nothing here is needed to follow the chapter's decisions. (The simulator constants live in
+\cref{tab:up:params}.)
+
+\subsection*{3.A.1\quad The CATE and the estimand ladder}
+
+Write $Y_i(1)$ for customer $i$'s spend if emailed and $Y_i(0)$ for their spend if not; the individual
+effect is $\tau_i = Y_i(1) - Y_i(0)$, and only one of its two terms is ever observed. Three averages
+are built on it, and the chapter needs all three:
+%
+\begin{align}
+  \text{ATE} &\;=\; \E\big[Y(1) - Y(0)\big]
+     &&\text{the effect on a random customer,} \label{eq:up:appate}\\
+  \tau(x) &\;=\; \E\big[Y(1) - Y(0) \,\big|\, X = x\big]
+     &&\text{the CATE: the effect for customers like } x, \label{eq:up:appcate}\\
+  V(\pi) &\;=\; \E\big[(\tau(X) - c)\,\pi(X)\big]
+     &&\text{the euros a targeting rule } \pi \text{ earns.} \label{eq:up:apppolicy}
+\end{align}
+%
+The ATE prices \emph{roll it out to everyone?}; the CATE decides \emph{who next?}; the policy value
+$V(\pi)$ is what the business buys, and it rewards ranking, not magnitude. The rungs are not
+interchangeable. Here the ATE is \eur{\nbOneTrueAte}, below the \eur{\nbOneCost} cost, so an
+average-level rule says email no one --- yet the CATE runs from \eur{\nbOneTauLo} to \eur{\nbOneTauHi}
+across customers, and a rule that mails only where $\tau(x) > c$ earns the \eur{\nbOneOracleProfit} the
+average leaves on the table.
+
+\subsection*{3.A.2\quad The meta-learners: S, T, and X}
+
+A meta-learner turns any regression routine into a CATE estimator by how it arranges the fits. All
+three below estimate the same $\tau(x)$ of \cref{eq:up:appcate}; they differ only in construction.
+
+\begin{description}[leftmargin=*, style=nextline]
+  \item[T-learner.] Fit one regression per arm and subtract,
+        $\hat\tau(x) = \hat\mu_1(x) - \hat\mu_0(x)$, with $\hat\mu_t$ fitted on the customers with
+        $T = t$. Two independent fits.
+  \item[S-learner.] Fit \emph{one} regression on $(x, T)$ jointly and read
+        $\hat\tau(x) = \hat f(x, 1) - \hat f(x, 0)$. Treatment is one more feature, so a regulariser
+        can shrink its influence and flatten $\tau(x)$.
+  \item[X-learner.] Fit the two arms, impute each customer's missing counterfactual from the other
+        arm's fit to form imputed effects $\tilde\tau_i$, regress those on $x$ within each arm, and
+        blend the two by the propensity. Built to help when the arms are very unequal in size.
+\end{description}
+%
+The construction, not the letter, decides what breaks. With the GBM base learner the T-learner reaches
+AUUC \nbOneGbmTAuuc{} of the oracle; the S-learner's shared surface flattens the effect, so its PEHE is
+\eur{\nbOneGbmSPehe} against the T-learner's \eur{\nbOneGbmTPehe}, while its ranking barely suffers.
+
+\subsection*{3.A.3\quad BCF: the treatment-surface parameterisation}
+
+A Bayesian Causal Forest \citep{hahn2020} splits the mean into a \emph{prognostic} surface and a
+\emph{treatment} surface, each a sum-of-trees BART prior, and reads the CATE straight off the second:
+%
+\begin{equation}
+  \mu_i \;=\; f_{\text{prog}}\big(x_i,\ \hat e(x_i)\big) \;+\; f_{\tau}(x_i)\, T_i,
+  \qquad
+  \hat\tau(x) \;=\; f_\tau(x),
+  \label{eq:up:appbcf}
+\end{equation}
+%
+with the estimated propensity $\hat e(x)$ fed to $f_{\text{prog}}$ to absorb targeted selection, and
+$f_\tau$ given \emph{half} as many trees as $f_{\text{prog}}$ so heterogeneity is reported only when
+the data insist. \Cref{eq:up:bcfprior} is the full prior. Here $f_{\text{prog}}$ carries
+$m = \nbOneBcfTrees$ trees and $f_\tau$ carries $m/2$; the posterior-mean ATE is \eur{\nbOneBcfAte},
+agreeing with the classical arm.
+
+\subsection*{3.A.4\quad The Qini / uplift curve and AUUC}
+
+Sort customers by \emph{predicted} effect, contact them from the top down, and plot the cumulative
+\emph{true} incremental effect against the fraction contacted. Random targeting traces the diagonal;
+an oracle that knows every $\tau_i$ traces the upper envelope. The \textbf{AUUC} is the area between
+the model's curve and the diagonal, normalised by the oracle's:
+%
+\begin{equation}
+  \text{AUUC}
+  \;=\; \frac{\int_0^1 \big(Q_{\text{model}}(p) - p\,Q(1)\big)\,dp}
+             {\int_0^1 \big(Q_{\text{oracle}}(p) - p\,Q(1)\big)\,dp},
+  \label{eq:up:appqini}
+\end{equation}
+%
+where $Q(p)$ is the cumulative true effect captured by contacting the top fraction $p$. Read it as a
+share: $1.0$ is a perfect ranking, $0$ is no better than random. It scores only the \emph{order},
+\cref{eq:up:apppolicy}'s sole input, and is blind to magnitude. BCF ranks at AUUC \nbOneBcfAuuc{} of
+the oracle's (\cref{fig:up:qini}).
+
+\subsection*{3.A.5\quad PEHE: the CATE mean-squared error}
+
+PEHE --- Precision in Estimation of Heterogeneous Effects --- is the root-mean-square error of the
+estimated effect against the true one:
+%
+\begin{equation}
+  \text{PEHE} \;=\; \sqrt{\frac1n \sum_{i=1}^{n}\big(\hat\tau(x_i) - \tau_i\big)^2},
+  \label{eq:up:apppehe}
+\end{equation}
+%
+in euros; lower is better. It is the CATE's answer to RMSE, and because it compares against $\tau_i$ it
+exists \emph{only in a simulator} --- \cref{sec:up:valid} says what replaces it in production. Here BCF
+scores \eur{\nbOneBcfPehe} against effects that run from \eur{\nbOneTauLo} to \eur{\nbOneTauHi}, and its
+estimates correlate with the truth at \nbOneBcfCorr.
+
+\subsection*{3.A.6\quad Calibration and coverage of the CATE intervals}
+
+An interval is \textbf{calibrated} at level $1 - \alpha$ when the true effect lands inside it that
+share of the time. \textbf{Coverage} measures it:
+%
+\begin{equation}
+  \text{coverage}
+  \;=\; \frac1n \sum_{i=1}^{n} \mathbf 1\big[\,\tau_i \in \text{CI}_{1-\alpha}(x_i)\,\big],
+  \label{eq:up:appcov}
+\end{equation}
+%
+reported overall and by decile of the true effect, because a model can be calibrated on average and
+overconfident exactly where the money is. Here BCF's 90\,\% intervals cover \pc{\nbOneBcfCovNinety}
+overall but only \pc{\nbOneBcfTopDec} on the top decile (\cref{tab:up:calibration}) --- a failure of
+location, not width, as shrinkage pulls the largest effects down.
+
+The remaining machinery is specific to the tree sampler. It exists because \code{pymc-bart} is not
+seed-stable in this environment: two full runs of identical source have moved this model's PEHE by more
+than a fifth and flipped a coverage-winner line. So no BART-derived number is typed into the chapter
+--- every one is injected from the run that produced this PDF --- and no two are compared by eye.
+
+\subsection*{3.A.7\quad The convergence verdict for a tree sampler}
+
+Divergences are a NUTS concept and do not apply to the particle-Gibbs sampler PGBART; what remain
+are $\hat R$ and the effective sample size. Against those this book applies a fixed band to a tree
+sampler: $\hat R \le 1.01$ is a clean pass, $1.01$--$1.02$ is tolerated, and anything above that is
+an \emph{investigate} signal. The verdict is computed and printed rather than eyeballed so it cannot
+drift with the author's optimism.
+
+The band has to be read with a caveat that is specific to sum-of-trees models. The scalar being
+monitored is the observation-noise standard deviation $\sigma$, and it is coupled to a sum of
+\nbOneBcfTrees{} trees whose \emph{individual} structures are exchangeable. A chain can therefore
+explore a perfectly good posterior \emph{over functions} while its scalar summaries mix slowly, so
+raising the draw count grinds $\hat R$ down only slowly, and $\hat R$ is a poor proxy for the object
+the chapter actually reads off the model --- the treatment surface $f_\tau$. The honest response is
+not to wave the number through but to reach for a different backstop: the \nbOneNSeeds-seed refit of
+\cref{sec:up:valid}, which grades the \emph{estimates} rather than the sampler and finds them
+\nbOneStabVerdict.
+
+\paragraph{Worked example.} On the run behind this PDF the headline BCF fit returns
+$\hat R = \nbOneBcfRhat$, and the band above turns that into the printed verdict
+\textbf{\nbOneBcfRhatVerdict}. The chapter then does exactly what a cautious reading of a tree
+sampler prescribes: it does not trust the scalar on its own, it leans on the multi-seed refit, and
+it treats the treatment surface as the thing to grade. A converged sampler would not have rescued
+the deeper problem in any case, because convergence is not reproducibility: the seed-instability
+above would remain.
+
+\subsection*{3.A.8\quad The comparison tolerance}
+
+Every head-to-head between two BART-derived numbers is judged against a tolerance, and a gap is
+called a winner only when it exceeds that tolerance; otherwise the verdict is allowed to read
+``too close to call''. A comparison rule that \emph{cannot} return that answer will always
+manufacture a winner out of noise. The tolerance sums two sources of noise.
+
+\begin{description}[leftmargin=*, style=nextline]
+  \item[The paired bootstrap.] Resample the same customers for \emph{both} arms, refit each, and
+        watch the gap between their scores move; the base tolerance is twice the standard error of
+        that gap. Pairing on the customer list is what makes it a fair test of the \emph{difference}
+        rather than of two independent estimates.
+  \item[The sampler wobble.] The paired bootstrap resamples data; it cannot see the noise the
+        \code{pymc-bart} sampler injects at fixed data. So wherever a BART \emph{refit} sits on one
+        side of a comparison, the fit-to-fit wobble is added on top. Its size is measured directly:
+        two equal-compute refits of the identical specification, same customers and a different seed,
+        disagree by \eur{\nbOneBcfSeedPeheWobble} of PEHE and \nbOneBcfSeedCovWobble{} points of
+        overall coverage, and that disagreement is pure sampler noise by construction. (It is also
+        why \cref{tab:up:compare} and \cref{tab:up:ladder} differ: they are two fits of one model.)
+        \Cref{fig:up:seedwobble} plots that floor across the multi-seed refits.
+\end{description}
+
+\input{build/floats/nb01_seed_wobble}
+
+\paragraph{Worked example.} Take the headline PEHE head-to-head of \cref{sec:up:compare}: BCF at
+\nbOneHhPeheA{} against the GBM T-learner at \nbOneHhPeheB, a gap of \nbOneHhPeheGap. The tolerance
+assembled from the two sources above is \nbOneHhPeheTol. The verdict is whatever the comparison of
+those two quantities returns --- here \textbf{\nbOneHhPeheWin} --- computed by the notebook and
+cited, never argued. Read every ``\dots against a tolerance of \dots'' clause in
+\cref{sec:up:compare} as this same construction applied once more.
 
 \notebooknote{%
   This chapter is \code{notebooks/01\_uplift\_targeting.ipynb}. The simulator is

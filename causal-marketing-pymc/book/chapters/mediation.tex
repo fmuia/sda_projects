@@ -18,17 +18,19 @@ onboarding flow raises conversion by \nbFourBayesTotal{} conversions per unit of
 score. The budget question is not whether it works but \emph{how}: money spent on onboarding is
 worth spending only if the mechanism it fires is the one the firm believes in. This chapter
 decomposes that total effect and finds it is essentially all \emph{indirect} --- a natural
-indirect effect of \nbFourBkNie{} against a natural direct effect of \nbFourBkNde{}, whose
+indirect effect of \nbFourBayesNie{} against a natural direct effect of \nbFourBayesDirect{}, whose
 interval straddles zero, so \nbFourPropMediated\,\% of onboarding's value is realised two stages
-downstream and a last-touch attribution model would price the lever at roughly nothing. The
+downstream and a last-touch attribution model prices the lever at \eur{\nbFourValOnboardingNaive}
+per standard deviation against its true \eur{\nbFourValOnboarding}. The
 classical arm gets there with two regressions and a multiplication; the bootstrap the applied
 literature insists on turns out to agree with the delta method to \nbFourSeGapPct\,\%, and the
 posterior --- which needs neither --- returns intervals that are, if anything, \emph{wider}
 (width ratios \nbFourWidthMin--\nbFourWidthMax). The uncertainty that matters is not in any of
 those intervals. It is in \cref{as:med:si2}, which no experiment on the treatment can buy and no
 resampling can see: \cref{sec:med:wrong} shows a hidden mediator--outcome confounder explaining
-\nbFourFlipMed\,\% of one fitted edge overturning the investment ranking, while both apparatuses
-report their tight intervals with the same untroubled face.}
+\nbFourFlipMed\,\% of one fitted edge overturning the investment ranking --- and one explaining a
+mere \pc{\nbFourNdeClearsZeroPct} of the same edge dissolving the mediated headline itself --- while
+both apparatuses report their tight intervals with the same untroubled face.}
 \end{quote}
 
 % =====================================================================================
@@ -52,6 +54,15 @@ effect of \nbFourTrueTotal. The regression has not measured onboarding's value; 
 \emph{conditioned it away}, by holding fixed the very channels through which onboarding acts.
 Every last-touch and last-click attribution system in commercial use commits a version of this
 error, and it systematically defunds the top of the funnel.
+
+The error has a price, and the price is the reason this chapter exists.
+\Cref{sec:med:euro} will value a one-standard-deviation improvement of onboarding at
+\eur{\nbFourValOnboarding} against a stated \eur{\nbFourCostSd} cost to produce it --- a lever with a
+return of \nbFourRoiOnboarding. The naive controlled regression values the same lever at
+\eur{\nbFourValOnboardingNaive} per standard deviation. An attribution system built on it therefore
+refuses a profitable investment on the grounds that it is worth a rounding error, and it refuses it
+with a small standard error. That is the cost of a wrong answer here, and it is paid every
+quarter, silently, by firms whose dashboards are correct arithmetic on the wrong regression.
 
 So the question this chapter answers is not ``does onboarding work?'' --- \cref{sec:med:classical}
 settles that in one line --- but \textbf{through what?} The total effect of a treatment splits into
@@ -115,6 +126,17 @@ the engagement-to-activation edge absorbs its association and every path product
 edge is poisoned. This is not a decorative complication. It is the single most realistic way a
 funnel analysis goes wrong in production --- the growth team never logged acquisition channel ---
 and \cref{sec:med:wrong} deletes $Q$ and measures the damage in both arms.
+
+\textbf{Every stage is continuous, including the outcome.} \Cref{eq:med:conv} makes
+\code{converted} a Gaussian \emph{conversion score}, not a $0/1$ event: it is the propensity a user
+converts, on the scale the linear system generates. This matters twice. It is what licenses
+\cref{eq:med:product}'s product of coefficients, and it is what makes ``a conversion is worth
+\eur{\nbFourValuePerConv}'' a \emph{pricing convention} --- one euro figure attached to one unit of
+score --- rather than a count of sales. Every euro in \cref{sec:med:euro} inherits that convention.
+The reader whose conversion is genuinely a $0/1$ flag is the common case, and
+\cref{sec:med:wrong} shows what breaks there: the product of coefficients stops being the natural
+indirect effect, for two separate reasons, and \cref{eq:med:formula} must be evaluated by simulation
+instead.
 
 Note what is \emph{absent} from \crefrange{eq:med:eng}{eq:med:conv}: any interaction term
 $O \times \text{engagement}$. That absence is what makes the two-way split of
@@ -199,19 +221,27 @@ practice: the two potential outcomes it constrains belong to different worlds an
 observed in any experiment, however large or however well randomized \citep{robins1992, imai2010}.
 It is the honest price of asking a cross-world question, and the reason some authors prefer
 \emph{controlled} direct effects, which require no such condition, at the cost of no longer
-decomposing the total.
+decomposing the total. Untestable is not, however, undemonstrable:
+\cref{sec:med:wrong} plants exactly this structure --- onboarding builds a habit which then drives
+both engagement and conversion --- and shows the total surviving while the split goes wrong
+\emph{whichever way} the analyst treats the habit.
 \end{assumption}
 
 \begin{assumption}[No mediator--mediator confounding]\label{as:med:mm}
 With two mediators in sequence, ``the effect through activation'' is a \emph{path-specific} effect
 \citep{avin2005}, and identifying it requires in addition that the two mediators share no unmeasured
 common cause \citep{vanderweele2014mediators}. \emph{Violation:} in this world, $Q$ --- which drives
-both of them. \emph{Status here:} \textbf{partially testable}. The graph
-implies conditional independences, and \cref{sec:med:valid} checks them: of \nbFourImpTests{}
-implied independences, \nbFourImpViolations{} is rejected at the $5\,\%$ level, which a Binomial
-false-positive budget prices as unremarkable ($\Prob \ge \nbFourImpViolations$ by chance
-$= \nbFourImpPchance$). And when the assumption is deliberately broken in \cref{sec:med:wrong}, the
-same test fires: \nbFourBadImpViolations{} of \nbFourBadImpTests. This is the one strong assumption
+both of them. \emph{Status here:} \textbf{partially testable}, and the test is more awkward than a
+count of rejections suggests. The graph implies conditional independences, and \cref{sec:med:valid}
+checks them: of \nbFourImpTests{} implied independences, \nbFourImpViolations{} is rejected at the
+$5\,\%$ level. The Binomial false-positive budget prices that count as unremarkable
+($\Prob(\ge \nbFourImpViolations$ rejection by chance$) = \nbFourImpPchance$) --- but the flagged
+$p$-value is \nbFourImpPFlagged, the implication that fired is not one of this assumption's
+(it is \nbFourImpFlaggedPair, the marginal independence of the two exogenous roots), and a
+combined test of the whole battery \emph{rejects the correct graph}. \Cref{sec:med:valid} carries
+both read-outs and resolves them. And when the assumption is deliberately broken in
+\cref{sec:med:wrong}, the same battery fires on the right implication:
+\nbFourBadImpViolations{} of \nbFourBadImpTests. This is the one strong assumption
 of the chapter that leaves a testable footprint, and the falsification cell is not decoration.
 \end{assumption}
 
@@ -317,8 +347,9 @@ $\hat a = \nbFourBkA$ (SE $\nbFourBkASe$, $t = \nbFourBkAT$) and $\hat b = \nbFo
 (SE $\nbFourBkBSe$, $t = \nbFourBkBT$). Both links are strong, which will matter in a moment.
 The decomposition is in \cref{tab:med:classical}: a natural indirect effect of \nbFourBkNie{}
 against the planted \nbFourTrueTotal, a natural direct effect of \nbFourBkNde{} whose interval
-$[\nbFourBkNdeLo, \nbFourBkNdeHi]$ contains zero, and a proportion mediated of
-\pc{\nbFourBkProp}. Every interval covers its planted value. \textbf{This is a complete and correct
+$[\nbFourBkNdeLo, \nbFourBkNdeHi]$ contains zero, and --- on this \emph{single-mediator} read, the
+one \crefrange{eq:med:ols1}{eq:med:ols2} performs --- a proportion mediated of \pc{\nbFourBkProp}.
+Every interval covers its planted value. \textbf{This is a complete and correct
 answer to the chapter's question, and it took milliseconds.}
 
 \input{build/tables/nb04_classical}
@@ -412,7 +443,12 @@ arithmetic is chained over three stage regressions, one per arrow of
 belong on the right-hand side of the conversion equation, because the goal has changed: the analysis
 now \emph{wants} to split the long route from the short one rather than to measure engagement's
 total. The results are the classical columns of \cref{tab:med:compare}, and
-\nbFourClNCover{} of \nbFourNEstimands{} bootstrap intervals cover their planted value.
+\nbFourClNCover{} of \nbFourNEstimands{} bootstrap intervals cover their planted value. The chained
+read also revises the headline of the previous page by a rounding place --- it puts the proportion
+mediated at \pc{\nbFourClProp} rather than the single-mediator \pc{\nbFourBkProp} --- and it is the
+chained figure that \cref{tab:med:compare} sets against the posterior, because it is the chained
+estimand the chain model reports. The two are different estimators of the same quantity, not the
+same estimator computed twice.
 
 \subsection*{What this apparatus cannot say}
 
@@ -534,14 +570,40 @@ replicate band is \pc{\nbFourPpcEngagement}, \pc{\nbFourPpcActivated} and \pc{\n
 \Cref{as:med:mm} is the chapter's one strong assumption with a testable footprint. The funnel graph
 implies a set of conditional independences, and each can be checked as a partial correlation.
 \nbFourImpTests{} implied independences are tested at the $5\,\%$ level and \nbFourImpViolations{}
-is rejected. That is not evidence against the graph: at size $0.05$, each test rejects $5\,\%$ of the
-time even when the graph is \emph{correct}, so the count of violations should be read against a
-Binomial false-positive budget, which prices $\Prob(\ge \nbFourImpViolations$ rejections by chance$)$
-at \nbFourImpPchance. A single marginal rejection among several tests is expected noise. Treating any
-one violation as fatal is how a correct graph gets thrown away.
+is rejected. This is the point at which most write-ups reach for the word ``marginal'' and move on.
+The word is not available here, and the honest account takes two read-outs rather than one.
 
-The test earns its keep in \cref{sec:med:wrong}, where the graph is deliberately broken and it fires:
-\nbFourBadImpViolations{} of \nbFourBadImpTests.
+\emph{The count read-out shrugs.} At size $0.05$ each test rejects $5\,\%$ of the time even when the
+graph is \emph{correct}, so a count of violations should be read against a Binomial false-positive
+budget, which prices $\Prob(\ge \nbFourImpViolations$ rejection by chance$)$ at \nbFourImpPchance.
+One rejection in \nbFourImpTests{} is exactly what an honest battery serves up now and then, and
+treating any single violation as fatal is how a correct graph gets thrown away.
+
+\emph{The magnitude read-out does not.} A count throws away \emph{how small} the flagged $p$-value
+was, and it was \nbFourImpPFlagged{} --- not marginal by any convention. Combining the
+\nbFourImpTests{} $p$-values into a single test of ``all implications hold'' by Fisher's method ---
+$-2\sum_j \log p_j \sim \chi^2_{2J}$ under the null that every implication holds --- gives
+$\chi^2(\nbFourDagFisherDf) = \nbFourDagFisherStat$ and a global $p$ of \nbFourDagFisherP:
+\textbf{the battery rejects the correct graph at the $5\,\%$ level}. Fisher's method assumes
+independent, exactly calibrated component tests,
+and these share one dataset --- so the natural next move is to suspect the approximation rather than
+the graph. It is not the approximation. Because the generating model is owned, the identical battery
+can be re-run on \nbFourDagCalWorlds{} fresh worlds drawn from the graph that is known to be true:
+the global test rejects at a nominal $5\,\%$ in \pc{\nbFourDagCalRej} of them --- well calibrated ---
+and a global $p$ as small as \nbFourDagFisherP{} arises in \pc{\nbFourDagCalP} of correct-graph
+worlds. The rejection is real, it is not an artefact, and it is a false positive.
+
+That it is knowable as a false positive is a luxury of simulation, and the chapter will not pretend
+otherwise. Two further details are worth carrying into practice. The implication that actually fired
+is \nbFourImpFlaggedPair{} --- the \emph{marginal} independence of the two exogenous roots, partial
+correlation \nbFourImpFlaggedCorr{} --- which bears on none of \cref{as:med:mm}'s mediator--mediator
+structure at all: the flagged test and the assumption the battery is supposed to police are not the
+same object. And on real data, none of the above is available: a global $p$ of \nbFourDagFisherP{}
+with a count budget that shrugs is a genuine judgement call, whose only honest resolutions are to
+re-test on fresh data and to interrogate the flagged pair before trusting the graph.
+
+The test earns its keep in \cref{sec:med:wrong}, where the graph is deliberately broken and it fires
+on the right implication: \nbFourBadImpViolations{} of \nbFourBadImpTests.
 
 \subsection*{Not a lucky seed}
 
@@ -551,6 +613,13 @@ friendly noise. So the whole procedure --- simulate, fit, decompose --- is re-ru
 graded on how often they cover (\cref{tab:med:replication}). Of \nbFourRepIntervals{} intervals,
 \nbFourRepCovered{} cover --- \pc{\nbFourRepCovPct} --- with a largest bias of \nbFourRepMaxBias.
 The intervals of \cref{sec:med:bayes} are calibrated, not lucky.
+
+The replication fits are \emph{deliberately} short, and the reader is entitled to know it: they run
+at $\hat R$ up to \nbFourRepMaxRhat{} and a minimum bulk effective sample size of \nbFourRepMinEss{}
+(\nbFourRepDivergences{} divergences in total), against the main fit's $\hat R = \nbFourRhat$ and ESS
+\nbFourEss. Posterior \emph{means} and interval \emph{coverage} are all that is graded off them, and
+both survive that chain length comfortably. The diagnostics quoted in \cref{sec:med:bayes} are the
+main fit's, and the coverage count borrows none of their credit.
 
 \input{build/tables/nb04_replication}
 
@@ -579,9 +648,19 @@ are the same estimator wearing different clothes.
 Now the widths, which is where a reader who has been sold Bayesian inference expects the payoff. The
 credible intervals are \textbf{not narrower}. They are, if anything, slightly \emph{wider}: the ratio
 of credible-interval width to bootstrap-interval width runs from \nbFourWidthMin{} to
-\nbFourWidthMax{} across the four path estimands. And the same holds for the standard error of the
-indirect effect, which \cref{tab:med:scales} priced three ways: the delta method's \nbFourSeDelta,
-the bootstrap's \nbFourSeBoot, and the posterior's \nbFourBayesNieSd{} --- three devices, one number.
+\nbFourWidthMax{} across the four path estimands.
+
+The standard error of the indirect effect needs one line of care, because the three numbers of
+\cref{tab:med:scales} do not all price the same estimand and reading them as a single column is how
+a Bayesian free lunch gets invented. The delta method's \nbFourSeDelta{} and the bootstrap's
+\nbFourSeBoot{} both price the \emph{single-mediator} product $\hat a\hat b$ of
+\crefrange{eq:med:ols1}{eq:med:ols2}, and they agree to \pc{\nbFourSeGapPct}. The posterior's
+\nbFourBayesNieSd{} prices something else: the \emph{chained} NIE, which imposes the activation
+stage of \cref{eq:med:lik2} and therefore knows more about the engagement-to-conversion route than
+the unrestricted reduced-form $\hat b$ ever claimed. Priced like for like --- the same chained
+estimand, bootstrapped over the three stage regressions --- the classical arm returns
+\nbFourSeBootChained, within \pc{\nbFourSeChainGapPct} of the posterior. The extra precision is
+bought by \emph{structure}, not by the paradigm, and it is available to either arm.
 
 So the ledger opens with a debit. Say it plainly, because the notebook does and the book will not
 soften it: \textbf{the Bayesian machinery did not move the number, and it did not sharpen the
@@ -619,7 +698,9 @@ Four things, and they are real, and none of them is the estimate.
 needs no linearisation and no \nbFourNBoot{} refits, and --- the part that matters --- it stays
 correct in the regime where \cref{eq:med:delta} does not. The delta method's failure mode is a weak
 first link; the posterior does not have a failure mode there, because it never approximated anything.
-This run happens to be the easy case, and \cref{fig:med:product} shows all three devices agreeing.
+This run happens to be the easy case, and \cref{fig:med:product} shows the two devices that price
+$\hat a\hat b$ landing on top of each other --- with the chain posterior, and its like-for-like
+classical bootstrap, slightly to one side of both because they are pricing the restricted estimand.
 The posterior is the arm that did not have to check.
 
 \emph{Derived quantities are functions of draws.} The proportion mediated is a ratio of two
@@ -632,7 +713,9 @@ about anything.
 \emph{The sensitivity analysis becomes a posterior rather than a point.} \Cref{sec:med:wrong} does
 not ask ``what if the engagement-to-conversion edge were partly confounded?'' once, at the point
 estimate. It asks it \emph{per draw}, so the flip point comes back as a distribution with an
-interval, and the two affected levers shrink \emph{together} because they ride the same edge.
+interval, and every quantity riding the shaved edge moves coherently with it --- the engagement lever
+shrinks, and the value it loses is \emph{re-attributed} to onboarding's direct route rather than
+deleted, because onboarding's total is pinned by \cref{as:med:si1}.
 
 \emph{The decision quantities exist at all.} $\Prob(\text{indirect} > \text{direct}) =
 \nbFourPIndGtDir$. $\Prob(\text{proportion mediated} > 90\,\%) = \nbFourPPropGtNinety$.
@@ -715,8 +798,10 @@ budget question has been reduced to a measurement the firm is competent to make.
 (90\,\% $[\pc{\nbFourPropLo},\ \pc{\nbFourPropHi}]$). Onboarding is a \emph{root} investment whose
 payoff lands two stages downstream. Judging it by direct or last-touch conversion --- as the naive
 controlled regression of \cref{sec:med:decision} effectively does, returning \nbFourNaiveOnCoef{}
-against a true \nbFourTrueTotal{} --- would price it at roughly zero and defund it. That is the
-sentence to put in the memo, and it is the chapter's commercial payload.
+against a true \nbFourTrueTotal{} --- prices a lever worth \eur{\nbFourValOnboarding} per standard
+deviation at \eur{\nbFourValOnboardingNaive}, and defunds it. That is the memo sentence, and it is
+the chapter's commercial payload: an attribution system does not merely mis-rank the funnel, it
+refuses a lever whose return is \nbFourRoiOnboarding{} at the stated cost of \eur{\nbFourCostSd}.
 
 % =====================================================================================
 \section{What can go wrong}
@@ -749,31 +834,73 @@ Second, \textbf{this particular violation left a footprint}, and the graph's own
 found it: \nbFourBadImpViolations{} of \nbFourBadImpTests{} implied independences now fail. That is
 genuinely reassuring --- and it must not be over-read. The footprint exists because the omitted
 confounder was a common cause of two \emph{observed} mediators, so its absence made the observed data
-inconsistent with the graph. A confounder of the mediator and the \emph{outcome} --- \cref{as:med:si2}
---- leaves no such trace, because there is no third observed variable for it to contradict. Which is
-the subject of the next subsection.
+inconsistent with the graph. A confounder of the mediator and the \emph{outcome} ---
+\cref{as:med:si2} --- is a different matter, and the difference is precise: it is not that such a
+confounder leaves no trace, it is that \textbf{its magnitude is not identified}. A trace may well
+exist. In \emph{this} graph one does, by the very collider mechanism the previous subsections have
+been teaching: engagement is a common child of channel quality and of any hidden trait $U$ that also
+reaches conversion, so conditioning on engagement opens the path
+$Q \to \text{eng} \leftarrow U \to \text{conv}$ and $U$ leaves a residual association between $Q$ and
+conversion. What the data cannot tell the analyst is \emph{how much} of the fitted
+engagement-to-conversion edge belongs to $U$ --- and in an experiment whose mediator has no observed
+parent at all, not even the trace survives. Hence the next subsection prices \cref{as:med:si2}
+rather than testing it.
 
 \input{build/tables/nb04_failfix}
 
-\subsection*{The one that leaves no footprint: pricing \texorpdfstring{\cref{as:med:si2}}{Assumption 6.2}}
+\subsection*{Pricing \texorpdfstring{\cref{as:med:si2}}{Assumption 6.2}: the sweep}
 
-An assumption with no accompanying test is a wish. \Cref{as:med:si2} admits no test, so what it gets
-instead is a \emph{price}: how large would a hidden mediator--outcome confounder have to be before it
-overturned the decision \citep{imai2010, cinelli2020}?
+An assumption with no accompanying test is a wish. \Cref{as:med:si2}'s magnitude is not identified,
+so what it gets instead of a test is a \emph{price}: how large would a hidden mediator--outcome
+confounder have to be before it overturned the decision \citep{imai2010, cinelli2020}?
 
-Suppose a hidden trait --- intrinsic product interest, cohort quality --- explains a fraction of the
-fitted engagement-to-conversion edge, so that the causally correct edge is smaller than the fitted
-one by that share. Two constraints make the sweep honest, and both are easy to get wrong.
+Suppose a hidden trait $U$ --- intrinsic product interest, cohort quality --- explains a share $b$ of
+the fitted engagement-to-conversion edge, so that the causally correct edge is $c_{eng} - b$. Be
+exact about \emph{which} edge that is, because the chapter has two numbers with a claim to the name.
+It is the \emph{direct} engagement coefficient of \cref{eq:med:lik3}, posterior mean
+\nbFourEdgeFitted{} --- not engagement's reduced-form total association with conversion,
+\nbFourBlockingBOk, which runs through activation as well. The sweep therefore ranges over the
+smaller of the two, and its median flip point of \pc{\nbFourFlipMed} is an absolute
+\nbFourFlipAbs{} of hidden confounding --- a modest fraction of engagement's \nbFourBlockingBOk{}
+total association with conversion, and not the outlandish quantity that ``half an edge'' suggests to
+a reader still carrying \cref{sec:med:classical}'s $\hat b$.
 
-It must be \textbf{coherent}. That same edge carries the engagement lever \emph{and} part of
-onboarding's total effect. An analysis that shrinks the engagement lever while holding onboarding's
-total fixed is not describing any possible world. Both must move together.
+Two constraints make the sweep honest, and both are easy to get wrong.
 
 It must be \textbf{per draw}. Applying the confounding correction to the point estimate yields a
 single flip point, and a single flip point invites the reader to believe it. Applying it inside each
 posterior draw yields a \emph{posterior} for the flip point, which is what an honest memo quotes.
 
-\Cref{fig:med:sens} runs it. The engagement-over-activation ranking --- the ranking
+It must be \textbf{coherent}, and coherence is not what intuition suggests. The instinct is to shrink
+everything that rides the shaved edge --- the engagement lever \emph{and} onboarding's total. That is
+wrong, and \cref{eq:med:ols1} is enough to see why. Onboarding is exogenous
+(\cref{as:med:si1}), so its total effect on conversion is the \emph{reduced form}
+%
+\begin{equation}
+  \text{TE} \;=\; \underbrace{e_{on}\,c_{eng} \;+\; e_{on}\,a_{eng}\,c_{act}}_{\text{NIE}}
+  \;+\; \underbrace{c_{on}}_{\text{NDE}},
+  \label{eq:med:reduced}
+\end{equation}
+%
+and \cref{eq:med:reduced} is a property of the \emph{data}. No hypothesis about an unobserved $U$ can
+move it --- which is exactly what \cref{tab:med:failfix} demonstrated when the split broke and the
+raw total did not. So if $b$ is shaved off $c_{eng}$, the left-hand side of \cref{eq:med:reduced}
+cannot fall: the direct edge must rise to compensate, $c_{on} \mapsto c_{on} + e_{on}\,b$. The
+confounded slice of the engagement route is not destroyed. It is \textbf{re-attributed} to
+onboarding's own direct route. A sweep that shrinks $c_{eng}$ and freezes $c_{on}$ reports
+onboarding's total effect falling, which is a world exogeneity forbids --- and it thereby misses the
+thing an $M$--$Y$ confounder actually destroys.
+
+\Cref{fig:med:sens} runs it, and the result is sharper than the one the sweep was built to find.
+
+\input{build/floats/nb04_sensitivity}
+
+\textbf{Onboarding's total does not move at all.} It is \eur{\nbFourOnbValSweepStart} per standard
+deviation at $b = 0$ and \eur{\nbFourOnbValSweepEnd} at a fully confounded edge --- a flat line, and
+the flatness is \cref{eq:med:reduced}, not luck. \Cref{as:med:si1} buys onboarding's total, and
+\cref{as:med:si2} cannot take it away.
+
+\textbf{The ranking is fragile.} The engagement-over-activation ordering --- the ranking
 \cref{sec:med:euro} just recommended --- survives only while the hidden confounder explains less than
 \pc{\nbFourFlipMed} of the fitted edge, 90\,\% interval $[\pc{\nbFourFlipLo},\ \pc{\nbFourFlipHi}]$,
 with $\Prob(\text{no flip anywhere in the sweep}) = \nbFourPNoflip$. Half an edge is not an
@@ -782,15 +909,90 @@ knowledge cannot rule it out, the engagement-versus-activation ranking should be
 undecided} --- and no interval in \cref{tab:med:compare} or \cref{fig:med:forest} would ever have
 told you so.
 
-\input{build/floats/nb04_sensitivity}
+\textbf{And the headline is more fragile still.} The claim the CMO will actually repeat is not the
+ranking; it is \pc{\nbFourPropMediated} \emph{mediated, with a direct effect that straddles zero}.
+That claim is what the re-attribution destroys, and it destroys it cheaply. At the median flip point
+the natural direct effect has risen from \nbFourBayesDirect{} to \nbFourNdeAtFlip{}
+($[\nbFourNdeAtFlipLo,\ \nbFourNdeAtFlipHi]$), the proportion mediated has fallen to
+\pc{\nbFourPropMedAtFlip} ($[\pc{\nbFourPropMedAtFlipLo},\ \pc{\nbFourPropMedAtFlipHi}]$), and
+$\Prob(\text{proportion mediated} > 90\,\%)$ --- which \cref{sec:med:compare} reported as
+\nbFourPPropGtNinety{} --- has collapsed to \nbFourPPropGtNinetyAtFlip. Worse: a confounder
+explaining only \pc{\nbFourNdeClearsZeroPct} of the edge is already enough for the direct effect's
+90\,\% interval to leave zero. The mediated share is an \emph{upper bound} under
+\cref{as:med:si2}, and should be quoted as one.
 
-Onboarding's story, by contrast, survives the same sweep. Its per-SD value falls to
-\eur{\nbFourOnbValAtFlip} at the median flip point, down \pc{\nbFourOnbValDropPct} from
-\eur{\nbFourValOnboarding} --- a real haircut, but not a reversal. The reason is structural:
-onboarding's identification leans on the \emph{treatment} side (\cref{as:med:si1}), which is
-exogenous here, whereas the engagement lever leans on the \emph{mediator} side
-(\cref{as:med:si2}), which is not. \textbf{The fragile conclusions are exactly the ones that rest on
-the untestable assumption}, and the sweep is what makes that visible.
+\textbf{The fragile conclusions are exactly the ones that rest on the untestable assumption}, and the
+sweep is the only instrument that says which those are. Onboarding's \emph{total} leans on the
+treatment side, which is exogenous; onboarding's \emph{mediation}, and engagement's lever, lean on
+the mediator side, which is not.
+
+\subsection*{The confounder the treatment creates}
+
+\Cref{as:med:crossworld} is the one assumption in this chapter that no test can reach, in this world
+or any other. That is a reason to \emph{demonstrate} its failure, not to leave it as a definition.
+
+Plant it. Onboarding builds an early \emph{habit}, and the habit then drives both engagement and
+conversion: a mediator--outcome confounder that is itself an effect of the treatment --- the
+\emph{recanting witness} of the mediation literature \citep{avin2005}. The structure is simulated at
+$n = \nbFourRwN$, so that what follows is structural bias and not sampling noise, and the same
+product-of-coefficients machinery of \cref{eq:med:product} is turned on it. The planted split sends
+\nbFourRwPlantedViaM{} through engagement and \nbFourRwPlantedNotM{} around it, for a total of
+\nbFourRwPlantedTotal. \Cref{tab:med:recanting} records what the analyst gets.
+
+\input{build/tables/nb04_recanting}
+
+The total is never in danger: one regression of conversion on onboarding returns \nbFourRwTotal, and
+\cref{as:med:crossworld} does not touch it --- the same pattern as \cref{tab:med:failfix}, and for
+the same reason. The \emph{split} has no safe treatment.
+
+\emph{Ignore the witness}, and the confounded engagement-to-conversion edge overstates the indirect
+effect by \nbFourRwBiasIgnored{} (\nbFourRwNieIgnored{} against a planted \nbFourRwPlantedViaM) while
+inventing a direct effect of \nbFourRwDirIgnored{} that the world does not contain. The two still sum
+to \nbFourRwSumIgnored{} --- the total, exactly --- so the decomposition balances and
+\textbf{nothing looks wrong}. This is the dangerous case, because every internal check the analyst is
+likely to run will pass.
+
+\emph{Adjust for the witness}, and both of the habit's routes are blocked at once --- the one that
+runs through engagement, which the analysis wanted to keep, and the one that bypasses it, which it
+wanted to remove. The indirect effect is now understated by \nbFourRwBiasAdjusted, the direct effect
+is \nbFourRwDirAdjusted, and the two sum to \nbFourRwSumAdjusted{} against a total of \nbFourRwTotal:
+the witness's own value has simply left the ledger, and the decomposition no longer adds up.
+
+There is no adjustment strategy in between, and that is precisely what ``the natural split is
+unidentified'' means. It is why \cref{as:med:crossworld} earns the word \emph{untestable} rather than
+merely unchecked, and why some authors retreat to controlled direct effects, which ask a weaker
+question and are therefore allowed an answer.
+
+\subsection*{When a stage is 0/1: the product is not the NIE}
+
+\Cref{eq:med:conv} makes conversion a continuous score, and \cref{eq:med:product} depends on it. The
+reader's conversion is a flag. So the porting question --- \emph{what do I multiply?} --- deserves an
+answer rather than a footnote, and the answer is: nothing. A logistic conversion is planted on the
+same funnel, and the product of coefficients fails twice (\cref{tab:med:binary}).
+
+It fails on \textbf{units}. A logistic $b$ lives on the log-odds scale, so $\hat a \hat b$ is a
+log-odds number --- \nbFourBinAbLogodds{} here --- and a log-odds number is not a quantity a budget
+owner can price. What finance buys is the \nbFourBinNiePp-percentage-point lift in conversion
+probability that the mediated route produces, and \emph{no coefficient product ever equals it}.
+
+It fails on \textbf{non-collapsibility}, which is the less obvious half. Averaging over the mediator's
+distribution \emph{inside} a sigmoid is not the same as plugging the mediator's mean into it, so even
+on the one scale the two quantities share --- marginal log-odds --- the conditional product
+overstates the same fitted model's natural indirect effect by \pc{\nbFourBinOverstatePct}
+(\nbFourBinAbLogodds{} against \nbFourBinNieLogodds). Both numbers come from the \emph{same} fitted
+coefficients, so this is not sampling error; it is a property of the link function, and it grows with
+the mediator's spread.
+
+\input{build/tables/nb04_binary}
+
+The fix is not a better product. It is \cref{eq:med:formula} itself --- the mediation formula was
+always the estimand, and the product was only ever its linear special case. Evaluate it by plug-in
+simulation from the fitted stage models: draw the mediator under each treatment level, push the draws
+through the fitted outcome model, average \emph{on the probability scale}, and difference. Classically
+that is a few lines and a few milliseconds; in the Bayesian arm it is the same recipe run once per
+posterior draw, which returns the percentage-point lift with a credible interval and no extra
+apparatus. The mirror-image problem --- a binary \emph{treatment} that a linear first stage would
+misspecify --- is \cref{ch:iv}'s, and is handled there with a probit first stage.
 
 \subsection*{Post-treatment variables: block a path or open one}
 
@@ -880,14 +1082,32 @@ up, and \citeauthor{vanderweele2014}'s four-way decomposition is required
         \nbFourBadArmGap), each reporting a tight interval around a confounded number. A prior cannot
         see an unmeasured confounder, and neither can a bootstrap.
 
-  \item \textbf{So price the assumption, since you cannot test it.} A hidden mediator--outcome
-        confounder explaining \pc{\nbFourFlipMed} of the engagement-to-conversion edge
-        (90\,\% $[\pc{\nbFourFlipLo},\ \pc{\nbFourFlipHi}]$) reverses the investment ranking that
-        \cref{sec:med:euro} recommended --- while onboarding's near-fully-mediated story, which rests
-        on the exogenous treatment side, survives with a \pc{\nbFourOnbValDropPct} haircut. The
-        fragile conclusions are the ones resting on the untestable assumption, and the sweep is the
-        only instrument that says which those are. The follow-up study is not a fancier model: it is
-        an experiment that \emph{randomizes onboarding and logs the mediators}.
+  \item \textbf{So price the assumption, since you cannot test it --- and price the right thing.}
+        Onboarding's \emph{total} is untouchable: it is a reduced form
+        (\cref{eq:med:reduced}) bought by the exogeneity of the treatment, and it sits at
+        \eur{\nbFourOnbValSweepStart} per SD at both ends of the sweep. What a hidden
+        mediator--outcome confounder destroys is the \emph{split}. Explaining \pc{\nbFourFlipMed} of
+        the engagement-to-conversion edge (90\,\% $[\pc{\nbFourFlipLo},\ \pc{\nbFourFlipHi}]$) it
+        reverses the investment ranking \cref{sec:med:euro} recommended; explaining a mere
+        \pc{\nbFourNdeClearsZeroPct} of it, it pushes the direct effect's interval off zero, and by
+        the flip point the mediated share has fallen to \pc{\nbFourPropMedAtFlip} with
+        $\Prob(\text{mediated} > 90\,\%)$ down from \nbFourPPropGtNinety{} to
+        \nbFourPPropGtNinetyAtFlip. The chapter's own headline is the fragile claim, not the total.
+        Quote the mediated share as an upper bound; the follow-up study is not a fancier model but an
+        experiment that \emph{randomizes onboarding and logs the mediators}.
+
+  \item \textbf{Two failures the linear world hides, both demonstrated.} A mediator--outcome
+        confounder that the \emph{treatment creates} --- the recanting witness --- leaves the total
+        intact (\nbFourRwTotal{} against a planted \nbFourRwPlantedTotal) and the split unrecoverable:
+        ignore it and the indirect effect is overstated by \nbFourRwBiasIgnored{} while the
+        decomposition still balances, so nothing looks wrong; adjust for it and the indirect effect is
+        understated by \nbFourRwBiasAdjusted{} and the split stops adding up
+        (\cref{tab:med:recanting}). And when a stage is $0/1$, the product of coefficients is not the
+        NIE at all: it is in the wrong units, and non-collapsibility makes it overstate the same
+        fitted model's effect by \pc{\nbFourBinOverstatePct} even on a shared scale
+        (\cref{tab:med:binary}). Simulate \cref{eq:med:formula} from the fitted stages instead ---
+        the mediation formula was always the estimand, and the product was only ever its linear
+        special case.
 \end{enumerate}
 
 \notebooknote{%

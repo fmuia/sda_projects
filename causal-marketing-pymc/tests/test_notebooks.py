@@ -6,8 +6,15 @@ kernel as a subprocess, so a single pytest process can drive both
 environments — provided both kernels are registered (`make kernels`).
 
 CMP_FAST=1 is forced so each notebook targets < ~2 min.
+
+The run's `cmp.report` output is redirected to a throwaway directory (CMP_RESULTS_DIR). The
+notebooks emit their book results as a side effect of executing, so without this a FAST test run
+would overwrite `book/build/results/` — the FULL-mode shards the book is typeset from — and the
+next `make book` would (correctly) refuse to build from them. A green test run must not damage the
+artifact it is testing.
 """
 import os
+import tempfile
 from pathlib import Path
 
 import nbformat
@@ -16,6 +23,8 @@ from nbclient import NotebookClient
 from jupyter_client.kernelspec import KernelSpecManager
 
 os.environ["CMP_FAST"] = "1"
+os.environ.setdefault("CMP_RESULTS_DIR",
+                      tempfile.mkdtemp(prefix="cmp-test-results-"))
 
 NB_DIR = Path(__file__).resolve().parent.parent / "notebooks"
 NOTEBOOKS = sorted(NB_DIR.glob("*.ipynb"))

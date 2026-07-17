@@ -137,7 +137,12 @@ def ols(df: pd.DataFrame, formula: str, target: str, *, cov: str = "HC1",
         raise KeyError(f"{target!r} not in fitted coefficients: {list(res.params.index)}")
     est, se = float(res.params[target]), float(res.bse[target])
     extra["r2"] = float(res.rsquared)
-    return Classical(name or target, est, se, _ci(est, se, alpha, res.df_resid),
+    # A cluster-robust SE is only as good as the number of clusters, so the interval must be
+    # built on t(G-1), not t(n-k). statsmodels knows this and exposes it as df_resid_inference;
+    # passing res.df_resid instead made every clustered interval in the book ~9 % too narrow
+    # (12 regions: t(11) = 1.796 against t(752) = 1.647). The point estimate is unaffected.
+    dof = getattr(res, "df_resid_inference", res.df_resid)
+    return Classical(name or target, est, se, _ci(est, se, alpha, dof),
                      alpha, cov_label, int(res.nobs), extra)
 
 
@@ -183,7 +188,9 @@ def event_study(df: pd.DataFrame, *, outcome: str, unit: str, rel_time: str, tre
     terms = " + ".join(col[k] for k in ks)
     res = smf.ols(f"{outcome} ~ {terms} + C({unit}) + C(_k)", data=d).fit(
         cov_type="cluster", cov_kwds={"groups": d[unit]})
-    q = stats.norm.ppf(1 - alpha / 2)
+    # t(G-1), not the normal quantile: the event-study bands are read as parallel-trends
+    # evidence, and a band that is too narrow manufactures a pre-trend violation that is not there.
+    q = stats.t.ppf(1 - alpha / 2, getattr(res, "df_resid_inference", res.df_resid))
     rows = [{"k": base, "estimate": 0.0, "se": 0.0, "lo": 0.0, "hi": 0.0, "is_base": True}]
     for k in ks:
         e, s = float(res.params[col[k]]), float(res.bse[col[k]])
@@ -193,7 +200,8 @@ def event_study(df: pd.DataFrame, *, outcome: str, unit: str, rel_time: str, tre
 
 
 def iv_2sls(df: pd.DataFrame, *, outcome: str, endog: str, instrument: str,
-            controls: list[str] | None = None, alpha: float = 0.10) -> Classical:
+            controls: list[str] | None = None, alpha: float = 0.10,
+            cov: str = "HC1", cluster: str | None = None) -> Classical:
     """Two-stage least squares — the classical IV workhorse, with proper 2SLS standard
     errors and the first-stage F.
 
@@ -226,18 +234,46 @@ def iv_2sls(df: pd.DataFrame, *, outcome: str, endog: str, instrument: str,
     b = A @ (Pz_X.T @ y)
     resid = y - X @ b                      # residuals use the ORIGINAL X (the 2SLS rule)
     n, k = X.shape
-    s2 = (resid @ resid) / (n - k)
-    V = s2 * np.linalg.pinv(Pz_X.T @ Pz_X)
+
+    # This module's whole discipline is that an estimator may not default its covariance choice in
+    # silence — and this function used to do exactly that, hard-coding homoskedastic 2SLS. The
+    # sandwich is V = A * meat * A', with A = (X'P_Z X)^-1 and the meat built from P_Z X and the
+    # 2SLS residuals. `cov` now has to be chosen, exactly as in `ols`.
+    A = np.linalg.pinv(Pz_X.T @ X)
+    dof = n - k
+    if cov == "cluster":
+        if cluster is None:
+            raise ValueError("cov='cluster' requires cluster=<column name>")
+        g = df[cluster].to_numpy()
+        meat = np.zeros((k, k))
+        for lvl in np.unique(g):
+            m = g == lvl
+            sg = Pz_X[m].T @ resid[m]                       # score summed within the cluster
+            meat += np.outer(sg, sg)
+        n_g = len(np.unique(g))
+        # the small-sample correction statsmodels uses, and the dof that matters is G-1, not n-k
+        meat *= (n_g / max(n_g - 1, 1)) * ((n - 1) / max(n - k, 1))
+        V = A @ meat @ A.T
+        dof = n_g - 1
+        cov_label, extra = f"cluster-robust by {cluster} ({n_g} clusters)", {"n_clusters": n_g}
+    elif cov == "nonrobust":
+        s2 = (resid @ resid) / (n - k)
+        V = s2 * np.linalg.pinv(Pz_X.T @ Pz_X)
+        cov_label, extra = "2SLS (homoskedastic)", {}
+    else:                                                   # HC1, the default
+        meat = (Pz_X * (resid ** 2)[:, None]).T @ Pz_X
+        meat *= n / max(n - k, 1)                           # HC1 finite-sample correction
+        V = A @ meat @ A.T
+        cov_label, extra = "2SLS, HC1 heteroskedasticity-robust", {}
+
     est, se = float(b[1]), float(np.sqrt(V[1, 1]))
     # first stage: endog ~ instrument + controls; F on the excluded instrument
     import statsmodels.api as sm
     fs = sm.OLS(df[endog].to_numpy(float), Z).fit()
     F = float(fs.tvalues[1] ** 2)          # single instrument: F = t^2
-    out = Classical("LATE (2SLS)", est, se, _ci(est, se, alpha, n - k), alpha,
-                    "2SLS (homoskedastic)", n,
-                    {"first_stage_F": F, "weak": F < 10,
-                     "first_stage_coef": float(fs.params[1])})
-    return out
+    extra.update({"first_stage_F": F, "weak": F < 10,
+                  "first_stage_coef": float(fs.params[1])})
+    return Classical("LATE (2SLS)", est, se, _ci(est, se, alpha, dof), alpha, cov_label, n, extra)
 
 
 def rd_local_linear(df: pd.DataFrame, *, outcome: str, running: str, cutoff: float,

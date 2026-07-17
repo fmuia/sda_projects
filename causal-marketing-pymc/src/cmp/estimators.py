@@ -17,7 +17,7 @@ from __future__ import annotations
 import warnings
 
 import numpy as np
-from scipy.optimize import minimize
+from scipy.optimize import minimize, nnls
 
 # pymc / pymc-bart are imported lazily inside the BART functions so that the
 # legacy environment (pymc<6, no pymc-bart) can still `import cmp.estimators`
@@ -71,7 +71,13 @@ def _bart_predict(model, idata, X_new, seed, binary=False):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             pp = pm.sample_posterior_predictive(
-                idata, var_names=[var], sample_vars=[var],
+                idata, var_names=[var],
+                # ALWAYS "mu", never `var`. On the binary path `var` is "p", which is a
+                # Deterministic — the BART random variable is "mu". Passing sample_vars=["p"]
+                # therefore did NOT resample the tree ensemble at X_new: the counterfactual was
+                # silently frozen to the training prediction, and every binary CATE came out ~0.
+                # This is the exact gotcha the docstring warns about, committed in the code below it.
+                sample_vars=["mu"],
                 progressbar=False, random_seed=seed,
             )
     return pp.posterior_predictive[var].values.reshape(-1, X_new.shape[0])
@@ -137,8 +143,14 @@ def convergence_report(idata, var_names=None):
 # --------------------------------------------------------------------------
 # Meta-learners — uniform interface: (n_samples, n_units) posterior CATE
 # --------------------------------------------------------------------------
-def s_learner(X, T, y, seed=1, binary=False, **kw):
+def s_learner(X, T, y, seed=1, binary=False, X_score=None, **kw):
     """One surface f(x, t) with treatment as a feature; CATE = f(x,1)-f(x,0).
+
+    `X_score` — score the CATE at THESE rows instead of at the training rows. Pass a held-out
+    split and every downstream number (AUUC, Qini, PEHE, the realised-profit table) becomes an
+    out-of-sample number. Scoring at the training rows, which is what `X_score=None` does and what
+    the whole cookbook used to do, flatters the model by an unmeasured amount — and uplift ranking
+    is precisely the setting where in-sample evaluation flatters itself most.
 
     Known failure mode (cookbook gotcha #2): the S-learner regularises the
     treatment contribution toward zero, flattening heterogeneity — it
@@ -147,8 +159,11 @@ def s_learner(X, T, y, seed=1, binary=False, **kw):
     p = {**FAST, **kw}
     Xa = np.column_stack([X, T])
     model, idata = _fit_bart(Xa, y, seed, m=p["m"], draws=p["draws"], tune=p["tune"], chains=p["chains"], binary=binary)
-    X1 = Xa.copy(); X1[:, -1] = 1.0
-    X0 = Xa.copy(); X0[:, -1] = 0.0
+    Xs = np.asarray(X if X_score is None else X_score, float)
+    # the treatment column is appended, then overwritten with 1 / 0 for the two counterfactuals
+    base = np.column_stack([Xs, np.zeros(len(Xs))])
+    X1 = base.copy(); X1[:, -1] = 1.0
+    X0 = base.copy(); X0[:, -1] = 0.0
     # Score both counterfactuals in ONE posterior-predictive call so each draw's
     # tree ensemble hits X1 and X0 together — CATE is then a within-draw contrast.
     # Two separate calls (different seeds) would add *independent* predictive
@@ -159,18 +174,23 @@ def s_learner(X, T, y, seed=1, binary=False, **kw):
     return both[:, :n] - both[:, n:]
 
 
-def t_learner(X, T, y, seed=1, binary=False, **kw):
+def t_learner(X, T, y, seed=1, binary=False, X_score=None, **kw):
     """Two separate surfaces mu1, mu0 fit on treated / control; CATE =
     mu1(x) - mu0(x). Default choice for uplift — does not force the
-    treatment through a shared regularised term."""
+    treatment through a shared regularised term.
+
+    `X_score`: score at held-out rows (see `s_learner`). Default None = score at the training
+    rows, which is in-sample and optimistic."""
     p = {**FAST, **kw}
     X, T, y = np.asarray(X), np.asarray(T), np.asarray(y)
+    Xs = X if X_score is None else np.asarray(X_score, float)
     m1, i1 = _fit_bart(X[T == 1], y[T == 1], seed, m=p["m"], draws=p["draws"], tune=p["tune"], chains=p["chains"], binary=binary)
     m0, i0 = _fit_bart(X[T == 0], y[T == 0], seed + 1, m=p["m"], draws=p["draws"], tune=p["tune"], chains=p["chains"], binary=binary)
-    return _bart_predict(m1, i1, X, seed + 90, binary) - _bart_predict(m0, i0, X, seed + 91, binary)
+    return _bart_predict(m1, i1, Xs, seed + 90, binary) - _bart_predict(m0, i0, Xs, seed + 91, binary)
 
 
-def bcf(X, T, y, propensity, seed=1, return_full=False, **kw):
+def bcf(X, T, y, propensity, seed=1, return_full=False,
+        X_score=None, propensity_score=None, **kw):
     """Bayesian Causal Forest (Hahn-Murray-Carvalho 2020): a prognostic
     BART with the estimated propensity fed in (to absorb targeted-selection
     confounding / RIC), plus a separate, tighter treatment BART (fewer
@@ -217,10 +237,36 @@ def bcf(X, T, y, propensity, seed=1, return_full=False, **kw):
             random_seed=seed, progressbar=False, compute_convergence_checks=False,
         )
     tau = idata.posterior["tau"].values.reshape(-1, n)
+
+    # Out-of-sample CATE: resample the TREATMENT forest at held-out rows. Without this the
+    # cookbook's whole uplift evaluation (AUUC, Qini, PEHE, the realised-profit table) is scored on
+    # the same customers the forest was fitted to, which flatters the ranking by an unmeasured
+    # amount. `sample_vars=["tau"]` is essential — it is the BART random variable; predicting a
+    # Deterministic of it would freeze the ensemble at its training values (see `_bart_predict`).
+    if X_score is not None:
+        Xs = np.asarray(X_score, float)
+        if propensity_score is None:
+            raise ValueError(
+                "bcf(X_score=...) also needs propensity_score=... — the prognostic forest takes the "
+                "propensity as a feature, so held-out rows need their own propensity estimates "
+                "(fit the propensity model on TRAIN, then score it on the held-out rows)."
+            )
+        ps = np.asarray(propensity_score, float)
+        with model:
+            pm.set_data({"Xp": np.column_stack([Xs, ps]), "Xt": Xs, "z": np.zeros(len(Xs))})
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                pp = pm.sample_posterior_predictive(
+                    idata, var_names=["tau"], sample_vars=["tau"],
+                    progressbar=False, random_seed=seed + 90,
+                )
+        tau = pp.posterior_predictive["tau"].values.reshape(-1, len(Xs))
+        n = len(Xs)
+
     if return_full:
         return {
             "cate": tau,
-            "mu": idata.posterior["mu"].values.reshape(-1, n),
+            "mu": idata.posterior["mu"].values.reshape(-1, len(y)),
             "sd": idata.posterior["sd"].values.reshape(-1),
             "idata": idata,
             "convergence": convergence_report(idata, var_names=["sd"]),
@@ -357,31 +403,84 @@ def mccrary_density(running, cutoff, bandwidth=None, n_bins=40):
 # --------------------------------------------------------------------------
 # Synthetic control
 # --------------------------------------------------------------------------
-def sc_weights_slsqp(target_pre, donors_pre):
-    """Fast simplex synthetic-control weights (non-negative, sum to 1) via
-    SLSQP. Used for the many placebo-in-space permutations, where a full
-    Bayesian fit per placebo would be too slow."""
-    J = donors_pre.shape[0]
+def sc_weights_slsqp(target_pre, donors_pre, *, strict: bool = False):
+    """Fast simplex synthetic-control weights (non-negative, sum to 1) via SLSQP.
+    Used for the many placebo-in-space permutations, where a full Bayesian fit per
+    placebo would be too slow.
+
+    THE SCALING BUG, AND WHY THIS FUNCTION LOOKS LIKE THIS.
+    SLSQP's convergence test is *absolute* (`ftol` on the objective, default 1e-6).
+    The sales panel lives at a level of ~100-500, so the sum-of-squares objective
+    starts at O(1e4) — and SLSQP then terminates after ~5 iterations, **reporting
+    success while never leaving its starting point**. The old implementation guarded
+    only `if not res.success`, which is not a convergence test at all: it returned the
+    equal-weight average of the donor pool, silently, and called it a synthetic control.
+    On the placebo worlds that happened for dozens of fits, and it corrupted every
+    quantity built on them (the permutation p-value, the donor-robustness check, and
+    the gap-error autocorrelation the chapter reports).
+
+    The fixes, in order of importance:
+      1. **Normalise the objective** to O(1) by dividing through by the target's scale.
+         The minimiser is invariant to this, but the *tolerance* is not.
+      2. **Warm-start from NNLS** (projected to the simplex) as well as from equal
+         weights, and keep whichever converges lower — SLSQP is a local method.
+      3. **Verify the fit actually beat its own starting point.** A synthetic control
+         that cannot improve on the equal-weight average of the donor pool has not
+         fitted anything, and the caller must not be told otherwise.
+
+    `strict=True` raises instead of warning — use it in tests and anywhere a silently
+    degenerate fit would poison an aggregate.
+    """
+    T = np.asarray(target_pre, float)
+    D = np.asarray(donors_pre, float)
+    J = D.shape[0]
+
+    # (1) scale: SLSQP's ftol is absolute, so the objective must be O(1).
+    s = float(T.std())
+    if not np.isfinite(s) or s <= 0:
+        s = float(np.abs(T).mean()) or 1.0
+    Ts, Ds = T / s, D / s
 
     def loss(w):
-        r = target_pre - w @ donors_pre
-        return r @ r
+        r = Ts - w @ Ds
+        return float(r @ r)
 
     cons = [{"type": "eq", "fun": lambda w: w.sum() - 1}]
-    bounds = [(0, 1)] * J
-    w0 = np.full(J, 1 / J)
-    res = minimize(loss, w0, bounds=bounds, constraints=cons, method="SLSQP")
-    # SLSQP can return weights slightly outside [0,1] / not summing to 1, or fail
-    # to converge. These weights feed the placebo p-values, LOO and launch-date
-    # sensitivity, so clip to the simplex and fall back to equal weights rather
-    # than silently propagate an infeasible solution.
-    w = np.clip(res.x, 0.0, 1.0)
-    s = w.sum()
-    w = w / s if s > 0 else np.full(J, 1 / J)
-    if not res.success:
-        warnings.warn(f"sc_weights_slsqp did not converge ({res.message!r}); "
-                      "returning clipped/renormalized weights.", RuntimeWarning)
-    return w
+    bounds = [(0.0, 1.0)] * J
+
+    equal = np.full(J, 1 / J)
+    starts = [equal]
+    # (2) an NNLS solution, projected onto the simplex, is a far better start than the
+    #     centroid when one or two donors dominate.
+    try:
+        w_nnls, _ = nnls(Ds.T, Ts)
+        if w_nnls.sum() > 0:
+            starts.append(w_nnls / w_nnls.sum())
+    except Exception:                                   # nnls is picky about rank
+        pass
+
+    best, best_loss = None, np.inf
+    for w0 in starts:
+        res = minimize(loss, w0, bounds=bounds, constraints=cons, method="SLSQP",
+                       options={"maxiter": 500, "ftol": 1e-10})
+        w = np.clip(res.x, 0.0, 1.0)
+        tot = w.sum()
+        w = w / tot if tot > 0 else equal
+        if (l := loss(w)) < best_loss:
+            best, best_loss = w, l
+
+    # (3) the convergence test that actually means something: did we beat the centroid?
+    equal_loss = loss(equal)
+    if not np.isfinite(best_loss) or best_loss >= equal_loss * (1 - 1e-8):
+        msg = (f"sc_weights_slsqp did not improve on equal weights "
+               f"(loss {best_loss:.4g} vs {equal_loss:.4g}); the fit is degenerate and "
+               f"any placebo p-value, donor-robustness or autocorrelation statistic built "
+               f"on it is meaningless.")
+        if strict:
+            raise RuntimeError(msg)
+        warnings.warn(msg, RuntimeWarning)
+        return equal
+    return best
 
 
 def sc_effect_slsqp(target, donors, pre, post):
@@ -392,7 +491,7 @@ def sc_effect_slsqp(target, donors, pre, post):
     return target - counterfactual, w
 
 
-def synthetic_control(target, donors, pre, post, seed=1, draws=1000, tune=1000, chains=4):
+def synthetic_control(target, donors, pre, post, seed=1, draws=1000, tune=1000, chains=4, target_accept=0.95):
     """Bayesian synthetic control (main estimate, with uncertainty):
     Dirichlet-simplex weights on the donor pool fit to the pre-period, then
     a posterior over the counterfactual path and hence the effect.
@@ -414,6 +513,11 @@ def synthetic_control(target, donors, pre, post, seed=1, draws=1000, tune=1000, 
     target : (W,) observed treated series
     donors : (J, W) donor pool series
     pre, post : slices into the W time axis
+    target_accept : NUTS target acceptance probability (default 0.95). Raise
+        toward 0.99 to shorten the step and suppress the simplex-corner
+        divergences the Dirichlet geometry can produce on a hard-to-match panel;
+        it changes sampling fidelity, not the target distribution, so the
+        estimand is untouched.
 
     Returns dict with counterfactual_samples (S, W, posterior-predictive incl.
     obs noise), counterfactual_mean (S, W, the mean blend), effect_samples
@@ -432,7 +536,11 @@ def synthetic_control(target, donors, pre, post, seed=1, draws=1000, tune=1000, 
             # Pure NUTS (Dirichlet weights + HalfNormal sd): standard r-hat/ESS
             # apply to every parameter, so let pm.sample run its own checks and
             # surface a scoped readout below via convergence_report.
-            random_seed=seed, progressbar=False, target_accept=0.95,
+            # target_accept is a parameter (default 0.95) so a caller can tighten
+            # NUTS against the simplex-corner divergences the Dirichlet geometry
+            # produces on a hard-to-match panel — nb07b raises it to 0.99. The
+            # default keeps every existing caller's posterior byte-for-byte the same.
+            random_seed=seed, progressbar=False, target_accept=target_accept,
         )
     W_post = idata.posterior["w"].values.reshape(-1, J)     # (S, J)
     sd_post = idata.posterior["sd"].values.reshape(-1)      # (S,)
@@ -454,7 +562,7 @@ def synthetic_control(target, donors, pre, post, seed=1, draws=1000, tune=1000, 
 
 
 def synthetic_control_ar1(target, donors, pre, post, seed=1, draws=1000, tune=1000,
-                          chains=4):
+                          chains=4, target_accept=0.95):
     """Bayesian synthetic control with **AR(1) errors** — the correctly-specified
     counterpart to `synthetic_control`.
 
@@ -530,7 +638,9 @@ def synthetic_control_ar1(target, donors, pre, post, seed=1, draws=1000, tune=10
 
         idata = pm.sample(
             draws=draws, tune=tune, chains=chains, cores=chains,
-            random_seed=seed, progressbar=False, target_accept=0.95,
+            # target_accept is a parameter (default 0.95), exactly as in `synthetic_control`,
+            # so a caller can tighten the integrator when the simplex geometry diverges.
+            random_seed=seed, progressbar=False, target_accept=target_accept,
         )
 
     W_post = idata.posterior["w"].values.reshape(-1, J)        # (S, J)

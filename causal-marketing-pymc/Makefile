@@ -59,8 +59,35 @@ app-confounding:
 app-sc:
 	$(CORE)/marimo run apps/synthetic_control_placebo.py
 
+app-iv:  ## Chapter 13 lecture (IV): foldable sections; loads the precomputed posterior draws
+	$(CORE)/marimo run apps/iv_lecture.py
+
+edit-iv:  ## same lecture in presenter/notebook mode (shows code, lets you tweak live)
+	$(CORE)/marimo edit apps/iv_lecture.py
+
+data-iv:  ## rebuild the IV lecture's data bundle (draws + nb11/nb11b scalars) and re-embed it
+	# Run AFTER re-executing notebooks/11 (which writes the draws) so the euro figures and the
+	# real-data section cite the notebooks' numbers, and the WASM export stays self-contained.
+	$(CORE)/python apps/build_iv_lecture_data.py
+
+html-iv:  ## build the standalone Quarto-style HTML lecture (apps/iv_lecture.html) — one offline file
+	# Pre-renders every slider state to a PNG frame and inlines everything, so the single .html
+	# opens in any browser with no server/runtime yet stays interactive. Reads the data-iv bundle.
+	$(CORE)/python apps/build_iv_html.py
+
+html-iv-slides:  ## build the Ch.13 interactive slide deck (apps/iv_slides.html) from iv_slides_src.html
+	# Token-substitutes {{nb11.*}}/{{nb11b.*}} from the shards, bakes the draws + DGP params into
+	# /*__DATA__*/, inlines MathJax. Edit apps/iv_slides_src.html, then rebuild.
+	$(CORE)/python apps/build_iv_slides.py
+
+html-geo:  ## build the standalone Ch.9 slide deck (apps/geo_lift_slides.html) — one offline file
+	# Assembles apps/geo_slides_src.html: shard-token substitution (numbers never retyped),
+	# the nb07 lecture bundle for the live charts, book figures inlined as PNGs, MathJax vendored.
+	$(CORE)/python apps/build_geo_slides.py
+
 site:  ## export the WASM-safe apps to static, in-browser pages under site/
 	$(CORE)/marimo export html-wasm apps/experiment_design.py -o site/experiment_design --mode run
+	$(CORE)/marimo export html-wasm apps/iv_lecture.py -o site/iv_lecture --mode run
 	@echo "Serve locally:  python -m http.server --directory site"
 
 warm:  ## RUN THIS BEFORE A LECTURE. Populates the fit cache so no notebook samples live.

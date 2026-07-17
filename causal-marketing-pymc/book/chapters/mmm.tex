@@ -19,10 +19,12 @@
 graph, and the exact functional form that generated the data. It returns a confident answer, and
 the answer is backwards. Television, which truly moved \eur{\nbSixTrueTv} of sales, is credited
 \eur{\nbSixDefTv}; brand search, which truly moved \eur{\nbSixTrueBs}, is credited
-\eur{\nbSixDefBs} --- so the model ranks brand search \emph{above} television, and it does so with
-$\hat R = \nbSixDefRhat$, \nbSixDefDiv{} divergences, and a posterior predictive check that puts
-\pc{\nbSixPpcCovDef} of weeks inside its \pc{90} band. Nothing in its own output warns anyone. The
-repair is not a better prior; it is an experiment. One geo lift test (Chapter~9), translated
+\eur{\nbSixDefBs} --- so the model ranks brand search \emph{above} television, and it does so at
+$\hat R = \nbSixDefRhat$, with a posterior predictive check that puts \pc{\nbSixPpcCovDef} of weeks
+inside its \pc{90} band --- scores indistinguishable from those of the \emph{correct}
+decomposition. The one complaint the sampler files is \nbSixDefDiv{} divergent transitions, and a
+divergence says the geometry is bad, not which of the two decompositions is right. Every diagnostic
+that grades the \emph{answer} is silent. The repair is not a better prior; it is an experiment. One geo lift test (\Cref{ch:geo}), translated
 into a prior on brand search's saturation ceiling, restores the ranking ---
 \eur{\nbSixCalTv} against \eur{\nbSixCalBs}. \Cref{sec:mmm:compare} then reports the
 uncomfortable scoreline: on the decision-relevant quantity the \emph{classical} estimator beat the
@@ -76,8 +78,9 @@ the difference and the industry routinely conflates them.
 
 On a saturating channel the second is always below the first, and it can be far below: a channel
 with a splendid average ROAS may be worth almost nothing at the margin because it is already
-saturated. \Cref{sec:mmm:euro} measures exactly that gap in this data, and the two figures differ
-by a factor of \nbSixAvgOverSat{}.
+saturated. In the calibrated fit below, television's average ROAS is \nbSixAvgRoasTv$\times$ and its
+marginal ROAS at today's spend is \nbSixMargRoasTv$\times$. \Cref{sec:mmm:euro} prices the same
+budget move both ways, and the two prices differ by a factor of \nbSixAvgOverSat{}.
 
 % =====================================================================================
 \section{The data-generating model}
@@ -207,15 +210,20 @@ average. \Cref{sec:mmm:euro} returns to both.
 
 The graph of \crefrange{eq:mmm:xtv}{eq:mmm:dgp} is small and completely explicit:
 $\text{season} \to \text{sales}$, $\text{season} \to \text{brand search}$,
-$\text{TV} \to \text{sales}$, $\text{brand search} \to \text{sales}$. Season is a common cause of
-brand-search spend and of sales, so the path
-$\text{brand search} \leftarrow \text{season} \to \text{sales}$ is an open backdoor, and Pearl's
-backdoor criterion \citep{pearl1995, pearl2009} says: block it by conditioning on season.
-Television has no backdoor at all; its arrow into sales is clean.
+$\text{season} \to \text{TV}$, $\text{TV} \to \text{sales}$,
+$\text{brand search} \to \text{sales}$. Read the season's arrows straight off
+\crefrange{eq:mmm:xtv}{eq:mmm:xbs}: it is a parent of \emph{both} channels' spend. So \emph{both}
+channels sit on an open backdoor --- $\text{TV} \leftarrow \text{season} \to \text{sales}$ no less
+than $\text{brand search} \leftarrow \text{season} \to \text{sales}$ --- and Pearl's backdoor
+criterion \citep{pearl1995, pearl2009} blocks both of them with the same conditioning set.
 
 So the adjustment set is $\{\text{season}\}$, it is known exactly, it is measured exactly, and it
-is in every model fitted below. Hold that thought. It is going to fail to be enough, and the
-failure is the chapter.
+is in every model fitted below. What separates the two channels is therefore not the
+\emph{presence} of a backdoor but its \emph{strength}: brand-search spend tracks the season at
+\nbSixCorrBsSeason{} against television's \nbSixCorrTvSeason{}, and it is that difference,
+interacting with a saturation curve flexible enough to trace the wave (\cref{as:mmm:overlap}), that
+decides which channel's curve can steal the credit. Hold that thought. The correct adjustment set
+is going to fail to be enough, and the failure is the chapter.
 
 \subsection*{The assumptions}
 
@@ -327,6 +335,13 @@ $\hat\lambda_{\text{tv}} = \nbSixClLamTv$, $\hat\kappa_{\text{tv}} = \eur{\nbSix
 $\hat\lambda_{\text{bs}} = \nbSixClLamBs$, $\hat\kappa_{\text{bs}} = \eur{\nbSixClKapBs}$
 (the planted truth is $0.40 / 50$ and $0.20 / 40$), at $R^2 = \nbSixClRsq$.
 
+One feature of that winner deserves to be said out loud rather than buried in a decimal.
+$\hat\kappa_{\text{tv}} = \eur{\nbSixClKapTv}$ coincides exactly with \eur{\nbSixRegKapTvHi}, the
+top of the searched band: the sum of squares never turned around, so there is no interior optimum,
+and the reported half-saturation is not an estimate the data produced but the boundary the analyst
+drew. A grid whose winner sits on its own edge is telling the analyst that the parameter is not
+identified --- and the profile region below says so formally.
+
 \subsection*{The standard errors, and what ``correct'' means}
 
 Weekly sales are serially correlated, and the residuals of \cref{eq:mmm:ols} carry a lag-one
@@ -363,8 +378,10 @@ answer move if the transform had been fixed somewhere else --- somewhere the dat
 out?}
 
 The classical fit is structurally unable to answer that, because it conditioned on the answer. So
-the question is asked from outside, using the standard Gaussian profile-likelihood result: the set
-of $(\lambda, \kappa)$ the data cannot reject at the 90\,\% level is
+the question is asked from outside, with the profile (concentrated) likelihood: under Gaussian
+errors, $n \log\big(\text{SSE}(\lambda,\kappa) / \text{SSE}(\hat\lambda,\hat\kappa)\big)$ is
+asymptotically $\chi^2_4$ at the true transform \citep{vandervaart1998}, so the set of
+$(\lambda, \kappa)$ the data cannot reject at the 90\,\% level is
 $\{\, \text{SSE}(\lambda,\kappa) \le \text{SSE}(\hat\lambda,\hat\kappa)
 \exp(\chi^2_{4,\,0.90} / n) \,\}$.
 
@@ -390,10 +407,14 @@ $[\nbSixEnvLo, \nbSixEnvHi]$ --- width \nbSixEnvWidth{} --- while the interval t
 And the spreadsheet version of the same disease is worse, because it is what most inherited models
 actually do. \Cref{tab:nb06:transform} simply \emph{asserts} the transform --- ``we use
 industry-standard values'' --- across \nbSixAssertN{} plausible settings. The fits are
-indistinguishable: $R^2$ spans only \nbSixAssertRsqLo{} to \nbSixAssertRsqHi. The answers are not:
-the implied television ROAS spans \nbSixAssertRoasTvLo{} to \nbSixAssertRoasTvHi, and
-\nbSixAssertNInverted{} of the \nbSixAssertN{} settings invert the channel ranking outright.
-\textbf{The choice, not the data, is setting the answer.}
+indistinguishable: $R^2$ spans only \nbSixAssertRsqLo{} to \nbSixAssertRsqHi. The answers are not.
+The implied television ROAS spans \nbSixAssertRoasTvLo{} to \nbSixAssertRoasTvHi --- from a channel
+that returns half of what it costs to one that clears the revenue break-even of $1.0$ outright. Nine
+settings a media planner would sign off without a second thought therefore carry the budget meeting
+from \emph{defund television} to \emph{television pays}, on a fit that cannot separate them past the
+third decimal. The channel \emph{ranking}, it should be conceded, survives all nine
+(\nbSixAssertNInverted{} of \nbSixAssertN{} invert it). The \emph{level} does not --- and the level
+is what a ROAS deck reports. \textbf{The choice, not the data, is setting the answer.}
 
 \begin{remark}[If you inherit a model whose adstock was ``set to industry standards'']
 Its ROAS intervals are decorative. They are correct answers to the question \emph{given that
@@ -439,10 +460,11 @@ an implied ceiling near \emph{twice} peak weekly sales --- effectively unconstra
 honest out-of-the-box model: the correct graph, the correct functional form, the correct control,
 and no thumb on any scale.
 
-It converges cleanly: $\hat R = \nbSixDefRhat$, minimum bulk effective sample size \nbSixDefEss{}
-\citep{vehtari2021}, \nbSixDefDiv{} divergent transitions. And it credits television with
-\eur{\nbSixDefTv} and brand search with \eur{\nbSixDefBs}, against a planted \eur{\nbSixTrueTv}
-and \eur{\nbSixTrueBs}.
+The chains agree --- $\hat R = \nbSixDefRhat$, minimum bulk effective sample size \nbSixDefEss{}
+\citep{vehtari2021} --- and the sampler files exactly one complaint: \nbSixDefDiv{} divergent
+transitions. Hold on to that number; \cref{sec:mmm:compare} returns to what it does and does not
+warn about. And the fit credits television with \eur{\nbSixDefTv} and brand search with
+\eur{\nbSixDefBs}, against a planted \eur{\nbSixTrueTv} and \eur{\nbSixTrueBs}.
 
 \textbf{It ranks brand search above television.} It over-credits brand search by a factor of
 \nbSixDefBsOverTrue. It is exactly, expensively backwards --- and it is the most widely deployed
@@ -477,7 +499,7 @@ data cannot tell it which thing to believe.
 
 Since the likelihood is silent, the information must come from outside it. The standard and correct
 move --- Google's \citep{chan2017} and Uber's \citep{ng2021} recommendation alike, and the one
-this book's Chapter~9 exists to supply --- is to \textbf{run an experiment and calibrate the model
+this book's \Cref{ch:geo} exists to supply --- is to \textbf{run an experiment and calibrate the model
 against it}. A geo lift test randomizes a channel's spend across matched groups of regions and
 reads the sales gap as that channel's true incremental lift, uncontaminated by the seasonality no
 regression can net out. That is a \emph{design}, not a model, and it does not need
@@ -504,10 +526,12 @@ has pinned down, keeps its default prior. This is not a thumb on the scale. It i
 experimental evidence at exactly the one place observational data is silent, and
 \cref{sec:mmm:valid} sweeps the prior to prove the claim rather than assert it.
 
-The calibrated fit converges as cleanly as the default ($\hat R = \nbSixCalRhat$, minimum bulk ESS
-\nbSixCalEss, \nbSixCalDiv{} divergences) and credits television with \eur{\nbSixCalTv} and brand
-search with \eur{\nbSixCalBs}. \textbf{The ranking is restored} (\cref{tab:nb06:compare}, last
-row). The brand-search ceiling comes back to \eur{\nbSixCalCeilingBs} against the planted
+The calibrated fit reports $\hat R = \nbSixCalRhat$ and a minimum bulk ESS of \nbSixCalEss{} ---
+indistinguishable from the default's --- and \nbSixCalDiv{} divergences, against the default's
+\nbSixDefDiv. That is the single diagnostic that moves, and \cref{sec:mmm:compare} makes the case
+that it is a statement about the sampler's \emph{geometry} rather than about which decomposition is
+right. The fit credits television with \eur{\nbSixCalTv} and brand search with \eur{\nbSixCalBs}.
+\textbf{The ranking is restored} (\cref{tab:nb06:compare}, last row). The brand-search ceiling comes back to \eur{\nbSixCalCeilingBs} against the planted
 \eur{\nbSixTrueCeilingBs}, and the baseline to \eur{\nbSixCalBaseline} against \eur{100}.
 
 \begin{remark}[In production, feed the experiment to the likelihood, not the prior]
@@ -541,8 +565,18 @@ nominal figure is 90\,\%, and the simulator's own noise has standard deviation
 equally good accounts of the same series.} That is the ridge, in the only form the data will ever
 show it: not as a diagonal in a scatter of draws, but as two answers with the same score. It is the
 same object \cref{fig:nb06:profile} showed classically --- a near-flat likelihood along the
-direction that trades brand search's ceiling against the seasonal coefficient --- and it explains
-why no amount of posterior predictive checking will catch this failure.
+direction that trades brand search's ceiling against the \emph{baseline} --- and it explains why no
+amount of posterior predictive checking will catch this failure.
+
+The direction deserves naming precisely, because the obvious guess is wrong. It is \emph{not} the
+seasonal coefficient that pays: $\gamma$ is recovered at essentially the planted value in both fits
+(\cref{tab:nb06:recovery}), and the draw-level correlation between brand search's ceiling and
+$\gamma$ comes out at \nbSixRidgeCorr{} --- the scatter of draws is a blob, not a diagonal. What
+absorbs the stolen credit is the intercept, which swings from \eur{\nbSixDefBaseline} to
+\eur{\nbSixCalBaseline} across the two fits against a planted \eur{\nbSixTrueBaseline}. This is why
+the evidence for flatness in this chapter is the SSE surface and the posterior predictive check, and
+never a picture of the posterior: once a sampler has settled into one corner of a flat valley,
+nothing pulls its draws back across the flat direction, so nothing traces it out.
 
 Keep running posterior predictive checks. A model that \emph{cannot} reproduce the series is
 disqualified before anything is read off it. But treat them as \textbf{necessary and never
@@ -575,8 +609,9 @@ throughout --- and read off where the ranking survives.
 \input{build/floats/nb06_sweepfig}
 
 \textbf{The honest answer is a bounded one, and it is smaller than the reader is being invited to
-hope.} The ranking is correct ($\Prob(\tau_{\text{tv}} > \tau_{\text{bs}}) > 0.5$) only for
-$\mu \le \nbSixSweepHoldTo$, and it is \textbf{already flipped at the very next grid point},
+hope.} The ranking of the contributions is correct
+($\Prob(\tau_{\text{tv}} > \tau_{\text{bs}}) > 0.5$) only for $\mu \le \nbSixSweepHoldTo$
+(\cref{tab:nb06:sweep}), and it is \textbf{already flipped at the very next grid point},
 $\mu = \nbSixSweepFlipAt$ --- \nbSixSweepNFlipped{} of the \nbSixSweepNGrid{} grid points invert.
 The ranking probability falls from \nbSixSweepPLo{} at the tightest prior to \nbSixSweepPHi{} at
 the library default.
@@ -646,11 +681,16 @@ is a hard constraint or a ridge penalty on $\alpha_{\text{bs}}$: a prior in disg
 honest interval and no principled way to weigh the test's own standard error against the data.
 
 \emph{(iii) The number the budget meeting needs.}
-$\Prob(\tau_{\text{tv}} > \tau_{\text{bs}}) = \nbSixPTvFirst$ is a posterior probability, and it is
-compared against an action bar in \cref{sec:mmm:euro}. The classical arm has no such quantity. Its
+$\Prob(\text{ROAS}_{\text{tv}} > \text{ROAS}_{\text{bs}}) = \nbSixPTvFirst$ is a posterior
+probability, and it is compared against an action bar in \cref{sec:mmm:euro}. It is a probability
+about \emph{returns per euro}, not about totals: the ranking of the raw contributions,
+$\Prob(\tau_{\text{tv}} > \tau_{\text{bs}}) = \nbSixPContribTvFirst$, is a different number, because
+the two channels' spend denominators differ (\eur{\nbSixSpendTv} against \eur{\nbSixSpendBs}). A
+budget move is decided on the former: the euro being moved could go either way, so what matters is
+which channel returns more per euro. The classical arm has no such quantity. Its
 nearest analogue --- the share of the transform settings the fit cannot rule out that rank
 television first, \pc{\nbSixRegRankOk} --- is a statement about a \emph{grid}, not a probability
-about the channels, and it cannot be compared to a bar. This is Chapter~2's
+about the channels, and it cannot be compared to a bar. This is \Cref{ch:pvp}'s
 proposition on what a confidence interval licenses, arriving in media-planning dress.
 
 \subsection*{What the posterior did not buy}
@@ -658,7 +698,7 @@ proposition on what a confidence interval licenses, arriving in media-planning d
 It did \textbf{not} rescue a non-identified model, and stating this precisely is the most important
 paragraph in the chapter.
 
-Chapter~2 established the book's rule: \emph{the prior does almost nothing; the likelihood is
+\Cref{ch:pvp} established the book's rule: \emph{the prior does almost nothing; the likelihood is
 the whole ballgame} --- a twenty-five-fold prior sweep there moved the answer by
 \eur{\nbZeroPriorShift}. \textbf{This chapter is the exception that proves the rule, and it proves
 it in the direction the rule predicts.} Here the prior does almost \emph{everything}
@@ -681,8 +721,30 @@ that \textbf{the experiment, not the estimator, is doing the identifying}. Bayes
 experiment \emph{in}, coherently, with an interval on the other side. It is not what made the model
 identified.
 
-\begin{remark}[The consistency with Chapter~2, stated plainly]
-Chapter~2 named three load-bearing conditions of the Bernstein--von Mises theorem, and
+\subsection*{What the diagnostics did, and did not, say}
+
+It is worth being exact about which of the standard checks discriminated the two fits, because the
+convenient telling of this story --- \emph{every diagnostic was clean} --- is not quite true, and
+the truth is the sharper lesson. Everything that grades the \emph{answer} was silent: $\hat R$
+(\nbSixDefRhat{} against \nbSixCalRhat), the minimum bulk effective sample size (\nbSixDefEss{}
+against \nbSixCalEss), the posterior predictive coverage (\pc{\nbSixPpcCovDef} against
+\pc{\nbSixPpcCovCal}) and its RMSE (\eur{\nbSixPpcRmseDef} against \eur{\nbSixPpcRmseCal}) are
+indistinguishable across an inverted decomposition and a correct one. Exactly one number moved: the
+divergent transitions, \nbSixDefDiv{} in the default fit against \nbSixCalDiv{} in the calibrated
+one.
+
+That is a warning, and it is not one that would have saved anyone. A divergence is a report about
+the sampler's \emph{geometry}: it says the posterior has a direction the integrator cannot follow,
+and that direction is the ridge. So it flags, correctly, that this model is badly identified --- but
+it does not say which of the two decompositions the ridge connects is the right one, and it
+certainly does not say that a channel ranking has been inverted. Worse, the standard practitioner
+response to divergences is to raise \code{target\_accept}, already at \nbSixTargetAccept{} here, and
+enough of that makes them vanish \emph{without repairing anything}, because the geometry was never
+the disease. \textbf{Read a divergence as evidence that the likelihood is flat, not as a test the
+wrong answer failed.} Everything downstream of it was clean.
+
+\begin{remark}[The consistency with \Cref{ch:pvp}, stated plainly]
+\Cref{ch:pvp} named three load-bearing conditions of the Bernstein--von Mises theorem, and
 predicted that this chapter would break the second: \emph{enough data}. It does, and more
 precisely than that --- what fails is not the count of weeks but the \emph{information} in them.
 \nbSixNWeeks{} weeks in which brand-search spend and the season move together at
@@ -704,10 +766,16 @@ euros-per-euro numbers get called ROAS, and only the second can price a budget m
 \begin{equation}
   \text{ROAS}_c \;=\; \frac{\sum_t f_c(a_{c,t})}{\sum_t x_{c,t}},
   \qquad\qquad
-  \text{mROAS}_c(\bar x) \;=\; \frac{\partial f_c}{\partial x}\bigg|_{x = \bar x}
-    \;=\; \frac{\alpha_c\, \kappa_c}{(\kappa_c + \bar x)^2} .
+  \text{mROAS}_c \;=\; \frac{\partial f_c\big(a_c(x)\big)}{\partial x}
+    \;=\; \underbrace{\Big(\textstyle\sum_{\ell < \nbSixLmax} \lambda_c^{\ell}\Big)}_{\text{the adstock echo}}
+      \cdot\; \frac{\alpha_c\, \kappa_c}{(\kappa_c + \bar a_c)^2} ,
   \label{eq:mmm:mroas}
 \end{equation}
+
+the second evaluated at the channel's mean \emph{adstocked} exposure $\bar a_c$. Both factors of
+that chain rule matter and both are routinely dropped. The saturation factor is the one everybody
+knows about; the adstock factor is the one everybody forgets, and it says that a euro spent this
+week keeps working next week, so its total return is a multiple of the slope it buys today.
 
 On a saturating curve the marginal is \emph{always} below the average, because the slope keeps
 falling. In this data television's calibrated average ROAS is \nbSixAvgRoasTv$\times$ and its
@@ -716,6 +784,18 @@ marginal ROAS at today's operating spend is \nbSixMargRoasTv$\times$; brand sear
 almost nothing on the next euro. The optimal split is reached exactly when the marginals equalise,
 $\text{mROAS}_{\text{tv}} = \text{mROAS}_{\text{bs}}$, which is what the sweep below finds
 numerically at its peak.
+
+\begin{remark}[The carry-over the numbers below leave out]
+The marginal ROAS quoted here, and the shift sweep that follows, are computed from a response curve
+refitted to \emph{raw} weekly spend rather than to adstocked exposure --- so both carry the
+saturation factor of \cref{eq:mmm:mroas} and drop the echo. At the posterior-mean decay
+$\hat\lambda_{\text{tv}} = \nbSixLamTvHat$ that factor is
+$\sum_{\ell < \nbSixLmax} \hat\lambda^{\ell}_{\text{tv}} = \nbSixCarryMult$, so every euro figure in
+this section \emph{understates} television's marginal return by roughly that multiple. It is a small
+correction at these decays and it is stated rather than buried; at a heavy-television decay of $0.8$
+it would be a factor of five, and an analyst who priced a budget move without it would be wrong by
+that much.
+\end{remark}
 
 \subsection*{The reallocation, priced two ways}
 
@@ -750,7 +830,7 @@ by construction its $\Prob(\Delta > 0)$ is just the ranking probability wearing 
 The decision rule is a stated convention applied to the posterior:
 
 \begin{equation}
-  \Prob\big(\tau_{\text{tv}} > \tau_{\text{bs}} \mid D\big)\ \begin{cases}
+  \Prob\big(\text{ROAS}_{\text{tv}} > \text{ROAS}_{\text{bs}} \mid D\big)\ \begin{cases}
     > 0.8 & \Rightarrow\ \textsc{reallocate},\\
     \text{otherwise} & \Rightarrow\ \textsc{pilot, and test}.
   \end{cases}
@@ -760,6 +840,21 @@ The decision rule is a stated convention applied to the posterior:
 The posterior gives \nbSixPTvFirst{} --- just short of the \nbSixActionBar{} bar. The verdict is
 therefore \textsc{pilot}, not \textsc{reallocate}: move a slice, measure it, do not swing the plan.
 
+\begin{remark}[Three probabilities, and which one the bar is defined on]
+This chapter has now printed three posterior probabilities and they are not interchangeable. (i)
+$\Prob(\text{ROAS}_{\text{tv}} > \text{ROAS}_{\text{bs}}) = \nbSixPTvFirst$ asks which channel
+returns more \emph{per euro}. It conditions on nothing but the fit, and it is the quantity
+\cref{eq:mmm:rule} is defined on, because the euro under discussion can be sent to either channel.
+(ii) $\Prob(\tau_{\text{tv}} > \tau_{\text{bs}}) = \nbSixPContribTvFirst$ asks which channel moved
+more sales in \emph{total}; it is the quantity the prior sweep of \cref{sec:mmm:valid} reports, and
+it differs from (i) only because the two spend denominators differ (\eur{\nbSixSpendTv} against
+\eur{\nbSixSpendBs}). (iii) $\Prob(\Delta > 0) = \nbSixSatPPositive$, from \cref{fig:nb06:shift},
+asks whether \emph{this particular} \pc{\nbSixShiftPct} move gains --- \emph{given} the fitted
+Michaelis--Menten curves, which it re-estimates on each of a few hundred subsampled draws and whose
+plug-in noise it therefore carries. It is a statement about a policy under a fitted curve, not about
+the channels, and it is the wrong object to hold to an action bar. The bar is a bar on (i).
+\end{remark}
+
 And then the caution that the rest of this chapter has earned. The \emph{levels} are not
 decision-grade. The calibrated model says television's ROAS is \nbSixCalRoasTv$\times$
 [\nbSixCalRoasTvLo, \nbSixCalRoasTvHi], overstating the truth of \nbSixTrueRoasTv$\times$ by
@@ -767,9 +862,9 @@ decision-grade. The calibrated model says television's ROAS is \nbSixCalRoasTv$\
 \pc{\nbSixMarginThirty} gross margin is not $1.0$ but \nbSixBreakevenThirty$\times$ --- which even
 the model's own inflated estimate fails, and which the \emph{true} television ROAS of
 \nbSixTrueRoasTv$\times$ fails at \emph{any} margin. So the sentence the analysis actually
-supports is: \emph{reallocate toward television, because the ranking is trustworthy; and do not
+supports is: \emph{pilot a shift toward television, because the ranking is trustworthy; and do not
 conclude that television pays, because the levels are not.} ``Is television worth it in absolute
-euros?'' is a question for the geo experiment of Chapter~9, not for this model.
+euros?'' is a question for the geo experiment of \Cref{ch:geo}, not for this model.
 
 \input{build/floats/nb06_correction}
 
@@ -778,21 +873,31 @@ euros?'' is a question for the geo experiment of Chapter~9, not for this model.
 The most useful number in this chapter is the price of \emph{not} having run the test. Acting on
 the \emph{default} model means believing its inverted ranking, and therefore taking the
 \textbf{mirror action}: moving \pc{\nbSixShiftPct} of the \emph{television} budget
-(\eur{\nbSixMirrorShiftEur}) into brand search. Price both policies at the true channel ROAS the
-simulator knows:
+(\eur{\nbSixMirrorShiftEur}) into brand search. Both policies can be priced exactly, because the
+simulator's response curves are known: adstock each counterfactual spend schedule at the planted
+decay, push it through the planted saturation curve, and difference. That prices the move
+\emph{at the margin}, which is the only pricing \cref{eq:mmm:mroas} permits:
 
 \begin{itemize}[leftmargin=*]
-  \item act on the \textbf{calibrated} model: \eur{\nbSixTrueDelta} per planning window, gained;
-  \item act on the \textbf{default} model: \eur{\nbSixMirrorDelta} per planning window ---
+  \item act on the \textbf{calibrated} model: \eur{\nbSixTrueDeltaSat} per planning window, gained;
+  \item act on the \textbf{default} model: \eur{\nbSixMirrorDeltaSat} per planning window ---
         \emph{value destroyed}.
 \end{itemize}
 
-The swing is \eur{\nbSixExperimentSwing} \textbf{per planning window, recurring every window},
-and it is a \emph{floor} on what the geo experiment that calibrated the prior was worth, since it
-prices only this one \pc{\nbSixShiftPct} decision and nothing else the calibration de-risks. If a
-geo test costs less than a few windows of that, it has already paid for itself --- and this is the
-argument to take into the room where the measurement budget is set. \Citet{lewis2015} made the case
-in principle; \cref{eq:mmm:calib} and this number make it in euros.
+The swing is \eur{\nbSixExperimentSwingSat} \textbf{per planning window, recurring every window},
+and it is what the geo experiment that calibrated the prior bought on this one
+\pc{\nbSixShiftPct} decision --- nothing else the calibration de-risks is counted. If a geo test
+costs less than a few windows of that, it has already paid for itself, and this is the argument to
+take into the room where the measurement budget is set. \Citet{lewis2015} made the case in
+principle; \cref{eq:mmm:calib} and this number make it in euros.
+
+The same two policies priced at the channels' true \emph{average} ROAS read \eur{\nbSixTrueDelta}
+and \eur{\nbSixMirrorDelta}, a swing of \eur{\nbSixExperimentSwing} ---
+\nbSixSwingAvgOverSat$\times$ the marginal-priced figure. That pricing is the error of the previous
+subsection committed one last time, on the chapter's own headline number, and it is reported here
+only so that it is visibly \emph{not} the one quoted. Both channels are saturating; the euros moved
+do not earn their average return. \textbf{Even the value of an experiment must be priced at the
+margin.}
 
 % =====================================================================================
 \section{What can go wrong}
@@ -819,15 +924,20 @@ will.}
         is the simulation. Treat a high measured ROAS on a demand-capture channel as a red flag,
         not a result.
 
-  \item \textbf{A confident model with clean diagnostics.} The default fit's $\hat R$ is
-        \nbSixDefRhat, it has \nbSixDefDiv{} divergences, and its posterior predictive check
-        covers at \pc{\nbSixPpcCovDef}. \textbf{Every diagnostic looks fine.} Convergence is a
-        statement about the sampler, not about identification (Chapter~2).
+  \item \textbf{A confident model whose only complaint is about geometry.} The default fit's
+        $\hat R$ is \nbSixDefRhat{} and its posterior predictive check covers at
+        \pc{\nbSixPpcCovDef} --- both indistinguishable from the correct fit's. The one number that
+        moves is the divergence count, \nbSixDefDiv{} against \nbSixCalDiv, and it flags the ridge
+        without saying which side of it is right; raising \code{target\_accept} silences it and
+        repairs nothing. Convergence is a statement about the sampler, not about identification
+        (\Cref{ch:pvp}).
 
-  \item \textbf{Fixed transform constants.} \Cref{tab:nb06:transform}: \nbSixAssertNInverted{} of
-        \nbSixAssertN{} ``industry-standard'' settings invert the ranking, at a spread in $R^2$ of
-        \nbSixAssertRsqLo{} to \nbSixAssertRsqHi. If an inherited model's adstock was set by
-        convention, its intervals are decorative.
+  \item \textbf{Fixed transform constants.} \Cref{tab:nb06:transform}: \nbSixAssertN{}
+        ``industry-standard'' settings, indistinguishable in fit ($R^2$ from \nbSixAssertRsqLo{} to
+        \nbSixAssertRsqHi), imply television ROAS anywhere from \nbSixAssertRoasTvLo{} to
+        \nbSixAssertRoasTvHi{} --- across the revenue break-even, so from \emph{defund it} to
+        \emph{it pays}. If an inherited model's adstock was set by convention, its intervals are
+        decorative.
 
   \item \textbf{Reading levels off any media mix model.} Even after calibration this one
         overstates television's ROAS \nbSixCalRoasTvOverTrue-fold. Rankings survive; levels do
@@ -846,7 +956,7 @@ The only repair is a \emph{design}: an experiment, which does not need \cref{as:
 a coin flip has already broken the dependence between spend and everything unobserved.
 
 That is why this chapter hands off, deliberately and explicitly, to the next one. The geo lift test
-of Chapter~9 is not an appendix to media mix modelling. \textbf{It is what makes media mix
+of \Cref{ch:geo} is not an appendix to media mix modelling. \textbf{It is what makes media mix
 modelling admissible.} An uncalibrated media mix model is not a measurement. A calibrated one --- a
 model anchored on an experiment, with the experiment carrying the identification and the model
 carrying the interpolation between tests --- is the best instrument a marketing organisation has,
@@ -861,9 +971,10 @@ and it is the one worth building.
         Given the correct graph, the correct control and the exact functional form that generated
         the data, it credited brand search \eur{\nbSixDefBs} against a planted \eur{\nbSixTrueBs},
         and television \eur{\nbSixDefTv} against \eur{\nbSixTrueTv} --- ranking a demand-capture
-        channel above the channel that creates the demand. Its $\hat R$ was \nbSixDefRhat, its
-        divergences \nbSixDefDiv, its posterior predictive coverage \pc{\nbSixPpcCovDef}. Nothing
-        in its output warned anyone.
+        channel above the channel that creates the demand. Its $\hat R$ was \nbSixDefRhat{} and its
+        posterior predictive coverage \pc{\nbSixPpcCovDef} --- both indistinguishable from the
+        correct fit's. Its \nbSixDefDiv{} divergences were the only complaint on the page, and a
+        divergence names a bad geometry, not a wrong answer.
 
   \item \textbf{A correct backdoor adjustment is necessary and not sufficient.} A linear control
         for the confounder does not de-confound a channel whose spend is collinear with it
@@ -880,8 +991,12 @@ and it is the one worth building.
 
   \item \textbf{Fixing a parameter hides its uncertainty; it does not remove it.} The classical
         model's reported ROAS interval is \nbSixEnvOverCi$\times$ narrower than the envelope of
-        transforms its own fit cannot rule out, and \nbSixAssertNInverted{} of \nbSixAssertN{}
-        ``industry-standard'' settings invert the ranking outright (\cref{tab:nb06:transform}).
+        transforms its own fit cannot rule out, and the \nbSixAssertN{} ``industry-standard''
+        settings of \cref{tab:nb06:transform} --- separated by \nbSixAssertRsqHi{} against
+        \nbSixAssertRsqLo{} in $R^2$, which is to say not separated at all --- move television's
+        implied ROAS from \nbSixAssertRoasTvLo{} to \nbSixAssertRoasTvHi, across the break-even.
+        The ranking happens to survive all of them; the level, which is what the deck reports,
+        does not.
 
   \item \textbf{The classical arm won here --- and it won by luck.} On the full series the profiled
         model ranked television first where the default Bayesian model did not, so Bayes made the
@@ -890,7 +1005,7 @@ and it is the one worth building.
         series the same estimator inverts. Do not read this as a classical victory lap.
 
   \item \textbf{The prior did almost everything --- because the likelihood did almost nothing.}
-        This is the mirror image of Chapter~2's finding, not a contradiction of it. Where the
+        This is the mirror image of \Cref{ch:pvp}'s finding, not a contradiction of it. Where the
         likelihood is flat, whatever else is in the room decides. A default
         $\text{Gamma}(\mu = 2)$ ceiling prior is not a neutral abstention; on this data it is an
         invitation to steal the wave.
@@ -911,11 +1026,13 @@ and it is the one worth building.
         is the number that goes to the CFO.
 
   \item \textbf{What the test was worth.} Acting on the default model would have moved
-        \eur{\nbSixMirrorShiftEur} the wrong way, destroying \eur{\nbSixMirrorDelta} per window
-        against the \eur{\nbSixTrueDelta} the calibrated model gains --- a swing of
-        \eur{\nbSixExperimentSwing} per window, recurring, and a floor on the value of the geo
-        test. \textbf{The experiment is not a luxury item on top of the media mix model. It is what
-        makes it admissible} (Chapter~9).
+        \eur{\nbSixMirrorShiftEur} the wrong way, destroying \eur{\nbSixMirrorDeltaSat} per window
+        against the \eur{\nbSixTrueDeltaSat} the calibrated model gains --- a swing of
+        \eur{\nbSixExperimentSwingSat} per window, recurring, priced on the true saturating curves.
+        Priced at average ROAS instead it would read \nbSixSwingAvgOverSat$\times$ larger, which is
+        this chapter's own error committed on its own headline number, and is why it is not the one
+        quoted. \textbf{The experiment is not a luxury item on top of the media mix model. It is
+        what makes it admissible} (\Cref{ch:geo}).
 \end{enumerate}
 
 \notebooknote{%

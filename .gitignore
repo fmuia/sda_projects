@@ -3,3 +3,6 @@
 # Virtualenvs living inside the project (large, never commit)
 causal-marketing-pymc/.venv/
 causal-marketing-pymc/.venv-legacy/
+
+# Course reference material (external, not ours to redistribute)
+causal-marketing-pymc/course/

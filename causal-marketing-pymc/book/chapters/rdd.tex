@@ -190,8 +190,9 @@ cutoff, like an experiment nobody ran.
 
 Identification of \cref{eq:rd:estimand} rests on the following. They are stated here, and each is
 either tested in \cref{sec:rd:valid} or explicitly declared untestable --- an assumption with no
-accompanying test is a wish. \Cref{tab:rd:assumptions} is the audit, and its rows A1--A5 are these
-five, in this order.
+accompanying test is a wish. \Cref{tab:rd:assumptions} is the audit: it carries these five
+assumptions, A1--A5, each followed by the observable implication (where one exists) through which it
+is actually checked.
 
 \begin{assumption}[Continuity of the potential-outcome means]\label{as:rd:cont}
 The functions $s \mapsto \E[Y(0) \mid S = s]$ and $s \mapsto \E[Y(1) \mid S = s]$ are continuous at
@@ -225,9 +226,14 @@ fingerprint of sorting \citep{mccrary2008}. Tested in \cref{sec:rd:valid}.
 The perk is the \emph{only} thing that switches on at \eur{\nbNineCutoff}. If the same threshold
 also triggers a different email cadence, a different service tier, or a different discount, then
 \cref{eq:rd:limits} identifies the effect of the \emph{bundle} and calling it ``the perk'' is a
-naming error with a budget attached. This is partly an institutional question --- go and read the
-programme rules --- and partly testable: \cref{sec:rd:valid} refits the estimator at
-\nbNinePlaceboN{} thresholds where nothing is supposed to happen, and finds nothing.
+naming error with a budget attached. \textbf{This assumption is not testable from these data}, and
+it is important not to pretend otherwise: a second rule firing at \eur{\nbNineCutoff} produces
+exactly the same discontinuity as the perk, and no estimator can separate two things that switch on
+at the same point. It is an institutional question --- go and read the programme rules. What
+\emph{is} testable is its implication for the estimator: \cref{sec:rd:valid} refits at
+\nbNinePlaceboN{} thresholds where nothing is supposed to happen and finds nothing, which
+establishes that the machinery does not manufacture discontinuities --- a necessary condition, and
+not a sufficient one.
 \end{assumption}
 
 \begin{assumption}[The local polynomial is adequate]\label{as:rd:poly}
@@ -295,11 +301,12 @@ can be quietly wrong.
         would let a \eur{400} whale --- a customer with nothing whatever to say about the perk's
         effect at the margin --- pull the fitted curve at \eur{\nbNineCutoff}.
         \Cref{eq:rd:estimand} is a statement about $S = c$, so only customers near $c$ should have
-        a vote. \Cref{sec:rd:wrong} shows what happens when that discipline is abandoned.
+        a vote. \Cref{sec:rd:wrong} abandons the discipline on this same data and reports what comes
+        back.
   \item \textbf{Linear, not high-order.} A straight line inside a narrow window is a first-order
         Taylor expansion of whatever the true regression function is, and the narrower the window,
         the better the approximation. Adding curvature is a remedy that costs more than the disease
-        \citep{gelman2019}; \cref{sec:rd:wrong} returns to it.
+        \citep{gelman2019}; \cref{sec:rd:wrong} fits the high-order global alternative and grades it.
   \item \textbf{Heteroskedasticity-robust standard errors.} The outcome is Bernoulli, so its
         variance is $p(1-p)$ and depends on $S$ mechanically. Homoskedastic OLS errors are
         therefore known to be wrong before the data are seen, and HC1 errors cost nothing.
@@ -343,10 +350,10 @@ is the only gap it fills.
 \section{The Bayesian model}
 \label{sec:rd:bayes}
 
-The Bayesian arm re-houses \cref{eq:rd:ols} rather than replacing it. The design matrix is
-identical --- the same window, the same centred running variable, the same treatment indicator and
-the same interaction --- and what changes is that the coefficients acquire a distribution instead of
-a point:
+The Bayesian arm re-houses \cref{eq:rd:ols} rather than replacing it. The design matrix spans the
+same space --- the same window, the same four columns of intercept, running variable, treatment
+indicator and interaction --- and what changes is that the coefficients acquire a distribution
+instead of a point:
 %
 \begin{align}
   Y_i \mid \beta, \sigma
@@ -359,7 +366,12 @@ a point:
 \end{align}
 %
 and fitted with CausalPy's \code{RegressionDiscontinuity}, on a PyMC linear-regression
-backend \citep{salvatier2016}. The jump is the posterior of the fitted discontinuity at $s = c$.
+backend \citep{salvatier2016}. One implementation detail is a trap worth naming, because it is the
+sort of thing that silently produces a wrong headline. Unlike \cref{eq:rd:ols}, \cref{eq:rd:mu} is
+written on the \emph{uncentered} running variable $S_i$, so $\beta_2$ is \textbf{not} the jump: it
+is the gap between the two fitted lines extrapolated to $s = 0$, a customer who spent nothing. The
+jump is the posterior of the fitted discontinuity at $s = c$ --- the difference of the two lines'
+predictions at the cutoff --- which is invariant to the centring, whereas the coefficient is not.
 
 Three modelling choices need justifying, and one of them is the kind of thing that gets waved
 through.
@@ -459,6 +471,15 @@ This is the RD analogue of an experiment's balance table, and it is exactly as i
 ($t = \nbNineCovTenureT$) and \nbNineCovOrders{} orders ($t = \nbNineCovOrdersT$): zero, to within
 noise, against the conventional $|t| < 1.645$ bar.
 
+One disclosure, since \cref{sec:rd:classical} ruled that homoskedastic errors on this outcome are
+wrong before the data are seen. The falsification battery of this section --- these two $t$'s and
+the placebo grid below --- is judged with the \emph{homoskedastic} OLS standard error of the same
+local-linear specification, not with HC1. Inside windows this narrow the fitted probability barely
+moves, so $p(1-p)$ is nearly constant and the HC1 correction is second-order; the headline of
+\cref{sec:rd:classical}, which is the number that carries a budget, is the one that gets the robust
+covariance. A test whose verdict turned on that correction would be a test too close to call to be
+worth reporting.
+
 \input{build/floats/nb09_covariates}
 
 \subsection*{A3 --- placebo cutoffs, or: does the machinery find jumps that are not there?}
@@ -477,11 +498,25 @@ $t$-statistic anywhere on the grid is \nbNinePlaceboMaxT{} --- at \eur{\nbNinePl
 the estimator reports \nbNinePlaceboMaxJump{}\,pp and cannot distinguish it from noise
 (\cref{tab:rd:placebo}, \cref{fig:rd:placebo}). Only the real threshold clears zero.
 
+The grid is read as a family, not bar by bar, and the construction is why. The side restriction
+truncates the two innermost windows: the placebos nearest the real cutoff have only the sliver of
+spend between themselves and \eur{\nbNineCutoff} on one flank, not the full
+$\pm$\eur{\nbNinePlaceboBw}. And \eur{\nbNinePlaceboMaxCut} sits in the thinning right tail of
+spend, on far fewer customers than the rest. ``The same estimator'' therefore runs on effectively
+different windows, and the tail placebo's larger $|t|$ is most likely that, not a hint of a second
+jump. Eight draws from noise will always produce one bar that looks like something; the question the
+family answers is whether any of them clears the bar, and none does.
+
 The logic of this test is worth spelling out, because it is often run and rarely understood. A
 placebo that \emph{did} find a jump would not merely be an anomaly to be explained away. It would
 demonstrate that the estimator manufactures discontinuities out of curvature, noise or a badly
 chosen window --- in which case the jump at \eur{\nbNineCutoff} would be evidence of nothing at all,
-however large it was. The placebos are a test of the \emph{instrument}, not of the world.
+however large it was. \textbf{The placebos are a test of the \emph{instrument}, not of the world},
+and this is exactly why \cref{tab:rd:assumptions} grades them on that claim and leaves
+\cref{as:rd:only} open. A second rule that fires at \eur{\nbNineCutoff} itself --- a bundled email
+cadence, a different service tier --- would leave all \nbNinePlaceboN{} placebos null while
+\cref{eq:rd:limits} silently identified the effect of the bundle. No grid of fake cutoffs has power
+against that. The programme rules do.
 
 \subsection*{A4 --- polynomial order and the functional form}
 
@@ -498,7 +533,12 @@ worse than most practitioners expect.
 The single-sample estimate sits \nbNineRdErr{}\,pp below the truth. That is either bias, which would
 be a defect of the estimator, or noise, which would not, and one sample cannot tell the difference.
 So the whole procedure --- simulate, fit, interval --- is re-run on \nbNineNSeeds{} fresh samples
-from \crefrange{eq:rd:running}{eq:rd:y}.
+from \crefrange{eq:rd:running}{eq:rd:y}. Name the object being calibrated, because the section has
+three estimators in play: it is the \emph{uniform}-kernel local-linear fit with HC1 errors, which
+is the exact classical twin of the Bayesian model (\cref{sec:rd:compare}). It returns
+\nbNineUnif{}\,pp on this chapter's sample against the triangular fit's \nbNineRd{}\,pp and the
+posterior's \nbNineBayes{}\,pp, so what the study establishes about one interval it establishes about
+all three.
 
 \input{build/floats/nb09_recovery}
 
@@ -589,9 +629,16 @@ conditioned on the same thing.
 \label{sec:rd:euro}
 
 The perk costs \eur{\nbNinePerkCost} per member per year. A retained member is worth
-\eur{\nbNineAnnualValue} a year. Roughly \nbNineNMargin{} members sit at the \eur{\nbNineCutoff}
-margin --- the population \cref{eq:rd:estimand} is actually about, and the only one this chapter is
-licensed to speak for.
+\eur{\nbNineAnnualValue} a year. The third input is the size of the population
+\cref{eq:rd:estimand} is actually about --- the members at the \eur{\nbNineCutoff} margin, the only
+ones this chapter is licensed to speak for --- and it is worth being scrupulous about where that
+number comes from, because every euro figure below scales linearly in it. It is \emph{not} a count
+in this snapshot: the \nbNineN{} simulated customers contain \nbNineNWindow{} inside the
+$\pm$\eur{\nbNineH} window. It is a \emph{stated business input}: \nbNineNMargin{} members are
+taken to pass the \eur{\nbNineCutoff} margin per renewal cycle, which is the quantity a loyalty
+team reads off its CRM and the analyst does not estimate. Substitute the firm's own inflow and
+every total below rescales in proportion; the per-member arithmetic, and the decision rule built on
+it, do not move at all.
 
 The arithmetic per marginal member is one line. A jump of $\tau$ retains $\tau$ extra members per
 member exposed, each worth \eur{\nbNineAnnualValue}, at a cost of \eur{\nbNinePerkCost}:
@@ -641,10 +688,12 @@ both.
 inside the window. One more cycle of data --- roughly doubling the \nbNineNWindow{} members in the
 $\pm$\eur{\nbNineH} band --- would tighten the credible interval by about
 \pc{\nbNineCriShrink} and lift $\Prob(\text{pays})$ from \nbNinePPays{} to \nbNinePPaysNext{},
-\emph{if the posterior mean holds}. Still short of the bar. Clearing \nbNineActionBar{} outright at
-the current cost requires a posterior standard deviation of \eur{\nbNineSdReq}, which is
-$\approx \nbNineDataFactor\times$ the current window sample. That is not one more cycle. It is
-years.
+\emph{if the posterior mean holds}. Short of the bar, but not by much. Clearing
+\nbNineActionBar{} outright at the current cost requires a posterior standard deviation of
+\eur{\nbNineSdReq}, which is $\approx \nbNineDataFactor\times$ the current window sample --- about
+one and a third cycles. This lever works. It costs a renewal cycle of waiting, and it is
+conditional on the posterior mean surviving the extra data, which is precisely what is not
+guaranteed.
 
 \textbf{Lever two: renegotiate the price.} The right-hand panel of \cref{fig:rd:euro} sweeps the
 perk's cost and reads $\Prob(\text{pays})$ off the same posterior. At a free perk it is
@@ -654,11 +703,15 @@ perk's cost and reads $\Prob(\text{pays})$ off the same posterior. At a free per
 \eur{\nbNinePerkCost} would pay even if the true effect sat at the pessimistic end of everything
 this chapter has estimated.
 
-\textbf{So the recommendation writes itself, and it is not ``keep'' or ``kill''.} The evidence
-cannot be improved fast enough to matter, and it does not need to be: \emph{renegotiating the perk's
-cost is the stronger lever by a wide margin}. Take \eur{\nbNineBePerk} to the supplier, or find a
-perk with the same perceived value and a lower marginal cost. That is a deliverable a CMO can act on
-this quarter, and it is more useful than either a $p$-value or a verdict.
+\textbf{So the recommendation writes itself, and it is not ``keep'' or ``kill''.} Both levers are
+live, and they are not equally attractive. Evidence takes a cycle to buy, needs
+$\approx \nbNineDataFactor\times$ the window sample to clear the bar, and pays off only if the
+posterior mean holds. Price is immediate, free, and clears the bar by construction:
+\emph{renegotiating the perk's cost is the stronger lever}. Take \eur{\nbNineBePerk} to the
+supplier, or find a perk with the same perceived value and a lower marginal cost --- and keep
+measuring, because the next cycle's data is worth \nbNinePPaysNext{} and costs nothing but patience.
+That is a deliverable a CMO can act on this quarter, and it is more useful than either a $p$-value
+or a verdict.
 
 \begin{remark}[What RD cannot answer, and the design that can]
 The question the loyalty team will ask next is \emph{where should the threshold be?} ---
@@ -694,18 +747,25 @@ Sweep it. \Cref{tab:rd:bwsweep} runs the identical estimator on the identical da
 \begin{enumerate}[leftmargin=*, itemsep=.4em]
   \item \textbf{The point estimate moves.} It ranges from \nbNineBwEstLo{}\,pp at the narrowest
         window to \nbNineBwEstHi{}\,pp at the widest --- a span of \nbNineBwEstRange{}\,pp, which is
-        \pc{\nbNineBwRangeOverHalf} of the \emph{half-width} of the reported interval. The drift has
-        a direction and a cause: narrow windows are noisy, wide windows pull in customers far from
-        the margin whose retention is governed by the confounder's slope, and the local-linear fit
-        starts booking curvature as level. This is the bias--variance trade-off, and it is the
-        reason a bandwidth exists at all.
+        \pc{\nbNineBwRangeOverHalf} of the \emph{half-width} of the reported interval. Be exact
+        about what that drift is and is not. \emph{Here} it is sampling variation, not bias: the
+        smooth part of \cref{eq:rd:p} is linear by construction on each side, a local-linear fit
+        with side-specific slopes is therefore unbiased at \emph{every} window in the sweep, and
+        all \nbNineBwNCovers{} of the \nbNineBwNWindows{} intervals cover the planted
+        \nbNineTrueJump{}\,pp. Widening the window here borrows distant customers without inducing
+        curvature bias. On real, curved data it would not: there the wide windows would be
+        \emph{biased} and not merely different, because a straight line fitted through a curve
+        books curvature as level, and the sweep would separate on bias rather than on noise. That
+        is the bias--variance trade-off, it is the reason a bandwidth exists at all, and it is
+        exactly why the sweep is mandatory even when --- as here --- it turns out benign.
   \item \textbf{The significance verdict itself flips.} The narrow windows' intervals cross zero:
         \textbf{\nbNineBwNInsignif{} of the \nbNineBwNWindows{} windows cannot exclude it}
         (\cref{tab:rd:bwsweep}, column five). The same data, the same estimator, the
         same assumptions --- and whether the perk has a demonstrable effect at all depends on a knob
         the analyst turned before anyone was looking. Had the analysis been written up at
         $h = \eur{\nbNineBwMin}$, the finding would have been ``no significant effect'' and the perk
-        would have been killed.
+        would have been killed. That is not a straw man chosen to make the point: the data-driven
+        pilot bandwidth recommended below lands at \eur{\nbNineHRot}, in exactly that region.
   \item \textbf{The union of the intervals is enormous.} Taking the lowest lower bound and the
         highest upper bound across the sweep gives $[\nbNineBwUnionLo, \nbNineBwUnionHi]$\,pp ---
         \nbNineBwUnionWidth{}\,pp wide, against the \nbNineRdWidth{}\,pp of the single reported
@@ -752,8 +812,15 @@ What honest practice looks like, given all that:
         estimator is biased at exactly the rate that invalidates the naive interval --- so they
         supply a bias-corrected estimator with a robust interval that remains valid at the
         MSE-optimal $h$. That is the state of the art, it is what \code{rdrobust} implements, and
-        it is what a production RD analysis should use. It narrows the choice; it does not abolish
-        it, because the optimal $h$ is itself estimated and the sweep still moves.
+        it is what a production RD analysis should use. Note where it lands here. The
+        \citeauthor{imbens2012} step-1 pilot --- a variance-only first pass,
+        $h_1 = 1.84\,\hat\sigma_S\, n^{-1/5}$, which the full procedures then refine with a
+        curvature term --- gives $h = \eur{\nbNineHRot}$ on this sample (the dashed line in
+        \cref{fig:rd:bandwidth}): the \emph{narrow} end of the sweep, inside the band of
+        \nbNineBwNInsignif{} windows whose intervals cannot exclude zero. A written-down rule removes
+        the analyst's discretion. It does not make the answer stable, and it would not have saved
+        the perk. It narrows the choice; it does not abolish it, because the optimal $h$ is itself
+        estimated and the sweep still moves.
   \item \textbf{Pre-register the bandwidth.} The cheapest fix in the list, and the most effective:
         choose $h$ before looking at the outcome, and the researcher degree of freedom disappears
         by construction.
@@ -769,9 +836,26 @@ the whales, who have nothing to say about \cref{eq:rd:estimand} --- and the resu
 noisy, wildly varying implicit weights near the boundary. Runge's phenomenon does the rest: the
 fitted curve oscillates near the edges of its range, and the cutoff \emph{is} an edge for each of
 the two fits. The estimand it targets is a jump at $c$; what it delivers is a difference of two
-extrapolated polynomial endpoints. \emph{Do not do it.} Narrow the window and keep the polynomial
-low-order; the quadratic check of \cref{sec:rd:valid} is as far up as this chapter goes, and it went
-there only to confirm that the linear fit did not need help.
+extrapolated polynomial endpoints.
+
+The argument is well known and widely ignored, so it is fitted here rather than asserted. Estimate
+\cref{eq:rd:ols} with the window removed --- all \nbNineN{} customers, a polynomial of order $k$ on
+each side of the cutoff, the jump still read as the coefficient on $D$ at $c$ --- and grade it
+against the planted \nbNineTrueJump{}\,pp. At $k = 4$ it returns \nbNineGlobalPolyFour{}\,pp
+$[\nbNineGlobalPolyFourLo, \nbNineGlobalPolyFourHi]$; at $k = 5$, \nbNineGlobalPolyFive{}\,pp
+$[\nbNineGlobalPolyFiveLo, \nbNineGlobalPolyFiveHi]$. Three things in those two lines are worth more
+than the citation. The answer \textbf{moves \nbNineGlobalPolyShift{}\,pp between two adjacent
+polynomial orders} --- the polynomial order is a researcher degree of freedom exactly like the
+bandwidth, priced by nothing, and it moves the estimate by as much. The standard error
+\textbf{inflates to $\approx \nbNineGlobalPolySeRatio\times$ the
+local-linear fit's}, despite using every customer in the file rather than the \nbNineRdN{} in the
+window: this is Gelman and Imbens's point made numerically, that the extra data enters through
+implicit weights so erratic near the boundary that it buys negative information. And the
+consequence is the one that ends careers rather than seminars: \textbf{neither global interval
+excludes zero}. An analyst who reaches for the global polynomial to look more sophisticated turns a
+demonstrable effect into a null result and kills the perk. \emph{Do not do it.} Narrow the window and
+keep the polynomial low-order; the quadratic check of \cref{sec:rd:valid} is as far up as this
+chapter goes, and it went there only to confirm that the linear fit did not need help.
 
 \subsection*{Heaping, and the donut}
 
@@ -781,16 +865,28 @@ threshold placed \emph{at} a heap point mixes the customers who landed on \eur{1
 unrelated reasons into the comparison at precisely the place where the estimator is most sensitive.
 The standard remedy is a \textbf{donut RD}: discard the observations within $\pm\epsilon$ of the
 cutoff and refit, so that the two local-linear fits are extrapolated a short distance to the
-threshold from data that are not contaminated by the heap. The simulator here has no heaping, so
-there is nothing to demonstrate --- but on real spend data the first thing to plot is a histogram at
-one-euro resolution, and the second is the donut.
+threshold from data that are not contaminated by the heap.
+
+Run it. Dropping the \nbNineDonutDropped{} customers within \eur{\nbNineDonutEps} of the cutoff leaves
+\nbNineDonutN{} in the window and returns \nbNineDonut{}\,pp
+$[\nbNineDonutLo, \nbNineDonutHi]$, against the headline \nbNineRd{}\,pp
+$[\nbNineRdLo, \nbNineRdHi]$. \textbf{The jump holds, and the interval widens} --- the half-width
+goes from \nbNineRdHalf{}\,pp to \nbNineDonutHalf{}\,pp, because the observations the donut throws
+away are precisely the most informative ones about a limit \emph{at} the cutoff. That widening is
+the price of the insurance, and it is the right way to read the check: no heaping was planted here,
+so the donut was never going to rescue anything. It is a demonstration that the headline does not
+\emph{depend} on the handful of customers standing exactly on the line --- which is the one thing a
+smooth density (\cref{fig:rd:density}) cannot establish, since manipulation \emph{exactly at} the
+threshold need not deform the density around it. On real spend data the first thing to plot is a
+histogram at one-euro resolution, and the second is the donut.
 
 \subsection*{The rest of the list}
 
 \emph{The effect is local, and the estimand says so.} \Cref{eq:rd:estimand} is about the customer at
 \eur{\nbNineCutoff}. Quoting \nbNineRd{}\,pp as ``the effect of Gold'' and multiplying it by the
-entire Gold membership is a category error with a budget attached; the correct multiplicand is the
-\nbNineNMargin{} members at the margin, which is what \cref{sec:rd:euro} used.
+entire Gold membership --- \pc{\nbNineGoldShare} of the base --- is a category error with a budget
+attached; the correct multiplicand is the firm's inflow of members past the margin, the
+\nbNineNMargin{} that \cref{sec:rd:euro} takes as a stated input.
 
 \emph{RD is expensive in data.} It discarded \pc{\nbNineRdDroppedPct} of the customer base
 (\cref{tab:rd:naive}), and every diagnostic in \cref{sec:rd:valid} was computed on what remained. A
@@ -831,11 +927,14 @@ programme rules before writing the code.
   \item \textbf{RD's diagnostics are unusually good --- use all of them.} The density is smooth at
         the cutoff ($z = \nbNineMccZ$), pre-determined covariates do not jump
         ($t = \nbNineCovTenureT$, $t = \nbNineCovOrdersT$), \nbNinePlaceboN{} placebo cutoffs find
-        nothing (max $|t| = \nbNinePlaceboMaxT$), and the quadratic refit moves the answer by
-        \nbNinePolyDiff{}\,pp. Each is a test of a \emph{named} assumption
-        (\cref{tab:rd:assumptions}) that could have failed and did not. The central assumption ---
-        continuity of the potential-outcome means, \cref{as:rd:cont} --- \emph{cannot} be tested
-        directly. Only its implications can, and saying so is part of the analysis.
+        nothing (max $|t| = \nbNinePlaceboMaxT$), the quadratic refit moves the answer by
+        \nbNinePolyDiff{}\,pp, and a \eur{\nbNineDonutEps} donut leaves the jump at
+        \nbNineDonut{}\,pp. Each is a
+        test of a \emph{named} assumption (\cref{tab:rd:assumptions}) that could have failed and did
+        not. \textbf{Be equally clear about what no test reaches.} Continuity itself
+        (\cref{as:rd:cont}) is untestable --- only its implications are. And the placebo grid tests
+        the \emph{estimator}, not the world: a second rule firing at \eur{\nbNineCutoff} would leave
+        every placebo null (\cref{as:rd:only}). Saying so is part of the analysis.
 
   \item \textbf{The bandwidth is a choice, not an estimate, and no interval in this chapter prices
         it.} Across \nbNineBwNWindows{} windows the estimate ranges \nbNineBwEstLo{} to

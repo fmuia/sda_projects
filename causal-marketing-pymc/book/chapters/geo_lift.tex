@@ -12,27 +12,32 @@
 \chapter{Geo lift: synthetic control}
 \label{ch:geo}
 
+% Standalone-safe cross-chapter references (the did.tex \refgeo pattern): in the offprint the
+% other chapters' labels do not exist, so fall back to words instead of printing "??".
+\newcommand{\refiv}{\ifcsname r@ch:iv\endcsname\refiv{}\else the instrumental-variables chapter\fi}
+\newcommand{\refdid}{\ifcsname r@ch:did\endcsname\refdid{}\else the difference-in-differences chapter\fi}
+\newcommand{\reffound}{\ifcsname r@ch:foundations\endcsname\reffound{}\else the foundations chapter\fi}
+
 \begin{quote}\small
-\emph{A television campaign costing \keur{\nbSevenCost} ran in one of \nbSevenNDmas{} markets.
-There was no coin flip and there is no control group, so the one quantity the decision turns
-on --- what that market would have sold had the campaign not run --- was never observed and
-never will be. Synthetic control constructs it, and prices the lift at \keur{\nbSevenClTotal}
-against a planted truth of \keur{\nbSevenTrueTotal}: accurate enough to roll out on. The
-Bayesian re-housing of that same estimator returns the same answer and a far more confident
-one --- a posterior standard deviation of \keur{\nbSevenBayesSd} for a quantity whose true
-sampling variability, measured across seeds, is \keur{\nbSevenSeedSd}. Its 90\,\% band
-consequently covers the truth \nbSevenTotalCov\,\% of the time, where the design-based
-interval covers it \nbSevenRiCov\,\%. The prior is not the culprit: an iid likelihood was
-applied to a random walk. \Cref{sec:sc:compare} measures the damage, and
-\cref{sec:sc:euro} shows the euro decision inheriting it.}
+\emph{A television campaign costing \keur{\nbSevenCost} ran in one of \nbSevenNDmas{} markets, with
+no control group and no coin flip; the board wants a national rollout. This chapter builds what that
+market would have sold anyway, a \emph{synthetic control} blended from the untreated markets, and
+reads the campaign's effect off the gap. The lift is real, and it comes to \keur{\nbSevenClTotal}:
+\nbSevenIroas{} euros of sales per euro spent, an apparent profit of \keur{\nbSevenApparentProfit},
+and a rollout deck that writes itself. The deck is wrong. The firm keeps only its \pc{\nbSevenMargin}
+gross margin, so the campaign pays only if the return beats \nbSevenBreakevenIroas{}, and the
+probability it actually paid is \nbSevenPGo{}, short of the nine-in-ten a confident buy demands: the
+verdict is \textbf{\nbSevenDecision}.
+The chapter builds the estimate step by step, prices that break-even bet as a probability, and shows
+how a single modelling choice can quietly distort it.}
 \end{quote}
 
 % =====================================================================================
 \section{The decision}
 \label{sec:sc:decision}
 
-A television campaign ran in a single metropolitan area --- a \emph{designated market area},
-the standard unit of media buying --- and nowhere else. Sales in that metro have risen since
+A television campaign ran in a single metropolitan area (a \emph{designated market area},
+the standard unit of media buying) and nowhere else. Sales in that metro have risen since
 launch. The proposal on the table is a national rollout, and the campaign that produced the
 evidence cost \keur{\nbSevenCost}. The question is not whether sales rose. They did. The
 question is whether the \emph{campaign} raised them, and by enough to pay for itself.
@@ -53,57 +58,247 @@ estimator has to know which part of the treated market's rise was the wave.
 
 What is needed is the one quantity that is never observed: the treated market's sales
 \emph{had the campaign not run}. \citet{abadie2003} proposed constructing it as a weighted blend
-of the untreated markets --- the \emph{donor pool} --- with the weights chosen so that the blend
-tracks the treated market before the campaign. If a mix of, say, sixty per cent of one metro and
-forty per cent of two others matched the treated market week for week for forty weeks, then, so
-long as those markets keep moving together, that same mix is the best available guess of what the
+of the untreated markets (the \emph{donor pool}) with the weights chosen so that the blend
+tracks the treated market before the campaign. Suppose a mix of, say, sixty per cent of one metro
+and forty per cent of two others matched the treated market week for week for forty weeks. So long
+as those markets keep moving together, that same mix is the best available guess of what the
 treated market would have done afterwards. The post-launch gap between the market and its
-synthetic double is the estimated lift. This chapter builds that estimator classically, rebuilds
-it as a posterior, and puts the two on the same estimand.
+synthetic double is the estimated lift. This chapter builds that estimator, checks whether the lift
+is real, and prices whether it paid. A short Bayesian layer at the end supplies the one thing the
+classical tools cannot: the probability the campaign beat its cost.
+
+% =====================================================================================
+\section{Setup and notation}
+\label{sec:sc:vocab}
+
+\subsection*{The panel, the treated unit, and the donor pool}
+
+The data is a \textbf{panel}: one row per market, one column per week, one number in each cell:
+weekly sales. \Cref{tab:sc:panel} is a corner of the real thing. Exactly one market, the
+\textbf{treated unit}, ran the campaign, and it did so from a known \textbf{launch week} onward.
+Every other market is untreated for the whole window, and together they form the
+\textbf{donor pool}: the markets from which a counterfactual will be built. There are
+\nbSevenNDonors{} of them.
+
+\input{build/tables/nb07_panel_rows}
+
+The \textbf{pre-period} is the weeks before launch; the \textbf{post-period} is the weeks after.
+The pre-period is where the method is \emph{fitted}, and the post-period is where it is
+\emph{used}. That split is the whole design. The post-period is the only place the answer lives,
+and the only place the method has nothing to check itself against.
+
+\subsection*{The counterfactual is a weighted average of other markets}
+
+Here is the one idea the chapter rests on. We cannot observe what the treated market would have
+sold without the campaign, so we \emph{build} it, as a weighted blend of the donor markets:
+%
+\begin{equation}
+  \widehat{Y}_{0,t}(0) \;=\; \sum_{j=1}^{J} w_j\, Y_{jt},
+  \label{eq:sc:vocab_synth}
+\end{equation}
+%
+one weight $w_j$ per donor, the same weights every week. (The treated market is indexed $0$ and the
+donors $1, \dots, J$ throughout, matching the notebooks; the lecture deck writes the treated unit as
+market $1$.) The weights are chosen so that the blend
+tracks the treated market \emph{before} the campaign; they are then held fixed and carried into
+the post-period. The blend is called the \textbf{synthetic control}, and the difference between
+what the treated market actually did and what its synthetic double did is the \textbf{gap}:
+%
+\begin{equation}
+  \hat\tau_t \;=\; Y_{0t} \;-\; \sum_{j=1}^{J} w_j\, Y_{jt}
+  \qquad\text{(the estimated lift in week } t).
+  \label{eq:sc:vocab_gap}
+\end{equation}
+%
+\Cref{tab:sc:donorcalc} performs that arithmetic once, by hand, for a single named week, so that
+\cref{eq:sc:vocab_synth} stops being notation. Of the \nbSevenNDonors{} donors, only
+\nbSevenDcNDonorsUsed{} carry material weight (the largest, \nbSevenDcTopName{}, at
+\nbSevenDcTopWeight{}) and the rest contribute essentially nothing. Multiply each donor's sales
+that week by its weight, add the column up, and the total \emph{is} the synthetic market:
+\keur{\nbSevenDcSynth}. The treated market actually sold \keur{\nbSevenDcActual}. The difference,
+\keur{\nbSevenDcGap}, is that week's estimated lift. That is the entire method, executed on one
+week with a pencil.
+
+\input{build/tables/nb07_donor_calc}
+
+\begin{intuition}{Why a \emph{weighted average}, and not a regression}
+The instinct of anyone trained on regression is to put the donors on the right-hand side and let
+least squares choose the coefficients. That is a different estimator, and it is a worse one here,
+for a reason worth internalising: unconstrained coefficients can be negative, and they can sum to
+anything. A negative weight means the synthetic goes \emph{up} when a real market goes down. It
+is no longer a portfolio of real places; it is an algebraic construct that happens to fit. The
+weights in \cref{eq:sc:vocab_synth} are deliberately confined so that the synthetic is always a
+\emph{blend of real markets}, and therefore always something a human being can point at and
+defend. The next subsection makes that constraint precise, and \cref{fig:sc:simplex} prices it.
+\end{intuition}
+
+\subsection*{The simplex: interpolation, not extrapolation}
+
+The weights are required to be non-negative and to sum to one:
+%
+\begin{equation}
+  w \in \simplex \;=\; \Big\{\, w \;:\; w_j \ge 0 \ \ \forall j, \quad \textstyle\sum_j w_j = 1 \,\Big\}.
+  \label{eq:sc:vocab_simplex}
+\end{equation}
+%
+This set is the \textbf{unit simplex}, and the constraint is the method's defining commitment
+\citep{abadie2010, abadie2021}. Geometrically it confines the synthetic to the \emph{convex hull}
+of the donor pool: the synthetic can be any blend that lies \emph{between} the real markets, and
+nothing that lies outside them. It \emph{interpolates}, and it is forbidden from
+\emph{extrapolating}.
+
+That constraint is not free, and \cref{fig:sc:simplex} prices it honestly rather than asserting
+that the alternative collapses. Drop the constraint (fit the donors by ordinary least squares
+on the pre-period) and \nbSevenUncNNegative{} of the \nbSevenNDonors{} weights go negative (the
+most negative is \nbSevenUncWMin{}), and they no longer sum to one. The unconstrained fit then
+tracks the pre-period \emph{better} than the simplex fit does: a root-mean-square weekly error
+(RMSE; the next subsection makes it precise) of
+\keur{\nbSevenRmspeUnconstrained} against \keur{\nbSevenRmspeSimplex}. It wins the weeks you can
+check. And it loses the weeks you cannot. Measured out of sample against the truth, on placebo
+worlds where the true lift is zero, the unconstrained fit's error is
+\keur{\nbSevenHullOosUnconstrained} against the simplex fit's \keur{\nbSevenHullOosSimplex},
+\nbSevenHullOosRatio$\times$ worse.
+
+\begin{intuition}{The constraint is a promise about the object, not about the panel}
+The simplex does not promise a better number on any particular panel: as \cref{fig:sc:simplex}
+shows, the unconstrained fit even tracks the pre-period more closely here. What it buys is a
+\emph{guarantee about what the number is}. A convex blend of real markets stays
+inside the range of things that actually happened. So when it is carried twenty weeks past the
+last week anyone checked, it is still doing the only thing it knows how to do: averaging real
+places. An unconstrained fit, extrapolating, has no such guarantee, and the post-period is
+precisely where nobody can catch it.
+\end{intuition}
+
+\input{build/floats/nb07_simplex}
+
+\subsection*{The pre-fit, and why it is the precondition for everything}
+
+The \textbf{pre-period fit} measures how closely the synthetic tracks the treated market
+\emph{before} the campaign. It is summarised by the root-mean-square of the pre-launch gaps,
+%
+\begin{equation}
+  \text{RMSE} \;=\; \sqrt{\tfrac{1}{T_0}\sum_{t < T_0}\big(Y_{0t} - \widehat{Y}_{0,t}(0)\big)^{2}}\,,
+  \label{eq:sc:rmse}
+\end{equation}
+%
+the average size of a weekly miss over the pre-period (sometimes called the RMSPE). It is the only
+quality check that exists, because it is the only stretch of time in which the truth is known: the
+campaign had not run, so the gap \emph{ought} to be zero. A synthetic that cannot reproduce the
+treated market's past has no business being trusted with its counterfactual future, and every
+number downstream inherits that failure. This is \cref{as:sc:prefit}, and \cref{sec:sc:model}
+enforces it as a pass/fail gate rather than reporting it as a statistic.
+
+\subsection*{Placebo-in-space, and what a permutation \texorpdfstring{$p$}{p}-value is}
+
+With one treated unit there is no standard error to read off a fit: a standard error describes
+variability across many units, and here there is one. So inference is done by
+\textbf{permutation}, and the idea is simpler than the name.
+
+Pretend, in turn, that each \emph{untreated} donor market was the treated one. Refit the whole
+method on it. Any ``lift'' that comes out is manufactured, because that market ran no campaign:
+it is pure noise from the estimator itself. Do that for every donor and you have a distribution of
+lifts under the null hypothesis that the campaign did nothing. That is the
+\textbf{placebo-in-space} distribution, and \cref{fig:sc:placebodist} is it.
+
+Now ask where the \emph{real} treated market falls in that distribution. If its lift is
+unremarkable, comfortably inside the placebo spread, the campaign has not distinguished
+itself from noise. If it sits out in the tail, it has. The \textbf{permutation $p$-value} is simply the
+share of placebo markets whose (absolute) lift is at least as large as the treated market's. It
+requires no likelihood, no normality, and no asymptotics; it asks only whether the treated market
+is unusual \emph{among markets the method was run on identically}.
+%
+\begin{equation}
+  p \;=\; \frac{\#\big\{\, j \in \text{donors} \;:\; |\hat\tau_j| \ \ge\ |\hat\tau_0| \,\big\} + 1}
+               {J + 1},
+  \label{eq:sc:vocab_perm}
+\end{equation}
+%
+with the $+1$s the standard finite-sample correction: the treated market is itself one of the
+$J + 1$ ways the label could have fallen, so it belongs in its own reference distribution.
+
+\input{build/floats/nb07_placebo_dist}
+
+\subsection*{The estimand: one week, or all twenty?}
+
+Two quantities can be reported, and the chapter's central finding is about the difference between
+them. The \textbf{per-week effect} is $\tau_t$ of \cref{eq:sc:vocab_gap}. The \textbf{total} is
+their sum over the post-period,
+%
+\begin{equation}
+  \tau \;=\; \sum_{t \ge T_0} \tau_t ,
+  \label{eq:sc:vocab_total}
+\end{equation}
+%
+and it is the total that the business buys: a campaign is paid for once, and its return is the
+whole of what it earned. Keep the distinction in view, because a model can price the per-week
+uncertainty well and the total's uncertainty poorly. \Cref{sec:sc:compare} is where the two are
+separated and the total is priced honestly.
+
+\begin{recap}
+The data is a panel; one market was treated, the rest are the donor pool. The counterfactual is a
+weighted average of donors (\cref{eq:sc:vocab_synth}), with weights fitted on the pre-period and
+confined to the simplex (\cref{eq:sc:vocab_simplex}) so that the synthetic interpolates between
+real markets and never extrapolates beyond them. The gap between the market and its synthetic
+double is the estimated lift (\cref{eq:sc:vocab_gap}); the pre-period fit is the precondition for
+believing it; the placebo-in-space distribution supplies inference without a likelihood; and the
+quantity the decision actually consumes is the \emph{total} over the post-period
+(\cref{eq:sc:vocab_total}), not the per-week path.
+\end{recap}
 
 % =====================================================================================
 \section{The data-generating model}
 \label{sec:sc:dgm}
 
-A causal method cannot be graded on real data, because on real data the counterfactual is
-missing --- that is the entire problem. So the method is first graded against a world whose
-answer is known by construction, and only then trusted on a world whose answer is not.
-\Cref{sec:sc:real} performs the second half of that bargain on a real, randomized geo
-experiment; this section builds the first.
+A causal method cannot be graded on the data a business actually has, because there the
+counterfactual is missing. That is the entire problem. It is graded, instead, in the three
+tiers of \reffound{}: against a \emph{simulated} world whose answer is known by
+construction (this section); against a \emph{within-study benchmark} whose answer is known by
+randomization (\cref{sec:sc:real}, on a real geo experiment with a randomized control arm); and,
+in deployment, not at all: only falsified, by tests it could have failed and did not.
 
 The simulator produces a weekly sales panel: \nbSevenNDmas{} markets, indexed
 $i = 0, \dots, \nbSevenNDmas-1$, over \nbSevenNWeeks{} weeks $t = 0, \dots, \nbSevenNWeeks-1$.
-Three latent factors are \emph{shared by every market} --- a secular trend $g_t$, a seasonal
-cycle $s_t$, and a macroeconomic random walk $m_t$:
+Three latent factors are \emph{shared by every market} (a secular trend $g_t$, a seasonal
+cycle $s_t$, and a macroeconomic random walk $m_t$):
 %
 \begin{align}
-  g_t &= 0.4\,t, \label{eq:sc:trend}\\
-  s_t &= 8\sin\!\Big(\tfrac{2\pi t}{26}\Big) + 4\sin\!\Big(\tfrac{2\pi t}{13}\Big),
+  g_t &= \beta_g\,t, \label{eq:sc:trend}\\
+  s_t &= a_1\sin\!\Big(\tfrac{2\pi t}{P_1}\Big) + a_2\sin\!\Big(\tfrac{2\pi t}{P_2}\Big),
+        \qquad P_1 = 26 \text{ weeks},\ \ P_2 = 13 \text{ weeks},
         \label{eq:sc:season}\\
-  m_t &= \sum_{u \le t} \eta_u, \qquad \eta_u \sim \mathcal N\!\left(0,\ 1.2^{2}\right).
+  m_t &= \sum_{u \le t} \eta_u, \qquad \eta_u \sim \mathcal N\!\left(0,\ \sigma_m^{2}\right).
         \label{eq:sc:macro}
 \end{align}
 %
-Each market carries its own baseline $c_i \sim U(80, 140)$ and its own sensitivity to each
-factor --- its \emph{loadings} $\lambda_i = (\lambda_{i1}, \lambda_{i2}, \lambda_{i3})$, each drawn
-$U(0.6, 1.4)$ --- and observed sales, in thousands of euros, are
+Each market carries its own baseline $c_i \sim U(c_{\min}, c_{\max})$ and its own sensitivity to
+each factor, its \emph{loadings} $\lambda_i = (\lambda_{i1}, \lambda_{i2}, \lambda_{i3})$, each
+drawn $U(\lambda_{\min}, \lambda_{\max})$, and observed sales, in thousands of euros, are
 %
 \begin{equation}
   Y_{it} \;=\; c_i \;+\; \lambda_{i1}\,g_t \;+\; \lambda_{i2}\,s_t \;+\; \lambda_{i3}\,m_t
            \;+\; \varepsilon_{it},
-  \qquad \varepsilon_{it} \sim \mathcal N\!\left(0,\ 3^{2}\right).
+  \qquad \varepsilon_{it} \sim \mathcal N\!\left(0,\ \sigma_\varepsilon^{2}\right).
   \label{eq:sc:dgp}
 \end{equation}
 %
 The campaign is planted in market $0$ alone, from week \nbSevenLaunchWeek{} onwards, as a
-proportional lift of \pc{\nbSevenLiftPct} on that market's untreated level:
+proportional lift of $\kappa = \pc{\nbSevenLiftPct}$ on that market's untreated level:
 %
 \begin{equation}
-  \Delta_t \;=\; 0.12 \,\big(c_0 + \lambda_{01}\,g_t + \lambda_{02}\,s_t + \lambda_{03}\,m_t\big)
+  \Delta_t \;=\; \kappa \,\big(c_0 + \lambda_{01}\,g_t + \lambda_{02}\,s_t + \lambda_{03}\,m_t\big)
   \cdot \mathbf 1[\,t \ge \nbSevenLaunchWeek\,],
   \qquad Y_{0t} \;\mathrel{+}=\; \Delta_t .
   \label{eq:sc:lift}
 \end{equation}
+%
+\Cref{tab:sc:params} gives every one of those constants, its value, and (the column that
+matters) why it has that value rather than another. Two of them are load-bearing and deserve
+naming here. $\sigma_m$, the scale of the macro random walk, is what makes the markets co-move at
+all: set it to zero and the panel becomes thirty independent series, a synthetic control becomes
+unnecessary, and the chapter has nothing to teach. And $\kappa$ is what the estimator must
+recover; it is the truth, not a knob.
+
+\input{build/tables/nb07_params}
 %
 Summed over the \nbSevenNPost{} post-launch weeks, the planted total lift is
 \keur{\nbSevenTrueTotal}, an average of \keur{\nbSevenTrueAvg} per week. That number is the
@@ -116,9 +311,10 @@ so any before-and-after comparison will book its drift as campaign effect. It is
 it is \emph{shared}: since all markets load on the same $(g_t, s_t, m_t)$, a convex combination
 of donor markets whose blended loadings match $(\lambda_{01}, \lambda_{02}, \lambda_{03})$
 reproduces market $0$'s untreated path exactly, up to idiosyncratic noise. That is what makes the
-effect identifiable at all. It is also --- and this only becomes visible in \cref{sec:sc:compare}
---- the reason the Bayesian interval will fail, because $m_t$ is a random walk and what the
-weights fail to match of it does not average away.
+effect identifiable at all. It is also the reason the summed lift carries more uncertainty than an
+independent-errors model admits: $m_t$ is a random walk, so whatever share of it the weights fail
+to match persists across the whole post-period instead of averaging away. \Cref{sec:sc:compare}
+prices that persistence and builds the interval that reflects it.
 
 \input{build/floats/nb07_panel}
 
@@ -131,7 +327,7 @@ weights fail to match of it does not average away.
 In the potential-outcome notation of \citet{rubin1974} and \citet{imbens2015}, write
 $Y_{0,t}(1)$ for market $0$'s week-$t$ sales when the campaign runs and $Y_{0,t}(0)$ for its
 sales when it does not. Only the first is observed. The causal effect in week $t$ is their
-contrast, and the object the business is buying is its sum over the post-launch window:
+contrast, and the decision's estimand is the post-launch sum introduced in \cref{sec:sc:vocab}:
 %
 \begin{equation}
   \tau_t \;=\; Y_{0,t}(1) - Y_{0,t}(0), \qquad t \ge T_0,
@@ -140,74 +336,140 @@ contrast, and the object the business is buying is its sum over the post-launch 
   \label{eq:sc:estimand}
 \end{equation}
 %
-with $T_0 = \nbSevenLaunchWeek$ the launch week. Everything in this chapter --- the classical
-estimator, the posterior, both intervals, and the euro decision --- targets the single scalar
+with $T_0 = \nbSevenLaunchWeek$ the launch week. Everything in this chapter (the classical
+estimator, the posterior, both intervals, and the euro decision) targets the single scalar
 $\tau$ of \cref{eq:sc:estimand}. Keeping the estimand fixed is what makes the comparison in
 \cref{sec:sc:compare} a comparison rather than a change of subject.
 
 \subsection*{The estimator}
 
-Synthetic control fills the hole in \cref{eq:sc:estimand} with a weighted average of the
-$J = \nbSevenNDonors$ donor markets:
-%
-\begin{equation}
-  \widehat{Y_{0,t}(0)} \;=\; \sum_{j=1}^{J} w_j\, Y_{jt},
-  \qquad
-  \hat\tau_t \;=\; Y_{0t} - \sum_{j=1}^{J} w_j\, Y_{jt},
-  \label{eq:sc:gap}
-\end{equation}
-%
-with the weights confined to the unit simplex,
-$\simplex = \{\,w : w_j \ge 0,\ \sum_j w_j = 1\,\}$. The simplex is not decoration. Left
-unconstrained --- ordinary regression on the donors --- the ``synthetic'' market may sit outside
-the range of every real market, which is extrapolation wearing the costume of a fit: it matches
-the pre-period beautifully and then diverges after it. Restricting $w$ to $\simplex$ keeps the
-synthetic inside the convex hull of the donor pool, and that restriction is what makes the
-post-launch projection a defensible one \citep{abadie2010, abadie2021}. \Cref{sec:sc:real} shows
-a real market that lies outside its own donor hull and what the method does about it.
+Synthetic control fills the hole in \cref{eq:sc:estimand} with the object \cref{sec:sc:vocab} already
+built: the weighted average of donors $\widehat{Y}_{0,t}(0)$ of \cref{eq:sc:vocab_synth}, on the unit
+simplex \cref{eq:sc:vocab_simplex}, and the gap \cref{eq:sc:vocab_gap} as the estimated lift. No new
+notation is needed here; what identification adds is the set of conditions under which that estimator
+recovers \cref{eq:sc:estimand}. \Cref{fig:sc:simplex} has already priced the simplex constraint: it
+keeps the synthetic a blend of real markets rather than an extrapolation, which is what makes it
+defensible in the post-period nobody can check \citep{abadie2010, abadie2021}.
+
+\subsection*{What the estimator does to the confounding, on a graph}
+
+It is worth stating, in the language of causal graphs (\reffound{}), exactly what this
+estimator does to the problem it was built for. The disease is a \emph{backdoor}: latent factors
+$(g_t, s_t, m_t)$, the season, the trend, and the macro economy, drive both the decision to
+advertise in a market like this one \emph{and} that market's sales, so raw co-movement between
+campaigns and sales mixes the causal arrow with the confounding fork
+(\cref{fig:sc:dags}, left). Those confounders are unobserved, so they cannot be adjusted for
+directly. What makes them tractable is that they are \emph{shared} across markets and stable over
+time. Synthetic control therefore closes the backdoor by \emph{matching on the confounder's
+footprint}: a donor blend whose loadings match the treated market's carries the same latent
+$(g_t, s_t, m_t)$, and the gap $Y_{0t} - \widehat{Y}_{0,t}(0)$ cancels them
+(\cref{fig:sc:dags}, centre). That is why the two assumptions that follow do all the work: the
+convex hull (\cref{as:sc:hull}) says a twin with the same footprint \emph{exists}, and the pre-fit
+(\cref{as:sc:prefit}) is the \emph{evidence} that the fitted twin really shares it. The other
+observational cure, the instrumental variable (\refiv{}), leaves the backdoor standing and
+\emph{bypasses} it, using only the slice of exposure that an exogenous instrument moves
+(\cref{fig:sc:dags}, right). Same disease, two cures: synthetic control removes the backdoor; IV
+routes around it.
+
+\begin{figure}[tb]
+\centering
+\begin{tikzpicture}[node distance=8mm and 7mm, baseline=(Xa.base)]
+  % Panel (a): the disease
+  \node[daglat]  (Ca) {$C$};
+  \node[dagnode] (Xa) [below left=of Ca]  {spend};
+  \node[dagnode] (Ya) [below right=of Ca] {sales};
+  \draw[dagconf]  (Ca) -- (Xa);
+  \draw[dagconf]  (Ca) -- (Ya);
+  \draw[dagcause] (Xa) -- (Ya);
+  \node[daglabel] at ($(Xa)!0.5!(Ya) + (0,-6mm)$) {(a) the backdoor};
+\end{tikzpicture}
+\hfill
+\begin{tikzpicture}[node distance=8mm and 5mm, baseline=(Yb.base)]
+  % Panel (b): synthetic control
+  \node[daglat]  (Cb) {$C$};
+  \node[dagnode] (Yb) [below left=of Cb]  {$Y_{0t}$};
+  \node[dagnode] (Sb) [below right=of Cb] {$\widehat{Y}_{0,t}(0)$};
+  \node[dagnode] (Tb) [left=5mm of Yb] {campaign};
+  \draw[dagconf]  (Cb) -- (Yb);
+  \draw[dagconf]  (Cb) -- (Sb);
+  \draw[dagcause] (Tb) -- (Yb);
+  \node[daglabel] at ($(Yb)!0.5!(Sb) + (0,-6mm)$) {(b) SC: the gap cancels $C$};
+\end{tikzpicture}
+\hfill
+\begin{tikzpicture}[node distance=8mm and 7mm, baseline=(Xc.base)]
+  % Panel (c): the instrument
+  \node[daglat]  (Cc) {$C$};
+  \node[dagnode] (Xc) [below left=of Cc]  {spend};
+  \node[dagnode] (Yc) [below right=of Cc] {sales};
+  \node[dagnode, draw=DagGreen] (Zc) [left=5mm of Xc] {$Z$};
+  \draw[dagconf]  (Cc) -- (Xc);
+  \draw[dagconf]  (Cc) -- (Yc);
+  \draw[dagcause] (Xc) -- (Yc);
+  \draw[daginst]  (Zc) -- (Xc);
+  \node[daglabel] at ($(Xc)!0.5!(Yc) + (0,-6mm)$) {(c) IV: bypass via $Z \perp C$};
+\end{tikzpicture}
+\caption{One disease, two cures. \emph{(a)} The backdoor: unobserved shared factors $C$ drive both
+spend and sales, so co-movement overstates the causal arrow. \emph{(b)} Synthetic control removes
+the backdoor: a donor blend with the treated market's loadings carries the same $C$, and the gap
+cancels it; the pre-fit is the evidence the twin really shares $C$
+(\cref{as:sc:hull,as:sc:prefit}). \emph{(c)} Instrumental variables (\refiv{}) bypasses it:
+only the $Z$-driven slice of spend is used, and $Z$ owes nothing to $C$. Dashed nodes and edges
+are unobserved and confounding; solid dark edges are causal; the green edge is the instrument.
+This figure is a schematic, not a computed result.}
+\label{fig:sc:dags}
+\end{figure}
 
 \subsection*{The assumptions}
 
-Identification of \cref{eq:sc:estimand} by the estimator \cref{eq:sc:gap} rests on five
+Identification of \cref{eq:sc:estimand} by the estimator \cref{eq:sc:vocab_synth} rests on five
 assumptions. They are stated here, and each is either tested or explicitly declared untestable
-later in the chapter --- an assumption with no accompanying test is a wish.
+later in the chapter: an assumption with no accompanying test is a wish.
 
 \begin{assumption}[Convex hull]\label{as:sc:hull}
-The treated market lies inside the convex hull of the donor pool: there exists
-$w \in \simplex$ whose blended factor loadings equal
-$(\lambda_{01}, \lambda_{02}, \lambda_{03})$. The simplex constraint enforces this by refusing
-to extrapolate; the diagnostic is a pre-period fit that the weights cannot achieve.
+The treated market lies inside the convex hull of the donor pool: there exists $w \in \simplex$
+whose blend matches market $0$ on the \emph{full} feature vector that generates its path: its
+baseline level and its three factor loadings alike,
+$\sum_j w_j\,(c_j,\, \lambda_{j1},\, \lambda_{j2},\, \lambda_{j3})
+   = (c_0,\, \lambda_{01},\, \lambda_{02},\, \lambda_{03})$. Both parts matter. The baseline
+$c_i$ of \cref{eq:sc:dgp} is an additive, market-specific level. A blend that matches the
+loadings but not the baseline leaves a constant gap; one that matches the baseline but not the
+loadings leaves a drifting one. The simplex constraint enforces the hull by refusing to
+extrapolate; the diagnostic is a pre-period fit that the weights cannot achieve.
 \end{assumption}
 
 \begin{assumption}[Good pre-fit]\label{as:sc:prefit}
 The synthetic tracks the treated market \emph{before} launch. Formally, the pre-period RMSE of
-\cref{eq:sc:gap} is small relative to the effect the design must detect. This is the
+the gap \cref{eq:sc:vocab_gap} is small relative to the effect the design must detect. This is the
 precondition on which every subsequent number depends: a synthetic that cannot reproduce the
 treated market's past cannot be trusted with its counterfactual future. It is tested as a
-pass/fail gate in \cref{sec:sc:valid}.
+pass/fail gate in \cref{sec:sc:model}.
 \end{assumption}
 
 \begin{assumption}[No anticipation]\label{as:sc:anticip}
-Nothing shifts sales in the treated market \emph{before} $T_0$ --- no leaked creative, no
+Nothing shifts sales in the treated market \emph{before} $T_0$: no leaked creative, no
 pre-buying, no mis-dated launch. Tested by placebo-in-time in \cref{sec:sc:wrong}.
 \end{assumption}
 
 \begin{assumption}[Stable factor structure]\label{as:sc:stable}
 The co-movement that held in the pre-period continues to hold after it: the loadings the weights
 matched on weeks $0$ to $T_0 - 1$ still govern weeks $T_0$ onward. A long pre-period makes the
-match harder to achieve by accident; placebo-in-time probes it.
+match harder to achieve by accident. Placebo-in-time probes it, but never verifies it: the
+post-period loadings are unobservable by construction, so the probe runs at a placebo date, not at
+the real one.
 \end{assumption}
 
 \begin{assumption}[No interference]\label{as:sc:sutva}
-The campaign in market $0$ does not change sales in any donor market --- SUTVA
-\citep{imbens2015}, applied to geographies. This is the assumption that no placebo can test,
+The campaign in market $0$ does not change sales in any donor market. This is the no-interference
+half of \textbf{SUTVA}, the stable-unit-treatment-value assumption \citep{imbens2015}: one unit's
+treatment does not spill onto another unit's outcome, and there is a single version of the treatment.
+Applied to geographies, it is the assumption that no placebo can test,
 because spillover contaminates every placebo refit in exactly the same way. It is stress-tested
 by simulation in \cref{sec:sc:wrong}, where the news is better than it sounds: spillover
 \emph{attenuates}.
 \end{assumption}
 
 \begin{remark}
-A sixth condition --- that nothing else hit market $0$ at exactly $T_0$ --- is genuinely
+A sixth condition, that nothing else hit market $0$ at exactly $T_0$, is genuinely
 untestable from the panel and can be discharged only by institutional knowledge. Say so, rather
 than dress a diagnostic in its clothes. \Cref{sec:sc:real} is instructive here: on a randomized
 geo experiment, that assumption is guaranteed in expectation by the coin flip, and the difference
@@ -218,12 +480,11 @@ between the two situations is exactly the value of an experiment.
 \section{The classical baseline}
 \label{sec:sc:classical}
 
-Before any sampler, the discipline of this book is to ask what a competent analyst produces
-\emph{without} one. In this chapter that question has an unusually clean answer, because the
-classical estimator \emph{is} the method: \citeauthor{abadie2003}'s synthetic control was born
-frequentist, and the Bayesian model of \cref{sec:sc:bayes} is its re-housing, not its rival.
+Synthetic control was born frequentist. \citeauthor{abadie2003}'s original estimator uses no
+sampler, and the Bayesian model of \cref{sec:sc:bayes} re-houses it rather than replacing it. This
+section fits that classical estimator in full, because on its own it carries the chapter's decision.
 
-\subsection*{The estimator, without a likelihood}
+\subsection*{Fitting the weights by constrained least squares}
 
 Choose the weights that best reproduce the treated market's pre-launch path, subject to
 \cref{as:sc:hull}'s simplex:
@@ -234,97 +495,271 @@ Choose the weights that best reproduce the treated market's pre-launch path, sub
   \label{eq:sc:slsqp}
 \end{equation}
 %
-This is constrained least squares --- a quadratic objective on a convex set --- solved
-numerically by sequential least-squares quadratic programming. It is deterministic, it runs in
-milliseconds, and it estimates nothing else: no variance parameter, no prior, no chain. The
-counterfactual and the effect follow by substitution into \cref{eq:sc:gap}. Because it is so
-cheap, this same fitter carries every robustness check in the chapter --- the leave-one-out
+This is constrained least squares (a quadratic objective on a convex set), solved numerically by
+\textbf{sequential least-squares quadratic programming} (SLSQP), the routine the figures name
+(\hyperref[app:sc:slsqp]{Appendix~\thechapter.A.1} sketches how it works). It is
+deterministic, it runs in milliseconds, and it estimates nothing else: no variance parameter, no
+prior, no chain. The
+counterfactual and the effect follow by substitution into \cref{eq:sc:vocab_gap}. Because it is so
+cheap, this same fitter carries every robustness check in the chapter: the leave-one-out
 refits, the placebo distributions, the launch-date sweep, the spillover stress test.
 
 Fitted to the pre-launch weeks, it puts material weight on \nbSevenClNMaterial{} of the
-\nbSevenNDonors{} donors --- an effective donor count of \nbSevenClEffDonors{}, measured by the
-inverse Herfindahl index $1/\sum_j w_j^2$ --- and tracks the treated market to a pre-launch RMSE
-of \keur{\nbSevenClPreRmse} (\cref{fig:sc:sc}). \Cref{as:sc:prefit} is satisfied, so the
-post-launch gap can be read. It comes to \keur{\nbSevenClAvg} per week and \keur{\nbSevenClTotal}
-over the window, against a planted truth of \keur{\nbSevenTrueTotal} --- a relative error of
+\nbSevenNDonors{} donors (an effective donor count of \nbSevenClEffDonors{}, measured by the
+inverse Herfindahl index $1/\sum_j w_j^2$) and tracks the treated market to a pre-launch RMSE
+of \keur{\nbSevenClPreRmse} (\cref{fig:sc:sc}). That is the tightest pre-fit any arm of this
+chapter achieves. It clears the gate of \cref{as:sc:prefit} (a bar of
+\keur{\nbSevenGateRef}, a third of the weekly lift the design must detect) by a margin no other
+fit here enjoys. \Cref{sec:sc:model} grades the Bayesian fits on the same bar, and they do not
+clear it. The post-launch gap comes to \keur{\nbSevenClAvg} per week and \keur{\nbSevenClTotal}
+over the window, against a planted truth of \keur{\nbSevenTrueTotal}, a relative error of
 $\nbSevenClErrPct\,\%$.
 
 \input{build/floats/nb07_sc}
 
-\subsection*{Where an interval comes from when there is no likelihood}
+\subsection*{The placebo distribution}
 
-Nowhere, by the usual route. There is no likelihood, so there is no standard error to read off a
-fit; and a regression standard error, even if one were bolted on, would answer the wrong
-question, because standard errors describe variability across many independent treated units and
-there is exactly one. \citeauthor{abadie2010}'s answer --- the inferential heart of the method
---- is \emph{permutation inference} \citep{abadie2010, abadie2015}, in the tradition of
-\citet{fisher1935}:
+There is no likelihood here, so there is no standard error to read off the fit, and a regression
+standard error would answer the wrong question: it describes variability across many treated units,
+and here there is one. Inference comes instead from the placebo-in-space permutation introduced in
+\cref{sec:sc:vocab} \citep{abadie2010, abadie2015, fisher1935}, now run in earnest. Take each of the
+\nbSevenNDonors{} donors in turn, pretend it was the treated market, and rebuild its synthetic from
+the \emph{other} donors, holding the genuinely treated market out of every placebo pool because its
+post-period is contaminated by the real campaign. The gap that comes out is a manufactured ``lift'':
+the donor ran no campaign, so its post-period gap is pure estimator noise under the null that the
+campaign did nothing. Those \nbSevenNDonors{} gaps are the reference distribution.
 
-\begin{quote}
-Under the null that the campaign did nothing, the treated market is just another market. So
-refit the identical estimator on each donor \emph{as if it had been treated}, collect the gaps
-those placebo fits produce --- that is the distribution of gaps the world hands you from noise
-alone --- and ask where the real one ranks.
-\end{quote}
+Two refinements of \citeauthor{abadie2010}'s sharpen the comparison, and they are separate ideas.
+\emph{First, discard placebos with a poor pre-fit}: a donor whose own synthetic cannot track it
+before launch produces a meaningless gap that would only pollute the reference distribution. The
+conventional cutoff is a pre-period RMSE more than five times the treated unit's. Here it changes
+nothing, and the reason is worth stating precisely: \textbf{the filter never fires}. All
+\nbSevenPlaceboKept{} of the \nbSevenNDonors{} donors clear it at $2\times$, $5\times$ and $20\times$
+alike, so $p$ holds at \nbSevenPFilterTwo{} and \nbSevenPFilterTwenty{} across that range. The result
+is robust \emph{here} because the filter is non-binding \emph{here}, not because a well-chosen cutoff
+rescued it; on a panel with a genuinely unmatchable donor (\cref{sec:sc:real} has one) the cutoff
+would bind, and would then have to be defended rather than reported. \emph{Second, rank on the RMSE
+ratio, not the raw gap}: post-period RMSE over pre-period RMSE is scale-free, so it compares large and
+small markets fairly, and it refuses to reward a placebo that fits badly everywhere, since such a unit
+inflates its numerator \emph{and} its denominator.
 
-Two refinements matter, and both are \citeauthor{abadie2010}'s. First, \emph{discard placebos
-with a poor pre-fit}: a donor whose own synthetic cannot track it before launch produces a
-meaningless gap that would only pollute the reference distribution. The conventional cutoff, used
-here, is a pre-period RMSE more than five times the treated unit's; \nbSevenPlaceboKept{} of the
-\nbSevenNDonors{} donors survive it. Second, \emph{rank on the RMSE ratio rather than the raw
-gap}: post-period RMSE divided by pre-period RMSE is scale-free, so it is fair across large and
-small markets, and it refuses to reward a placebo that simply fits badly everywhere, since such a
-unit has a high numerator \emph{and} a high denominator.
+\subsection*{The permutation \texorpdfstring{$p$}{p}-value, and its floor}
 
-On that statistic the treated market ranks \nbSevenTreatedRank{} of \nbSevenNUnits{}, with a
-ratio of \nbSevenTreatedRatio{} against a placebo median of \nbSevenPlaceboMedianRatio{}, for
-$p = \nbSevenPRatio$ (\cref{fig:sc:placebo}). The raw-gap permutation gives
-$p = \nbSevenPGap$; the two differ by a few hundredths because of bookkeeping --- the raw-gap
-version is an add-one permutation that excludes the treated unit from its own reference set,
-while the ratio statistic is a rank that includes it --- and they agree on everything that
-matters. The verdict is also stable in the one arbitrary knob: tightening the pre-fit filter to
-$2\times$ gives $p = \nbSevenPFilterTwo$ and loosening it to $20\times$ gives
-$p = \nbSevenPFilterTwenty$, the latter simply because a loose filter admits broken synthetics
-and dilutes the test.
+The $p$-value is the share of units, treated plus placebos, whose statistic is at least the treated
+market's (\cref{eq:sc:vocab_perm}, with the finite-sample $+1$ that counts the treated unit inside its
+own reference set). On the RMSE ratio the treated market ranks \nbSevenTreatedRank{} of
+\nbSevenNUnits{}, a ratio of \nbSevenTreatedRatio{} against a placebo median of
+\nbSevenPlaceboMedianRatio{}, for $p = \nbSevenPRatio$ (\cref{fig:sc:placebo}). The raw-gap
+permutation agrees exactly ($p = \nbSevenPGap$): the treated market is the most extreme unit in the
+panel on both statistics.
+
+That $p$ is not merely small; it is the \emph{smallest this design can produce}. With
+$J = \nbSevenNDonors$ donors the $+1$ correction floors the $p$-value at
+$1/(J+1) = 1/\nbSevenNUnits = \nbSevenPRatio$, and the treated market, ranked first, sits exactly on
+it. No effect, however large, could push $p$ below \nbSevenPRatio{} on \nbSevenNUnits{} units. One
+treated market buys significance but not resolution: the honest phrasing is ``as extreme as the design
+can register,'' not a vanishing $p$-value.
+(\hyperref[app:sc:perm]{Appendix~\thechapter.A.6} restates the test compactly.)
 
 \input{build/floats/nb07_placebo}
 
-\subsection*{An interval by inversion}
+\subsection*{The interval, by inverting the test}
 
-The same null yields an interval. The placebo totals map out how far this estimator's
-\nbSevenNPost-week total wanders when the true effect is zero, so subtracting that distribution's
-upper and lower percentiles from the estimate inverts the test into a 90\,\% \emph{randomization
-interval}:
+The same null yields an \emph{interval}, and this is the step worth slowing down for. It rests on one
+assumption, stated plainly: the effect is a \textbf{constant additive shift} over the post-period.
+Under it, a candidate truth $\tau_0$ moves the \emph{location} of the estimate but not the
+\emph{spread} of the estimator's error, so the placebo gaps, centred at zero, measure that spread
+around \emph{any} $\tau_0$.
+
+Inversion reads off which candidate truths the test does not reject. A value $\tau_0$ survives at the
+90\,\% level exactly when the estimate lands in the middle 90\,\% of its error band around $\tau_0$,
+and solving that for $\tau_0$ \emph{flips} the placebo percentiles:
+%
+\begin{equation*}
+  \hat\tau \in \big[\,\tau_0 + q_{0.05},\ \tau_0 + q_{0.95}\,\big]
+  \qquad\Longleftrightarrow\qquad
+  \tau_0 \in \big[\,\hat\tau - q_{0.95},\ \hat\tau - q_{0.05}\,\big].
+\end{equation*}
+%
+The reversal is the crux: the \emph{upper} placebo percentile sets the \emph{lower} bound, and the
+lower percentile sets the upper. The placebo totals reach \keur{\nbSevenPlaceboQhi} above zero (the
+95th percentile) and \keur{\nbSevenPlaceboQloMag} below it (the 5th), so with
+$\hat\tau = \keur{\nbSevenClTotal}$ the upper percentile subtracts to the lower bound
+(\keur{\nbSevenClTotal} $-$ \keur{\nbSevenPlaceboQhi} $=$ \keur{\nbSevenRiLo}) while the lower, being
+negative, \emph{adds} to the upper bound (\keur{\nbSevenClTotal} $+$ \keur{\nbSevenPlaceboQloMag} $=$
+\keur{\nbSevenRiHi}):
 %
 \begin{equation}
   \Big[\ \hat\tau - q_{0.95}\big(\tau^{\text{placebo}}\big),\ \
          \hat\tau - q_{0.05}\big(\tau^{\text{placebo}}\big)\ \Big]
-  \;=\; \big[\,\keur{\nbSevenRiLo},\ \keur{\nbSevenRiHi}\,\big],
+  \;=\; \big[\,\keur{\nbSevenRiLo},\ \keur{\nbSevenRiHi}\,\big].
   \label{eq:sc:ri}
 \end{equation}
 %
-valid under a constant-effect null: the placebos supply the \emph{spread} of the estimator's
-error, not its location. The planted \keur{\nbSevenTrueTotal} falls inside it. This interval
-never assumed a shape for the errors --- it went and measured one, from markets known to be
-untreated. Hold on to that sentence; \cref{sec:sc:compare} is going to cash it.
+Call this the \textbf{randomization interval}: the set of candidate truths the placebo test does not
+reject. \Cref{fig:sc:inversion} draws exactly how it is built: the placebo cloud at zero, the same cloud
+inverted onto the estimate, with break-even inside the interval and zero far outside it. The interval is mildly
+asymmetric, reaching \keur{\nbSevenPlaceboQhi} below the estimate but \keur{\nbSevenPlaceboQloMag} above
+it, so its midpoint sits a little above \keur{\nbSevenClTotal}; a symmetric $\pm$ summary would lose
+that, and carrying the percentiles through keeps it. The planted \keur{\nbSevenTrueTotal} falls inside.
+What earns this interval its trust is what it \emph{did not} do: it assumed no shape for the errors, no
+normal, no $\sqrt{n}$, no likelihood. It measured the error distribution from markets known to be
+untreated, autocorrelation and all, which is why \cref{sec:sc:compare} keeps it as the referee for the
+posterior built there (\hyperref[app:sc:randint]{Appendix~\thechapter.A.8}).
 
-What this classical apparatus cannot produce, at any level of effort, is
-$\Prob(\tau > \text{cost})$. A $p$-value ranks data against a null and attaches no probability to
-a hypothesis about the effect; \cref{eq:sc:ri} is a statement about a procedure, not about $\tau$.
-The euro rule of \cref{sec:sc:euro} is nothing but that probability. That is the gap the next
-section exists to fill.
+\input{build/floats/nb07_inversion}
+
+\subsection*{The margin trap}
+
+Before pricing the campaign, one fact decides everything, and it is the thing decision-makers most
+often get wrong: \textbf{advertising buys revenue, not profit}. The firm keeps only its
+\pc{\nbSevenMargin} gross margin on the incremental sales. Write $c$ for the campaign's cost and $m$
+for that margin. The campaign pays for itself only if the
+lift clears a \textbf{break-even lift} of $b = c/m = \keur{\nbSevenBreakevenLift}$, equivalently only
+if the incremental return on ad spend (\textbf{iROAS}, euros of incremental sales per euro spent)
+beats a break-even iROAS of $1/m = \nbSevenBreakevenIroas$.
+
+Here is the trap. The estimated return is an iROAS of \nbSevenIroas{}, and stated gross that
+\emph{looks} like an obvious win: nearly three euros of sales for every euro spent. But once the margin
+is applied the retained edge is almost nothing. The \keur{\nbSevenClTotal} of lift is worth only
+\keur{\nbSevenClProfit} of profit, and against the \keur{\nbSevenCost} paid the net is
+\keur{\nbSevenClNet} (\cref{fig:sc:marginfunnel}). A decision-maker who reasons in gross iROAS,
+``2.9$\times$, ship it,'' walks straight into a break-even bet. \textbf{That \keur{\nbSevenClNet} of net
+is not the size of the opportunity; it is the thin true edge hiding behind an impressive gross number.}
+Everything the rest of this section does is measure how safe that thin edge is.
+
+\input{build/floats/nb07_margin_funnel}
+
+\subsection*{The decision at \keur{\nbSevenCost}}
+\label{sec:sc:classicaldecision}
+
+The classical arm now has everything a frequentist decision needs, on one scale: a point estimate, a
+design-based interval that \cref{sec:sc:valid} confirms keeps its promise, and a significance test.
+Read it in three steps.
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Is the lift real?} Yes. The placebo test ranks the treated market \nbSevenTreatedRank{}
+        of \nbSevenNUnits{} ($p = \nbSevenPRatio$), and the randomization interval
+        $[\keur{\nbSevenRiLo},\ \keur{\nbSevenRiHi}]$ excludes zero.
+  \item \textbf{Does the point estimate clear break-even?} Barely. The lift is \keur{\nbSevenClTotal},
+        an iROAS of \nbSevenIroas{} against the \nbSevenBreakevenIroas{} bar, worth
+        \keur{\nbSevenClProfit} of profit against the \keur{\nbSevenCost} paid: a net of just
+        \keur{\nbSevenClNet}.
+  \item \textbf{Is that margin safe?} No. Carry the whole interval through the margin and the profit
+        runs from \keur{\nbSevenClProfitLo} to \keur{\nbSevenClProfitHi}, straddling the
+        \keur{\nbSevenCost} cost. Equivalently the break-even lift \keur{\nbSevenBreakevenLift} sits
+        well inside $[\keur{\nbSevenRiLo},\ \keur{\nbSevenRiHi}]$, and the break-even iROAS
+        \nbSevenBreakevenIroas{} sits inside the interval's iROAS range
+        $[\nbSevenRiIroasLo,\ \nbSevenRiIroasHi]$. The lift is significantly \emph{positive}; it is not
+        significantly \emph{profitable}.
+\end{enumerate}
+
+The verdict is \textbf{\nbSevenDecision}: a real effect this evidence cannot call a paying one, and a
+frequentist does not roll out nationally on a lift whose interval includes losing money. No posterior
+was consulted, and none was needed.
+
+The one thing the classical arm cannot do is put a single number on \emph{how close} the call is: the
+straddle in step~3 is a yes/no fact about an interval, not a probability. That single number,
+$\Prob(\text{profit} > \text{cost})$, is the one addition the Bayesian layer makes (\cref{sec:sc:euro}),
+and it does not overturn this verdict. First, though, the classical arm has more to say than a
+single-price verdict, and the rest of this section draws it out.
+
+\subsection*{Spanning the decision space: a cost sweep}
+
+The \keur{\nbSevenCost} case is one point in a space, and the space teaches more than the point. Hold
+the estimate and the interval fixed and slide the cost. Two thresholds organise everything, and the
+lesson is that they are \emph{different}. The first is where the point estimate breaks even: the net
+$m\hat\tau - c$ crosses zero at $c = m\hat\tau = \keur{\nbSevenClProfit}$. The second is where the
+\emph{interval} stops straddling. Carried through the margin, the profit band is
+$m\times[\keur{\nbSevenRiLo},\ \keur{\nbSevenRiHi}]
+= [\keur{\nbSevenClProfitLo},\ \keur{\nbSevenClProfitHi}]$. Any cost inside that band leaves the
+call genuinely hard. Below \keur{\nbSevenClProfitLo} the whole band clears cost: a clean \textsc{go}.
+Above \keur{\nbSevenClProfitHi} none of it does: a clean \textsc{no-go}. The two thresholds do not
+coincide, and the gap between them, the straddle band around the mean's break-even at
+\keur{\nbSevenClProfit}, is exactly the range of prices where a positive mean and an honest interval can
+disagree (\cref{fig:sc:costsweep}).
+
+\Cref{tab:sc:costsweep} works five costs that span that logic.
+
+\input{build/tables/nb07_cost_sweep}
+\input{build/floats/nb07_cost_sweep_plot}
+
+The bookends bound the space. At \keur{\nbSevenSweepGoC} the break-even lift is \keur{\nbSevenSweepGoBe},
+below the interval, so the whole profit band clears cost: a clean \textsc{go}, net \keur{\nbSevenSweepGoNet}
+at the point estimate. At \keur{\nbSevenSweepNgC} the break-even lift is \keur{\nbSevenSweepNgBe}, above
+the interval, net \keur{\nbSevenSweepNgNet}: a clean \textsc{no-go}. In both the straddle has ended,
+which is precisely why the call is easy; they are ``clear'' not because the effect changed but because
+break-even moved off the interval.
+
+The two interior cases are the instructive ones, because in each the interval straddles and the
+\emph{mean alone would mislead}. At \keur{\nbSevenSweepLoC} the net at the point estimate is a
+healthy-looking \keur{\nbSevenSweepLoNet}, yet the break-even lift \keur{\nbSevenSweepLoBe} still sits
+inside $[\keur{\nbSevenRiLo},\ \keur{\nbSevenRiHi}]$: a comfortable mean the interval refuses to bless,
+the sharpest reminder that the decision is not the mean. It is also \emph{our} case:
+\keur{\nbSevenSweepLoC} is what the campaign actually cost. At \keur{\nbSevenSweepHiC} the sign has
+flipped: the net is \keur{\nbSevenSweepHiNet}. But the break-even lift \keur{\nbSevenSweepHiBe} is
+\emph{still} inside the interval, so the upper tail still reaches profitability. This \textsc{no-go}
+leaves real money on the table, and it is the case where better evidence might be worth buying.
+Pricing that question needs a probability the classical arm does not produce,
+so it waits for the Bayesian layer, which puts a figure on it in \cref{sec:sc:euro}.% VOI hook now closed: the value-of-information number in sec:sc:euro is the answer to this (EUR 98k) case, where the hold still carries upside.
+
+The knife-edge sits at \keur{\nbSevenSweepKeC}: net \keur{\nbSevenSweepKeNet}, break-even
+\keur{\nbSevenSweepKeBe} near the centre of the interval, the hardest price in the space. The campaign
+was not bought there. It was bought at \keur{\nbSevenCost}, in the first interior case, where the mean
+is comfortable and the interval still withholds its blessing; pricing exactly that gap is what the
+Bayesian layer is for.
+
+One last honesty. The interval could be turned into a smooth probability by assuming the total is
+normal with standard deviation $\sigma_\tau \approx \keur{\nbSevenSigmaTauApprox}$ (the 90\,\%
+half-width over $1.645$) and reading $\Prob(\text{profit} > c)$ off it at any cost. That is an
+illustration, not a classical output: the true total is right-skewed, so such normal figures sit a few
+points off near break-even, and the classical arm deliberately stops at the interval. Turning it into
+an honest single-number probability is the Bayesian arm's job (\cref{sec:sc:euro}).
+
+\begin{remark}[Felt stakes]
+The example is deliberately small, and a reader may object that no board agonises over
+\keur{\nbSevenClNet}. Scale the whole campaign up by \nbSevenFeltN$\times$ and every ratio is
+untouched, the iROAS, the margin, the straddle, the verdict, while the numbers become
+\eur{\nbSevenFeltSpend}\,M of spend, \eur{\nbSevenFeltLift}\,M of lift, and \keur{\nbSevenFeltNet} of
+net. This changes the \emph{felt} stakes, not the lesson: a reader who checks the iROAS sees the same
+four-in-five bet, a solid expected net that still falls short of a confident buy. The point survives at any scale; the figures here are kept
+small only so the arithmetic stays legible.
+\end{remark}
 
 % =====================================================================================
-\section{The Bayesian model}
+\section{Why add a posterior at all?}
 \label{sec:sc:bayes}
+
+The classical arm of \cref{sec:sc:classical} has already made the call, and made it without a
+likelihood: a real effect the evidence cannot confidently price above cost, a profit interval that
+straddles the price paid. That is a yes/no fact about where an interval sits, not a number a board
+can weigh. A board reasons in probabilities, $\Prob(\text{profit} > c)$, and a permutation
+$p$-value cannot supply one: it attaches a probability to a \emph{procedure} under a null, not to a
+statement about $\tau$. \Cref{eq:sc:ri} says how often a test would reject, not how much posterior
+mass sits above cost. The posterior is the only object that returns $\Prob(\text{profit} > c)$, and
+that is what this arm adds: the same identification, the same estimand, the same number, now
+carrying a distribution.
+
+One contract governs everything that follows, and stating it up front is what lets the rest of the
+chapter air its caveats freely. \textbf{The decision is already settled.} \Cref{sec:sc:classical}
+reached it on the classical evidence alone, and nothing in the Bayesian sections moves the
+\emph{action}; what the posterior supplies is the \emph{probability} that states that same decision
+honestly. So a reader who wants only the rollout call has it and can skip to \cref{sec:sc:euro}; a
+reader who wants the probability, and the one honest-uncertainty subtlety it drags in, reads on.
+The verdict is banked. So the diagnostics ahead can be shown in full, including the place where the
+posterior's first likelihood is simply wrong, without ever putting the call at risk.
+
+% =====================================================================================
+\section{The model: a Dirichlet prior and an iid likelihood}
+\label{sec:sc:model}
 
 The natural probability distribution over the simplex is the Dirichlet: its draws are
 non-negative and sum to one by construction, so it says ``the weights live on $\simplex$'' in the
 language of priors rather than constraints. Fitting the pre-period gives a posterior over the
-weights, hence over the whole counterfactual path, hence over $\tau$ --- \cref{eq:sc:slsqp}'s
+weights, hence over the whole counterfactual path, hence over $\tau$: \cref{eq:sc:slsqp}'s
 objective with uncertainty attached.
 
-The model, fitted on the pre-period only ($t < T_0$), is
+The model, as any analyst would first write it and fitted on the pre-period only ($t < T_0$), is
 %
 \begin{align}
   Y_{0t} \mid w, \sigma &\;\sim\; \mathcal N\Big(\textstyle\sum_{j=1}^{J} w_j\, Y_{jt},\ \
@@ -334,59 +769,116 @@ The model, fitted on the pre-period only ($t < T_0$), is
 \end{align}
 %
 $\text{Dirichlet}(\mathbf 1_J)$ is flat over the simplex: no donor is favoured a priori. The
-prior on $\sigma$ is weakly informative and tied to the units of the data --- sales are in
-thousands of euros, weekly levels sit in the €80--170\,k band, and the idiosyncratic noise of
-\cref{eq:sc:dgp} has standard deviation €3\,k, so a scale of €5\,k is wide enough to accommodate
-any plausible blend error and tight enough to exclude an absurd one. As throughout this book, the
-prior is doing very little work here; \cref{eq:sc:lik} --- the likelihood --- is doing all of it,
-and \cref{sec:sc:compare} is about precisely that.
+prior on $\sigma$ is weakly informative and tied to the units of the data. Sales are in
+thousands of euros, the market baselines of \cref{eq:sc:dgp} sit between \keur{\nbSevenParLevelLo}
+and \keur{\nbSevenParLevelHi} (\cref{tab:sc:params}), and the idiosyncratic noise has standard
+deviation \keur{\nbSevenParNoiseSd}. So a scale of €5\,k is wide enough to accommodate
+any plausible blend error and tight enough to exclude an absurd one.
+
+The model is short enough to read in full. In PyMC \citep{salvatier2016} it is the three lines that
+state \cref{eq:sc:lik}, \cref{eq:sc:prior_w} and \cref{eq:sc:prior_s}, and one call to the sampler:
+
+\begin{pycode}
+with pm.Model() as model:
+    w     = pm.Dirichlet("w", a=np.ones(J))   # on the simplex
+    sigma = pm.HalfNormal("sigma", 5.0)       # blend-error scale
+    mu    = pm.math.dot(w, Y_donors_pre)      # the synthetic control
+    pm.Normal("y", mu=mu, sigma=sigma, observed=Y_treated_pre)
+    idata = pm.sample()                       # NUTS
+\end{pycode}
+
+Everything downstream (the posterior over $\tau$, both intervals, the euro decision) is read off the
+object this returns.
+
+One word in \cref{eq:sc:lik} is doing more work than the two priors combined, and it is not
+written down: \emph{independently}. The weekly errors are taken to be independent draws from
+$\mathcal N(0, \sigma^2)$. That assumption is the default of every textbook regression, and
+invisible on the page. Here it matters, because the quantity the rollout turns on is a total
+summed over twenty correlated weeks. Independence understates how much such a total can vary.
+\Cref{sec:sc:valid} measures the consequence for the interval, and \cref{sec:sc:compare} gives the
+error the persistence it actually has and builds the interval the decision needs. The distinction
+is carried in the notation from here on: the fit of \cref{eq:sc:lik} is the \emph{iid} fit, and
+the model with the autocorrelated residual, built in \cref{sec:sc:compare}, is the \emph{shipped}
+fit, the one whose posterior signs the euro decision. The flat Dirichlet prior does little work
+here; it is the likelihood that shapes the posterior. \Cref{fig:sc:priorsens} makes that concrete:
+refit under three Dirichlet concentrations, from sparse to diffuse, and the posterior of the total
+lift barely moves. Two caveats keep the claim honest. First, the sweep is run on the iid likelihood
+of \cref{eq:sc:lik}, the fit this chapter later discards; but the point is about the prior, not that
+fit, and it carries to the repaired model unchanged, because forty pre-period weeks swamp the prior
+either way. Second, prior stability covers the total's \emph{location and scale}, not everything the prior
+touches. The concentration still moves the effective donor count: sparse blends lean on a few
+donors, diffuse ones spread over many. That is a lever for out-of-sample stability and
+interpretability. It does not shift the headline total.
+
+\input{build/floats/nb07_prior_sensitivity}
 
 The counterfactual for a post-launch week is the posterior \emph{predictive} blend,
 %
 \begin{equation}
-  \widehat{Y_{0t}(0)} \;=\; \sum_j w_j\, Y_{jt} \;+\; \varepsilon_t,
+  \widehat{Y}_{0t}(0) \;=\; \sum_j w_j\, Y_{jt} \;+\; \varepsilon_t,
   \qquad \varepsilon_t \sim \mathcal N(0, \sigma^2),
   \label{eq:sc:ppc}
 \end{equation}
 %
-and the $\varepsilon_t$ term earns its place: dropping it --- reporting the band of the mean
-blend alone --- would carry weight uncertainty but not the treated market's own noise, and would
+and the $\varepsilon_t$ term earns its place. Dropping it (reporting the band of the mean
+blend alone) would carry weight uncertainty but not the treated market's own noise, and so would
 understate the per-week band. Posterior draws of $\tau$ follow by summing
-$Y_{0t} - \widehat{Y_{0t}(0)}$ over the window.
+$Y_{0t} - \widehat{Y}_{0t}(0)$ over the window.
 
 Inference is by the No-U-Turn sampler \citep{hoffman2014} as implemented in PyMC
 \citep{salvatier2016}: \nbSevenNDraws{} post-warmup draws, with $\hat R = \nbSevenRhat$, a
 minimum bulk effective sample size of \nbSevenEss{} \citep{vehtari2021}, and \nbSevenDivergences{}
-divergent transitions. The chains have converged; nothing that follows is a sampler artefact.
+divergent transitions on the shipped fit. The chains on this panel have converged, so nothing
+that follows on the simulated data is a sampler artefact. (\Cref{sec:sc:real} reports the
+real-data fits' diagnostics separately.)
 
-The fit puts weight on many more donors than \cref{eq:sc:slsqp} did --- \nbSevenBayesEffDonors{}
-effective donors against the classical \nbSevenClEffDonors{} (\cref{tab:sc:weights}) --- because
-a flat Dirichlet regularizes the blend. That is a real trade and worth naming: the regularized
-blend is more stable out of sample, and less interpretable as a business object. ``Our metro
-behaves like this specific mix of four named metros'' is a sentence a media planner can act on;
-``like a diffuse average of fifteen'' is not.
+Both Bayesian fits put weight on many more donors than \cref{eq:sc:slsqp} did,
+\nbSevenBayesEffDonors{} effective donors in the shipped posterior against the classical
+\nbSevenClEffDonors{} (\cref{tab:sc:weights}), because a flat Dirichlet regularizes the blend.
+That is a real trade and worth naming: the regularized blend is more stable out of sample, and
+less interpretable as a business object. ``Our metro behaves like this specific mix of four named
+metros'' is a sentence a media planner can act on; ``like a diffuse average of two dozen'' is not.
 
 \input{build/tables/nb07_weights}
 
-The posterior mean total lift is \keur{\nbSevenBayesTotal}, with a 90\,\% credible interval of
-$[\keur{\nbSevenBayesLo},\ \keur{\nbSevenBayesHi}]$ --- width \keur{\nbSevenBayesWidth}, against
-the classical interval's \keur{\nbSevenRiWidth}. The planted \keur{\nbSevenTrueTotal} sits just
-\emph{outside} that band. One panel is one draw of the world and a single miss proves nothing, so
-that observation is not yet a finding. \Cref{sec:sc:valid} turns it into one.
+Fitted, \cref{eq:sc:lik} gives a posterior mean total lift of \keur{\nbSevenIidTotal}, with a
+90\,\% credible interval of $[\keur{\nbSevenIidLo},\ \keur{\nbSevenIidHi}]$: width
+\keur{\nbSevenIidWidth}, against the classical randomization interval's \keur{\nbSevenRiWidth}.
+A likelihood-based interval barely three-fifths the width of a design-based one, on the same estimand
+and the same data, is the sort of bargain that ought to invite scrutiny before it invites celebration.
+And
+the planted \keur{\nbSevenTrueTotal} sits \emph{outside} that band. One panel is one draw of the
+world and a single miss proves nothing, so that observation is not yet a finding.
+\Cref{sec:sc:valid} turns it into one.
 
-% =====================================================================================
-\section{Diagnostics and validation}
-\label{sec:sc:valid}
+\subsection*{Does the blend fit? The pre-fit gate}
 
-\subsection*{The pre-fit gate}
+\Cref{as:sc:prefit} is a gate, not a formality, and it is made concrete rather than eyeballed: the
+pre-period RMSE must fall below a third of the weekly lift the design is meant to detect (the
+\emph{estimated} weekly lift, since a diagnostic that consults the planted truth is not available on
+real data). \textbf{The fit that carries the decision passes it.} Abadie's classical synthetic
+control of \cref{sec:sc:classical} tracks the treated market to a pre-RMSE of \keur{\nbSevenClPreRmse}
+against the \keur{\nbSevenGateRef} bar, comfortably inside. The decision of \cref{sec:sc:classical}
+rests on a synthetic that clears its own precondition, so the example is sound.
 
-\Cref{as:sc:prefit} is a gate, not a formality, and it is made concrete rather than eyeballed:
-the pre-period RMSE must fall below a third of the weekly lift the design is meant to detect. (The
-benchmark is the \emph{estimated} weekly lift, not the planted one --- a diagnostic that consults
-the truth is not available on real data and therefore not available here.) The fit gives a
-pre-RMSE of \keur{\nbSevenBayesPreRmse} against a bar of \keur{\nbSevenGateRef}:
-\textbf{\nbSevenGate}. The pre-launch gap averages \keur{\nbSevenPreGapMean}, which is the shape
-a good synthetic makes --- hugging zero before launch, departing after it (\cref{fig:sc:gap}).
+The regularized Bayesian blend is a \emph{different} fit, and the looser of the two. Its flat
+Dirichlet spreads weight over \nbSevenBayesEffDonors{} effective donors against the classical
+\nbSevenClEffDonors{}, which stabilises the blend out of sample but tracks the pre-period less
+tightly, at \keur{\nbSevenBayesPreRmse}, over the bar (\textbf{\nbSevenGate}). This is worth knowing,
+not alarming: the two fits agree on the estimate to within \keur{\nbSevenEstDiff}
+(\cref{tab:sc:compare}), so the looser blend inherits the credibility of the tighter one rather than
+undermining it. Where the gate has real teeth is a donor pool that \emph{no} blend can match, and
+\cref{sec:sc:real} exhibits one: the country's largest market lies outside its own donor hull, the
+pre-fit fails loudly, and the method refuses to ship an estimate at all. That is the gate doing its
+job, and it is the failure worth showing.
+
+What holds for \emph{both} fits is that the pre-launch gap averages \keur{\nbSevenPreGapMean},
+indistinguishable from zero (\cref{fig:sc:gap}): no \emph{systematic} mis-fit, just the shape a good
+synthetic makes, hugging zero before launch and departing after. The design's limitation is precision,
+not bias: the week-to-week wobble is of the same order as the weekly lift, so this design sits near
+the edge of its own resolution. Read the euro call of \cref{sec:sc:euro} with that caution, and
+prefer a longer pre-period where one exists. Do not distrust the number itself: the gate-passing
+classical fit and the randomized experiment of \cref{sec:sc:real} both corroborate it.
 
 \input{build/floats/nb07_gap}
 
@@ -397,11 +889,20 @@ top-weighted donors in turn and refitting moves the total only within
 \keur{\nbSevenLooLo}--\keur{\nbSevenLooHi}, against the same fitter's all-donor baseline of
 \keur{\nbSevenClTotal}. No single donor drives the result.
 
-\subsection*{Calibration across fresh panels}
+% =====================================================================================
+\section{The interval is broken, and why}
+\label{sec:sc:valid}
+
+The fit passes its diagnostics: it tracks the pre-period and hangs on no single donor. That says
+nothing about whether the \emph{interval} it reports is any good, and this section shows that the
+first likelihood's is not. It fails on exactly the object the rollout buys, a total summed over
+twenty weeks, and the failure has a single, diagnosable cause.
+
+\subsection*{Calibration across fresh panels: the coverage failure}
 
 This is the check that pays for the simulator, and the one that turns the chapter. A single panel
-is a single draw of the world; the honest question about an interval is not whether it happens to
-cover this time but how often it covers. So the whole procedure --- simulate, fit, interval --- is
+is a single draw of the world. The honest question about an interval is not whether it happens to
+cover this time, but how often it covers. So the whole procedure (simulate, fit, interval) is
 re-run on \nbSevenNPanels{} fresh panels drawn from \cref{eq:sc:dgp}, and the coverage of each
 nominal 90\,\% interval is counted.
 
@@ -409,170 +910,329 @@ Three results, and they do not point the same way.
 
 \begin{enumerate}[leftmargin=*]
   \item \textbf{Recovery is acceptable, precision is not.} The mean estimation error across panels
-        is $\nbSevenSeedBias$ (EUR 000), or $\nbSevenSeedBiasPct\,\%$ of the truth --- a modest
-        bias --- but the seed-to-seed standard deviation of that error is \keur{\nbSevenSeedSd}.
+        is $\nbSevenSeedBias$ (EUR 000), or $\nbSevenSeedBiasPct\,\%$ of the truth, a modest
+        bias. But the seed-to-seed standard deviation of that error is \keur{\nbSevenSeedSd}.
         Synthetic control here is a high-variance estimator, not a conservative one.
-  \item \textbf{The per-week bands are honest.} The 90\,\% posterior-predictive band covers the
-        true weekly path \pc{\nbSevenWeekCov} of the time --- essentially nominal. The
+  \item \textbf{The per-week bands are honest.} The iid fit's 90\,\% posterior-predictive band
+        covers the true weekly path \pc{\nbSevenWeekCov} of the time, essentially nominal. The
         observation-noise term of \cref{eq:sc:ppc} earns this.
-  \item \textbf{The total-lift interval is not.} The 90\,\% credible interval on $\tau$ covers the
-        planted total on only \pc{\nbSevenTotalCov} of panels. A nominal ninety that delivers
-        \pc{\nbSevenTotalCov} is not a rounding error; it is a broken instrument.
+  \item \textbf{The total-lift interval is not.} The same fit's 90\,\% credible interval on $\tau$
+        covers the planted total on only \pc{\nbSevenTotalCov} of panels (\cref{fig:sc:coverage}). A nominal ninety that
+        delivers \pc{\nbSevenTotalCov} is not a rounding error. It is a broken instrument, and
+        the object it is broken about is precisely the one the business buys.
 \end{enumerate}
 
-The classical arm, run on the very same panels, covers at \pc{\nbSevenRiCov} --- it keeps its
-promise. \Cref{tab:sc:compare} records both. The rest of this chapter is about why.
+That the same posterior can be honest about a week and dishonest about a sum of twenty of them is
+the whole puzzle, and the answer is in the summation, not in the sampler.
 
-% =====================================================================================
-\section{Point estimate versus posterior}
-\label{sec:sc:compare}
+\input{build/floats/nb07_coverage}
+
+The classical arm, run on the very same panels, covers at \pc{\nbSevenRiCov}: it keeps its
+promise. \Cref{tab:sc:compare} records both, and a third row whose likelihood is the business of
+the next section. One honesty about the ruler itself: \nbSevenNPanels{} panels carry Monte-Carlo
+error of their own, a binomial standard error of several points on every coverage rate
+(\hyperref[app:sc:mcerr]{Appendix~\thechapter.A.17}). The robust reading is therefore not the
+digits but the split: \pc{\nbSevenTotalCov} is a broken instrument by any reckoning, while the
+repaired and design-based rates of \cref{sec:sc:compare} are indistinguishable from the nominal
+ninety at this resolution. Every panel here is also fitted with the repaired model of
+\cref{sec:sc:compare}, so the comparison that follows is measured on identical worlds rather than
+argued.
+
+The coverage number just measured is the symptom; the rest of this section prices it and finds its
+cause, and \cref{sec:sc:compare} builds the cure. Nothing here moves the decision, only the
+probability that states it, so what follows makes the \emph{posterior} as honest as the design-based
+interval \cref{sec:sc:euro} will lean on. One quantity is at fault: the \emph{width}
+of the interval on the \nbSevenNPost-week total. We first dispose of the point estimate, where
+classical and Bayesian simply agree, then spend the rest of the section on that width in two steps:
+the posterior's interval is too narrow, and the cause is a persistent offset in the week-to-week
+error. The cure, one extra parameter, is the business of \cref{sec:sc:compare}.
 
 \input{build/tables/nb07_compare}
 
-\subsection*{On the number, they agree}
+\subsection*{The lift, and why classical and Bayesian agree on it}
 
-\Cref{tab:sc:compare} puts both arms on the estimand of \cref{eq:sc:estimand}. The point estimates
-differ by \keur{\nbSevenEstDiff} --- \pc{\nbSevenEstDiffPct} of the effect --- and both sit below
-the planted truth. If anything the classical point estimate is the closer of the two, because the
-Dirichlet prior spreads weight across donors and a regularized blend is a slightly more
-conservative one. The Bayesian layer did not buy a better point estimate, and it could not have:
-the causal work was done by the identification of \cref{sec:sc:ident} and by the simplex, and both
-arms share it. This is the ordinary case in this book, and it has a name --- the Bernstein--von
-Mises phenomenon \citep{gelman2013}: with a well-specified likelihood and enough data, the
-posterior concentrates where the maximum-likelihood estimate does, and the two paradigms return
-the same number.
+\Cref{tab:sc:compare} puts all three arms on the estimand of \cref{eq:sc:estimand}. The classical
+point estimate and the shipped posterior differ by \keur{\nbSevenEstDiff}
+(\pc{\nbSevenEstDiffPct} of the effect) and every arm, the discarded iid fit included, sits
+\emph{below} the planted truth. Neither paradigm is the closer of the two in any sense worth a
+sentence: the difference between them is a fraction of a standard deviation. The shared undershoot
+is a property of \emph{this draw}, not of this design. The chapter has the evidence to say
+which: the calibration check above refit everything on \nbSevenNPanels{} fresh panels and found a
+mean error of \keur{\nbSevenSeedBias}, an \emph{over}-shoot. One panel cannot tell you about bias.
+That is what the fresh-panel check is for, and it is why a single-panel undershoot must not be
+promoted into a property of the method. The
+Bayesian layer did not buy a better point estimate, and it could not have: the causal work was
+done by the identification of \cref{sec:sc:ident} and by the simplex, and all three arms share it.
+This is the ordinary case, and it has a name, the Bernstein--von Mises phenomenon
+\citep{gelman2013} (\hyperref[app:sc:bvm]{Appendix~\thechapter.A.13}): with a well-specified likelihood and enough data, the posterior concentrates
+where the maximum-likelihood estimate does, and the two paradigms return the same number.
 
-\subsection*{On the uncertainty, they do not --- and the classical arm wins}
+One qualification keeps that story honest. The agreement is between the classical fit and the
+\emph{shipped} posterior, the one \cref{sec:sc:compare} builds with a first-order autoregressive
+(AR(1)) error; the discarded iid posterior is the instructive exception. At
+\keur{\nbSevenIidTotal} it sits well below the classical \keur{\nbSevenClTotal}, and that gap is the
+likelihood at work on the \emph{estimate}, not only on the interval. An AR(1) likelihood is a
+generalised-least-squares re-weighting of the pre-period (\hyperref[app:sc:ar1]{Appendix~\thechapter.A.10}),
+so getting the error model wrong changes which weeks the fit trusts, hence the weights, hence the
+centre. Identification and the simplex put every arm in the right neighbourhood; the likelihood still
+nudges the centre \emph{within} it, and the misspecified iid fit nudged it the wrong way. So ``the
+sampler adds no causal content'' is right, but ``the likelihood touches only the width'' is not: the
+repair of \cref{sec:sc:compare} moves the estimate too, from \keur{\nbSevenIidTotal} up to
+\keur{\nbSevenBayesTotal}, which lands \emph{beside} the classical \keur{\nbSevenClTotal}.
 
-Now the width. Three quantities claim to price the same object, the standard deviation of the
-\nbSevenNPost-week total, and they are set against each other in \cref{tab:sc:scales}. The
-posterior says \keur{\nbSevenBayesSd}. The placebo distribution says \keur{\nbSevenPlaceboSd}.
-And the referee --- the \emph{actual} spread of the estimation error across the
-\nbSevenNPanels{} fresh panels, which only a simulator can supply --- says \keur{\nbSevenSeedSd}.
+It is worth being exact about what that agreement is, because it is easy to overclaim. The AR(1)
+repair does \emph{not} recover the classical \emph{weights}. Abadie's constrained least squares
+concentrates the blend on \nbSevenClEffDonors{} effective donors; the flat Dirichlet spreads the
+same reconstruction over \nbSevenBayesEffDonors{} (\cref{fig:sc:weightprofiles,tab:sc:weights}), and
+re-weighting the pre-period never pulls the second profile onto the first. What the two arms share
+is the \emph{total}, reached by two different routes. That is corroboration across weightings, and
+it is worth more than one method reproducing the other: two estimators that disagree on which markets
+to trust, yet agree on the answer, are harder to dismiss than either alone. The regularized blend
+remains the more stable of the two out of sample and the less interpretable, the trade
+\cref{sec:sc:model} already named; it is made on the weights, not on the estimate.
+
+\input{build/floats/nb07_weightprofiles}
+
+\subsection*{The iid interval is too narrow}
+
+With the centre settled, the width. Start with the symptom, because it is stark: the calibration
+check above found that the iid posterior's nominal 90\,\% interval on the \nbSevenNPost-week total
+covers the truth on only \pc{\nbSevenTotalCov} of fresh panels, against \pc{\nbSevenWeekCov} for its
+\emph{per-week} band. \Cref{fig:sc:iidshipped} shows the gap in one picture: the iid posterior (the
+narrow one) sits well inside both the design-based interval and the wider autocorrelated posterior
+\cref{sec:sc:compare} builds, and on this panel the planted truth falls \emph{outside} the iid band. The
+failure is confined to the \emph{sum}; the per-week band is fine. So the rest of the section prices a
+single number, the standard deviation of the total, and asks why the iid likelihood gets it too small.
+
+\input{build/floats/nb07_iid_vs_shipped}
+
+\subsection*{How wide should the interval on the total be?}
+
+The decision needs to know how far the \nbSevenNPost-week total could plausibly fall from the
+estimate, so the object to price is the standard deviation of that total. Four quantities claim to
+price it, and \cref{tab:sc:scales} sets them side by side. The iid posterior of \cref{eq:sc:lik}
+says \keur{\nbSevenIidSd}. The autocorrelated posterior built below says \keur{\nbSevenBayesSd}. The
+placebo distribution says \keur{\nbSevenPlaceboSd}. And the yardstick (the \emph{actual} spread
+of the estimation error across the \nbSevenNPanels{} fresh panels, which only a simulator can
+supply) says \keur{\nbSevenSeedSd}.
 
 \input{build/tables/nb07_scales}
 
-The posterior underprices the truth by a factor of \nbSevenUnderprice{}. The design-based placebo
-scale lands within \pc{\nbSevenPlaceboSdErrPct} of it. That is the whole finding, and it is
-measured, not argued: the coverage column of \cref{tab:sc:compare} is its consequence.
+The iid posterior is the outlier. It underprices the fresh-panel spread by a factor of
+\nbSevenUnderprice{}, and the coverage column of \cref{tab:sc:compare} is the direct consequence: a
+standard deviation two-and-a-bit times too small produces a band that is right half the time. That
+is the width the decision cannot use, and the next subsection explains what in the errors produces
+it.
 
-\subsection*{Why: a misspecified likelihood, not a failed paradigm}
+Grading the two posteriors fairly takes one piece of care, which
+\hyperref[app:sc:referee]{Appendix~\thechapter.A.9} works through: each must be judged against the
+spread of \emph{its own} estimator across fresh panels, because the iid and autocorrelated fits make
+different errors. Judged that way the verdict is clean. The iid posterior is genuinely too narrow.
+The autocorrelated posterior, whose own fresh-panel spread is \keur{\nbSevenSeedSdArone}, reports
+within ten per cent of that \emph{on average across panels} (\keur{\nbSevenAroneCrosspanelSd}) and is
+calibrated rather than tight. The right comparison is that cross-panel average
+\keur{\nbSevenAroneCrosspanelSd} against the \keur{\nbSevenSeedSdArone} spread. The
+\keur{\nbSevenBayesSd} in \cref{tab:sc:scales} is only what this one panel's posterior reports, and
+a single panel scatters around the average.
 
-The cause is a single modelling choice, and stating it precisely is the most important paragraph
-in this chapter.
+The design-based placebo scale earns a sentence of its own, because it separates an efficiency loss
+from a validity one. At \keur{\nbSevenPlaceboSd} it sits \pc{\nbSevenPlaceboSdErrPct} \emph{below}
+the yardstick (it too under-prices) and yet the randomization interval still covers at
+\pc{\nbSevenRiCov} against a nominal ninety. \Cref{eq:sc:ri} does not assume a normal with that
+standard deviation. It inverts the placebo \emph{quantiles}, so what it needs is a reference
+distribution of roughly the right \emph{shape}, not one of exactly the right scale. It gets one,
+and it covers. The iid posterior gets neither: it commits to an error structure that is false, so
+its interval is both too narrow and too rarely right: \pc{\nbSevenTotalCov}. Being approximately
+right about the spread costs efficiency; being wrong about the error structure costs validity.
 
-The likelihood \cref{eq:sc:lik} treats the weekly errors as independent. Under independence, the
-uncertainty of an $n$-week total scales as
-%
-\begin{equation}
-  \sd\Big(\sum_{t \in \text{post}} e_t\Big) \;=\; \sqrt{n}\,\sigma
-  \qquad \text{(iid errors)} .
-  \label{eq:sc:sqrtn}
-\end{equation}
-%
-But the blend's error is not iid. Whatever share of the treated market's factor loadings the
-weights fail to match leaks the \emph{shared} factors straight into the gap:
-%
-\begin{equation}
-  e_t \;\approx\; \big(\lambda_0 - \textstyle\sum_j w_j \lambda_j\big)^{\!\top}
-        (g_t,\, s_t,\, m_t) \;+\; \varepsilon_{0t},
-  \label{eq:sc:leak}
-\end{equation}
-%
-and $m_t$ is a random walk (\cref{eq:sc:macro}). The mismatch term is therefore a persistent,
-slowly wandering offset --- not fresh noise every week. For correlated errors the variance of a
-sum collects every covariance term,
-%
-\begin{equation}
-  \Var\Big(\sum_{t=1}^{n} e_t\Big)
-    \;=\; \sigma^{2}\Big( n \;+\; 2\sum_{k=1}^{n-1}(n-k)\,\rho_k \Big)
-    \;\xrightarrow[\ \rho_k \to 1\ ]{}\; n^{2}\sigma^{2} \;\gg\; n\,\sigma^{2},
-  \label{eq:sc:n2}
-\end{equation}
-%
-where $\rho_k$ is the lag-$k$ autocorrelation of the error. \Cref{eq:sc:n2} is the entire
-mechanism. \emph{Per-week bands need only the marginal variance} $\sigma^2$, which
-\cref{eq:sc:ppc} gets roughly right --- which is exactly why they cover at \pc{\nbSevenWeekCov}.
-\emph{The total needs the covariances too}, and \cref{eq:sc:lik} sets every $\rho_k$ to zero.
+\subsection*{Why an independent-errors interval is too narrow}
 
-\Cref{fig:sc:acf} measures $\rho_k$ rather than assuming it, on placebo worlds where the true
-lift is zero and the post-launch gap therefore \emph{is} the error. It is
-$\rho_1 = \nbSevenRhoOne$ and still $\nbSevenRhoEight$ at lag eight: the error is almost perfectly
-persistent. Substituting into \cref{eq:sc:n2} reproduces the observed underpricing without any
-further appeal to the data.
+The cause is a single modelling choice. The likelihood \cref{eq:sc:lik} treats the weekly errors as
+independent, and the uncertainty of an independent total grows only as $\sqrt{n}$. But the blend's
+error is not independent from week to week. Whatever share of the treated market's factor loadings
+the weights fail to match leaks the \emph{shared} factors straight into the gap. And one of those
+factors, the macro random walk $m_t$ of \cref{eq:sc:macro}, barely turns around over the
+post-period. So the mismatch acts as a near-constant \emph{offset} (one draw of ``how well did
+this donor pool match?'', held for the whole post-period) sitting on top of ordinary weekly
+noise.
+
+Two things follow from an error of that shape, and \hyperref[app:sc:acf]{Appendix~\thechapter.A.11}
+derives both. First, its autocorrelation is \emph{flat}: it does not decay with the lag, because a
+persistent offset is equally present at every horizon. Second, the variance of the summed total
+picks up a term in $n^2$ rather than $n$. So the total is far more uncertain than $\sqrt{n}$ scaling
+implies, while the \emph{per-week} band, which needs only the one-week variance, is left alone.
+That is exactly the split the coverage numbers show: the iid per-week band covers at
+\pc{\nbSevenWeekCov}, and only its total-lift band fails.
+
+\Cref{fig:sc:acf} measures the autocorrelation rather than assuming it, on placebo worlds where the
+true lift is zero and the post-launch gap therefore \emph{is} the error. The plotted quantity is an
+\emph{uncentered cross-panel} statistic: the ratio of between-panel offset variance to total gap
+variance at each lag, not the within-series autocorrelation of any one panel. That is the
+right object here, because it is precisely the persistent offset it exposes. It reads
+$\rho_1 = \nbSevenRhoOne$ and, decisively, still $\nbSevenRhoEight$ at lag eight: flat, not
+decaying. The error is not \emph{strongly} correlated; it is \emph{persistently} correlated, and
+the two call for different cures.
 
 \input{build/floats/nb07_acf}
 
-One diagnostic deserves emphasis because it is the one that would have misled a careful analyst.
-The \emph{in-sample} pre-period residual of the fitted model shows only modest, sign-flipping
-autocorrelation --- $\nbSevenAcfPreOne$, $\nbSevenAcfPreTwo$ and $\nbSevenAcfPreThree$ at lags one
-to three, against a noise band of roughly $\pm\nbSevenAcfNoiseBand$. The fit \emph{whitens} what
-it can see, because the weights were chosen to absorb precisely the in-sample structure. Eyeballing
-the pre-fit residual would therefore have raised no alarm at all. The persistence is a property of
-the \emph{out-of-sample} error, and only a design-based procedure --- one that refits the estimator
-on units known to be untreated --- ever gets to look at it.
+Translating that structure into a standard deviation for the \nbSevenNPost-week total gives
+\keur{\nbSevenTotalSdTrue} against the \keur{\nbSevenTotalSdIid} an iid likelihood charges: an
+under-pricing of \nbSevenTotalSdRatio$\times$ from the error's structure alone, and
+\nbSevenUnderprice$\times$ measured directly across fresh panels (\keur{\nbSevenSeedSd} against
+\keur{\nbSevenIidSd}). The two agree on the factor, which is the claim.
+\hyperref[app:sc:acf]{Appendix~\thechapter.A.11} carries the offset-model derivation, the
+$\sigma_\omega/\sigma_\varepsilon$ decomposition that reproduces the measured autocorrelation, and the
+in-sample residual check that shows why the pre-period fit could never have warned of any of this.
 
-So: the Bayesian arm lost here, and it lost for a reason that is fully diagnosed and entirely
-repairable. It is \textbf{not} a failure of Bayesian inference. It is a likelihood asserting
-independence over a quantity whose errors are serially correlated, and then being believed. Two
-principled repairs exist, and neither is ``stop using Bayes''. The first is to give the model the
-error structure it actually has --- an AR(1) or random-walk residual --- so that it can see the
-persistence itself; this is the route taken by Bayesian structural time-series approaches to the
-same problem \citep{brodersen2015}. The second is to correct the posterior for misspecification
-directly: \citet{mueller2013} shows that a Bayesian posterior computed under a misspecified
-likelihood can be rescaled by a sandwich covariance matrix so that its intervals recover their
-frequentist coverage --- exactly the repair this chapter's situation calls for, since the
-posterior's \emph{centre} is fine and only its \emph{scale} is wrong.
+% =====================================================================================
+\section{The fix: an AR(1) residual}
+\label{sec:sc:compare}
 
-The classical robustness toolkit exists precisely to be agnostic about the error structure.
-Clustered and HAC standard errors \citep{newey1987, bertrand2004}, the bootstrap, and
-randomization inference all decline to assume a shape for the errors and go and measure one
-instead. \Citet{bertrand2004} made the same point about difference-in-differences, and it cost the
-literature a decade of overstated significance to absorb: serially correlated errors, aggregated
-over time, destroy naive standard errors. Here the same lesson arrives in Bayesian dress. That is
-why the design-based interval wins in this chapter, and it is the honest reason --- not because
-frequentism is deeper, but because it committed to less.
+The diagnosis is complete: the errors carry a persistent offset the iid likelihood pinned to zero,
+so the interval on the total is too narrow. The fix is to give the likelihood that persistence, and
+one extra parameter does it.
 
-\subsection*{What the posterior did buy}
+\subsection*{The interval that gets the total right}
 
-One thing, and it is decisive. $\Prob(\tau > \text{cost})$ exists in exactly one of the two
-columns of \cref{tab:sc:compare}. The classical entry is not ``small'' or ``hard to compute'';
-it is \emph{undefined}, and that is a literal statement rather than a rhetorical concession. A
-$p$-value ranks data against a null. No amount of placebo refitting turns a rank into a
-probability that the campaign paid. \Cref{sec:sc:euro}'s rule is nothing but that probability, and
-so the decision quantity lives only in the Bayesian arm.
+The remedy is to give the model the error structure the diagnostic just found, rather than the
+independence it assumed, the route of the Bayesian structural time-series literature
+\citep{brodersen2015}. Let the residual $e_t = Y_{0t} - \sum_j w_j Y_{jt}$ follow an AR(1) law,
+%
+\begin{equation}
+  e_t \;=\; \rho\, e_{t-1} \;+\; \varepsilon_t,
+        \qquad \varepsilon_t \sim \mathcal N(0, \sigma^{2}), \label{eq:sc:ar1}
+\end{equation}
+%
+substitute it into the likelihood so the model is written entirely in observables, and keep the
+same flat Dirichlet on $w$: exactly one new parameter.
+\hyperref[app:sc:ar1]{Appendix~\thechapter.A.10} gives that observable form, including the stationary
+initial condition, and shows why an AR(1) likelihood is a generalised-least-squares re-weighting of
+the pre-period. The half that is routinely forgotten is the predictive. The post-launch residual
+must be \emph{simulated forward} under \cref{eq:sc:ar1}, not redrawn independently each week,
+because it is the persistence \emph{across the post window} that makes the total's variance
+compound.
 
-Which sets up the uncomfortable part, and this chapter states it rather than hides it:
-\textbf{the decision quantity lives in the arm whose uncertainty was just shown to be the least
-trustworthy}. $\Prob(\tau > \text{cost})$ is read off the same posterior whose total-lift interval
-covers at \pc{\nbSevenTotalCov}, and it inherits that optimism directly. The test is easy to run:
-re-centre nothing, merely rescale the posterior's standard deviation to the design-based one, and
-watch the probability move. It falls from \nbSevenPGo{} to \nbSevenPGoRescaled{}. In this run the
-verdict survives --- \nbSevenDecision{} either way --- but that is luck, not robustness. A run
-sitting near the decision bar would have had its rollout call overturned by the same correction,
-and nothing in the posterior's own output would have warned anyone.
+An alternative repair leaves the fit untouched and rescales the posterior after the fact:
+\citet{mueller2013} shows that a sandwich covariance can restore an interval's frequentist coverage
+under a misspecified likelihood. Either route fixes the width; this chapter takes the AR(1) because
+it also hands the analyst a parameter to read.
 
-The ledger, then, stated plainly. Bayes did not buy the point estimate: the classical one is at
-least as good. It did not buy interpretable weights: the classical blend is sparser. It did not
-buy a trustworthy interval on the total: it bought a worse one. What it bought is real but
-narrower than the brochure --- a near-nominal per-week band, a coherent way to propagate
-uncertainty into euros, and the only object in the chapter that can answer the question the
-business actually asked. \textbf{Use the posterior for the decision, and design-based inference
-for the confidence in it.}
+The data carried this parameter's value all along. The posterior on $\rho$ is centred at
+\nbSevenRhoPost{} with a 90\,\% interval of $[\nbSevenRhoLo,\ \nbSevenRhoHi]$, the quantity the
+iid likelihood had silently pinned to zero. The fix does three things.
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{It moves the estimate, and it lands beside the classical number.} The AR(1)
+        posterior mean is \keur{\nbSevenBayesTotal} against the iid fit's \keur{\nbSevenIidTotal}, a
+        shift of more than one iid posterior standard deviation. An AR(1) likelihood re-weights
+        which pre-period weeks the fit trusts, hence the donor weights, hence the counterfactual,
+        hence the estimate (\hyperref[app:sc:ar1]{Appendix~\thechapter.A.10}), so the width was never
+        going to move alone. Where it lands is the corroboration: \emph{beside} the classical arm's
+        \keur{\nbSevenClTotal}, not on top of it, and reached by a different weight profile
+        (\cref{fig:sc:weightprofiles}). Identification is untouched; the estimator is not, so the
+        repair buys a corroborated centre and an honest width at once.
+  \item \textbf{It re-prices the interval.} The 90\,\% credible interval becomes
+        $[\keur{\nbSevenBayesLo},\ \keur{\nbSevenBayesHi}]$, a width of \keur{\nbSevenBayesWidth}
+        against the iid band's \keur{\nbSevenIidWidth}, wider by a factor of
+        \nbSevenWidthRatio{}. It contains the planted \keur{\nbSevenTrueTotal}; the iid band did
+        not.
+  \item \textbf{It earns that width.} Refit on the \nbSevenNPanels{} panels of
+        \cref{sec:sc:valid}, the repaired interval covers the planted total \pc{\nbSevenTotalCovArone}
+        of the time against the iid fit's \pc{\nbSevenTotalCov}, level with the design-based
+        randomization interval's \pc{\nbSevenRiCov}. Its per-week band covers at
+        \pc{\nbSevenWeekCovArone}. Recovery is unchanged ($\nbSevenBiasArone$, EUR 000, of bias
+        against $\nbSevenSeedBias$), and the seed-to-seed spread it must price is
+        \keur{\nbSevenSeedSdArone}.
+\end{enumerate}
+
+An interval that is right \pc{\nbSevenTotalCovArone} of the time where its predecessor was right
+\pc{\nbSevenTotalCov} of the time is the difference between an interval and a decoration, bought
+with one parameter and no new data. A posterior returns exactly the uncertainty its likelihood
+encodes; give the likelihood the persistence the errors actually have, and the interval it returns
+is one the decision can use.
+
+The transferable rule is not ``always use AR(1)'', and it is worth being precise about \emph{why}
+AR(1) works here, because in one respect it is the wrong family. The diagnosed error is \emph{flat}:
+its autocorrelation does not decay (\cref{fig:sc:acf}), which is the signature of a level shift. A
+stationary AR(1)'s autocorrelation \emph{does} decay geometrically, so at the posterior
+$\rho = \nbSevenRhoPost$ it has all but vanished by lag eight, precisely the decay the data refused.
+What AR(1) matches is therefore not the \emph{shape} of the autocorrelation but the \emph{variance of
+the sum}: with $\rho$ pulled up, the summed variance inflates enough to cover honestly. It helps to
+put the candidate error shapes on one axis, because they price the sum very differently: independent
+errors give the total a variance in $n$, a \emph{constant} offset (the caricature the diagnosis used)
+gives $n^2$, and a near-integrated random walk gives $n^3$. The flat autocorrelation really points at
+that last, local-level case, so the truth sits between $n^2$ and $n^3$. AR(1) matches \emph{none} of
+the shapes exactly. What it prices is the \emph{sum}: $\rho$ is pulled up until the summed variance
+comes out right on this $n = \nbSevenNPost$ panel. A random-walk or local-level component would match the shape itself
+(the route of \citet{brodersen2015}, taken up in \cref{sec:sc:sts}); AR(1) is the pragmatic
+one-parameter stand-in that lands the total's scale here.
+\hyperref[app:sc:acf]{Appendix~\thechapter.A.11} works through that gap between getting the scale right
+and the shape wrong. The rule is: \emph{when a
+posterior's interval under-covers, suspect the specification, and check the coverage}: the
+likelihood first, as here, and any silently mis-scaled default prior next
+(\refiv{} meets exactly that second case). The classical robustness
+toolkit, clustered and HAC standard errors \citep{newey1987, bertrand2004}, the bootstrap, and
+randomization inference, is built to be agnostic about the error structure, measuring it rather
+than assuming it. \Citet{bertrand2004} made exactly this point for difference-in-differences, and
+it cost the literature a decade of overstated significance to absorb: serially correlated errors,
+summed over time, destroy naive standard errors. Here the same lesson arrives in Bayesian dress.
+That is why the design-based interval is worth keeping alongside the posterior as its
+\textbf{referee}: it committed to less, so it cannot be wrong about the autocorrelation, and it is
+what flags a likelihood that is under-pricing its own uncertainty.
+
+\subsection*{Does the AR(1) repair change the decision? No}
+
+It is worth stating plainly what the repair did and did not touch, because the rollout call must not
+appear to hinge on it. \textbf{It did not change the decision.} \Cref{sec:sc:classical} already
+reached the verdict from the classical point estimate and the randomization interval, neither of which
+involves a likelihood. What the repair changed is the \emph{posterior's width}, so that when
+\cref{sec:sc:euro} reads a probability off it, that probability is honest rather than borrowed.
+
+The same call survives every arm the chapter fits, and that is the point:
+\begin{itemize}[leftmargin=*, itemsep=.2em]
+  \item \textbf{classical} (\cref{sec:sc:classical}): the profit interval straddles the cost, so this
+        is not a confident buy;
+  \item \textbf{shipped AR(1) posterior}: $\Prob(\text{profit} > c) = \nbSevenPGo$, a
+        \textbf{\nbSevenDecision};
+  \item \textbf{that same posterior re-priced} at the wider design-based scale (\keur{\nbSevenPlaceboSd}
+        against its own \keur{\nbSevenBayesSd}): the probability rises only to \nbSevenPGoRescaled{}, a
+        \textbf{\nbSevenDecisionRescaled} at most;
+  \item the discarded \textbf{iid posterior} happens to print nearly the same probability here,
+        because the break-even sits well below the bulk of both posteriors; agreement at one price is a
+        coincidence of geometry, not a certificate, and the width, not the number, is what got it
+        discarded.
+\end{itemize}
+Every one of them says the same thing: not a national rollout on this evidence. The label survives
+every re-pricing, \nbSevenDecision{} on its own scale and \nbSevenDecisionRescaled{} on the design's,
+because the campaign sits far enough from its break-even that no defensible choice of width reaches
+the $0.9$ bar. That the number moves while the label does not is what scale-robustness looks like; a
+campaign priced at its break-even would enjoy no such stability, and the check must be run, not
+assumed.
+
+So the division of labour: the posterior states the decision as a single
+probability, and design-based inference certifies that probability is honest. Neither arm is
+strictly needed to \emph{act} here; the classical arm alone already says hold. Together they do
+more. The posterior turns a straddling interval into a probability a board can read. Design-based
+inference certifies it: it never wrote a likelihood, so it had none to get wrong, and it is what
+caught the iid fit under-pricing its own uncertainty and confirms the repaired width is honest.
 
 % =====================================================================================
 \section{The decision, in euros}
 \label{sec:sc:euro}
 
-The campaign cost \keur{\nbSevenCost}. Everything above now collapses into one object: the
-posterior over $\tau$. The rollout question is not ``is the lift positive?'' --- the placebo test
-of \cref{sec:sc:classical} settled that --- but \textbf{``what is the probability the lift beats
-what was paid?''}, because a real-but-small effect still loses money at national scale.
+\Cref{sec:sc:classical} already reached the rollout call on the classical evidence alone: at a
+\pc{\nbSevenMargin} margin the lift of \keur{\nbSevenClTotal} clears its \keur{\nbSevenBreakevenLift}
+break-even with room to spare (an iROAS of \nbSevenIroas{} against \nbSevenBreakevenIroas{}), and the
+design-based interval carried through the margin runs from \keur{\nbSevenClProfitLo} to
+\keur{\nbSevenClProfitHi}, straddling the \keur{\nbSevenCost} cost. This section states that same call
+the way the posterior states it, as a single probability, and the two agree.
 
-The decision rule is a stated convention, applied to the posterior:
+The decision quantity is the \emph{profit} the lift earns, $\text{profit} = \pc{\nbSevenMargin} \times \tau$,
+and the rule is the book's standard convention, now applied to the repaired posterior of
+\cref{sec:sc:compare} (the fit whose interval survived \cref{sec:sc:valid}'s coverage check):
 %
 \begin{equation}
-  \Prob(\tau > c)\ \begin{cases}
+  \Prob(\text{profit} > c)\ \begin{cases}
     > 0.9 & \Rightarrow\ \textsc{go} \quad\text{(act without buying more evidence)},\\
     < 0.5 & \Rightarrow\ \textsc{no-go} \quad\text{(more likely than not it does not pay)},\\
     \text{otherwise} & \Rightarrow\ \textsc{test further}.
@@ -580,79 +1240,155 @@ The decision rule is a stated convention, applied to the posterior:
   \label{eq:sc:rule}
 \end{equation}
 %
-At $c = \keur{\nbSevenCost}$ the posterior gives $\Prob(\tau > c) = \nbSevenPGo$, an expected
-total of \keur{\nbSevenExpValue}, an expected net value of \keur{\nbSevenExpNet}, and an expected
-return on investment of \pc{\nbSevenExpRoi}. The verdict is \textbf{\nbSevenDecision}
-(\cref{fig:sc:decision}).
+At $c = \keur{\nbSevenCost}$ the posterior gives $\Prob(\text{profit} > c) = \nbSevenPGo$, an expected
+profit of \keur{\nbSevenExpProfit} against the \keur{\nbSevenCost} spent (an expected net of
+\keur{\nbSevenExpNet} and a \pc{\nbSevenExpRoi} return). The verdict is \textbf{\nbSevenDecision}
+(\cref{fig:sc:decision}), the same action \cref{sec:sc:classical} reached, now carrying a probability
+the straddling interval could not report.
 
 \input{build/floats/nb07_euro}
 
 Two things are true at once here, and conflating them is how marginal campaigns get scaled. The
-placebo test says the effect is \emph{real} ($p = \nbSevenPRatio$). The economics say it is
-\emph{marginal at this price}: the expected lift sits almost exactly on the cost line, and
-\nbSevenPGo{} is barely better than a coin flip. Statistical significance and commercial
-worthiness are different questions asked of different objects.
+placebo test says the effect is \emph{real} ($p = \nbSevenPRatio$). The economics say it
+\emph{probably, but not provably, paid}. The expected profit, \keur{\nbSevenExpProfit}, clears the
+\keur{\nbSevenCost} paid by \keur{\nbSevenExpNet}, a \pc{\nbSevenExpRoi} return, so on the average
+the campaign is a clear winner. But the posterior is wide, and the probability that actually decides
+the rollout, $\Prob(\text{profit} > c) = \nbSevenPGo$, says roughly one world in five still ends with
+the spend unrecovered. This is exactly why the rule reads a \emph{probability} rather than a point
+estimate: a healthy mean can coexist with a one-in-five chance of losing the budget, and only the
+probability displays both facts at once. On the number that governs the decision the verdict is
+\textbf{\nbSevenDecision}. Statistical significance and commercial worthiness are different questions
+asked of different objects, and this campaign answers the first one yes and the second one with
+four-in-five confidence, where the rule demands nine-in-ten.
 
-The right-hand panel of \cref{fig:sc:decision} prices the gap. Sweeping a hypothetical cost $c$
-and plotting $\Prob(\tau > c)$ gives a headroom curve, and its crossing of the $0.9$ bar sits at
-\keur{\nbSevenHeadroom}. Had the campaign been bought for that instead of \keur{\nbSevenCost},
-this same evidence would already be a confident \textsc{go}. That is a number to take into the
-media-buying negotiation, and it is a more useful deliverable than a yes or a no.
+The right-hand panel of \cref{fig:sc:decision} prices the gap rather than merely deploring it.
+Sweeping a hypothetical price $c$ and plotting $\Prob(\text{profit} > c)$ gives a headroom curve, and
+its crossing of the $0.9$ bar sits at \keur{\nbSevenHeadroom}. That is the highest price at which this
+same evidence would already be a confident \textsc{go}, and the campaign was bought for
+\keur{\nbSevenCost}, above it. The finding to take into the media-buying negotiation is therefore not
+``the campaign failed'' but ``at a \pc{\nbSevenMargin} margin this evidence supports a confident buy
+only up to \keur{\nbSevenHeadroom}, and the asking price was \keur{\nbSevenCost}'', a far more useful
+deliverable than a yes or a no.
 
-\subsection*{What a confirmatory test is worth}
+\subsection*{A \textsc{test further} still has a price tag}
 
-\textsc{test further} must not end as a shrug. The deliverable is an answer to \emph{what evidence
-would settle this, and is it worth buying?} The value of perfect information,
+A \textsc{test further} is a verdict about this campaign at this price, not a full stop, and it must
+not end as a shrug either. This is the number the cost sweep of \cref{sec:sc:classical} could only
+point at: at the interior prices where the interval still straddles the cost, better evidence has a
+value the classical arm could not name. The deliverable is still an answer to
+\emph{what evidence would settle this, and is it worth buying?} The value of perfect information,
 %
 \begin{equation}
-  \text{VOI} \;=\; \E\big[\max(\tau - c,\ 0)\big] \;-\; \max\big(\E[\tau] - c,\ 0\big),
+  \text{VOI} \;=\; \E\big[\max(\text{profit} - c,\ 0)\big] \;-\; \max\big(\E[\text{profit}] - c,\ 0\big),
   \label{eq:sc:voi}
 \end{equation}
 %
-is the expected gain from deciding \emph{after} the uncertainty resolves rather than committing
-now on the mean \citep{raiffa1961}. It comes to \keur{\nbSevenVoi} --- and that small number is
-itself the finding. With the posterior centred almost exactly on the cost line, even perfect
-foresight barely changes the expected outcome, because whichever way the truth falls the firm is
-near break-even. \Cref{eq:sc:voi} is therefore an upper bound on any confirmatory-research
-budget: a study costing many times \keur{\nbSevenVoi} to resolve a \keur{\nbSevenVoi} question is
-not a cautious decision, it is an expensive one.
+is the expected gain from deciding \emph{after} the uncertainty resolves rather than acting now on the
+mean \citep{raiffa1961} (\hyperref[app:sc:voi]{Appendix~\thechapter.A.12} works it through).
+It comes to \keur{\nbSevenVoi}, and one subtlety in that number is worth
+naming, because the chapter runs two decision criteria at once. \Cref{eq:sc:voi} takes the risk-neutral
+baseline, ``act on the mean'': since expected profit (\keur{\nbSevenExpProfit}) sits \keur{\nbSevenExpNet}
+\emph{above} cost, that baseline is to \emph{invest}, and perfect information (which commits only in the
+worlds where profit actually clears cost) beats it by \keur{\nbSevenVoi}. The rollout rule of
+\cref{eq:sc:rule} is stricter and deliberately risk-averse: it demands $\Prob(\text{profit} > c) > 0.9$,
+far more than a merely positive mean, so it \emph{holds}. Against that stricter hold, the value of
+resolving the uncertainty is larger. It grows by exactly the \keur{\nbSevenExpNet} the
+act-on-the-mean baseline would have banked. Either way the conclusion is the same: the value is
+small, because most of the posterior's mass already sits above the cost line and perfect information
+would rarely overturn the commitment. Either
+figure is an upper bound on any confirmatory-research budget: a study costing many times \keur{\nbSevenVoi}
+to resolve a \keur{\nbSevenVoi} question is not a cautious decision, it is an expensive one.
 
-Sizing that test sharpens the point. A second geo test treating $k$ independent markets tightens
-the posterior roughly as $1/\sqrt{k}$; the smallest $k$ that reaches
-$\Prob(\tau > c) \ge 0.9$ is \nbSevenKNeeded{} --- more treated markets than this world contains
-(\nbSevenNDmas{} in total, one already used). And that arithmetic \emph{flatters} the test twice
-over: it treats the $k$ market-level estimates as independent when they share the same macro
-factors, and it takes the per-market scale from the posterior that \cref{sec:sc:compare} showed to
-be too tight. Read \nbSevenKNeeded{} as a lower bound. The honest conclusion is that no feasible
-single confirmatory geo test settles this question at this price. What remains is to renegotiate
-the price (the headroom curve says \keur{\nbSevenHeadroom} clears the bar), to extend the
-post-period, or to accept a lower confidence bar with open eyes. What is not on the list is a
-blind national rollout.
+Sizing that test completes the picture, and it answers a different question than the VOI does. A
+second geo test treating $k$ independent markets tightens the posterior roughly as $1/\sqrt{k}$, and
+because the profit posterior is centred \emph{above} the cost line, tightening moves mass towards
+$\{\text{profit} > c\}$. The centre clears the price by \keur{\nbSevenExpNet}, so the $0.9$ bar is
+reached after only a factor-two shrink of the width: the sizing routine returns
+$k \approx \nbSevenKNeeded$ treated markets. Read that as a lower bound, because the arithmetic
+flatters the test twice over, treating the $k$ market-level estimates as independent when they share
+the same macro factors, and taking the per-market scale from a posterior the multi-seed check calls
+optimistic. So the test is \emph{feasible}, and the VOI just said it is not \emph{worth funding}, and
+both are true because they price information for different decisions. The \keur{\nbSevenVoi} is what
+certainty is worth for this \keur{\nbSevenCost} media buy; a $k$-market test is bought to de-risk the
+national rollout, whose stakes, not this campaign's, are what pay for it. Keep the two ledgers
+separate and both sentences fit in one memo: do not fund a test to re-litigate this buy, and do not
+roll out without one. What remains at this price is to renegotiate (the headroom curve says a
+confident buy holds up to \keur{\nbSevenHeadroom}), to run the confirmatory test against the rollout
+ledger, or to accept the four-in-five bet with open eyes. What is not on the list is a blind national
+rollout.
+
+% =====================================================================================
+\section{The more precise route: structural time series}
+\label{sec:sc:sts}
+
+The AR(1) repair was honest about its own limitation: it prices the \emph{sum} correctly while
+getting the error's \emph{shape} wrong (\cref{fig:sc:acf}). The flat autocorrelation points at a
+local-level, near-integrated error, a level that drifts like a random walk rather than a shock that
+decays. A model built from that shape would fit a state-space \emph{level} component jointly with the
+donor blend, so the counterfactual would carry a random-walk uncertainty that widens with the horizon
+by construction, instead of an AR(1) whose $\rho$ has been pulled up until the summed variance happens
+to come out right. That is the route of \citet{brodersen2015}, and it is the shape-correct one.
+
+This chapter did not take it, deliberately. The extra machinery, a latent level fit alongside the
+weights, buys shape-correctness that does not move \emph{this} verdict: on a \nbSevenNPost-week window
+AR(1) already lands the total's scale and covers at \pc{\nbSevenTotalCovArone}, and the rollout call
+was settled classically before any likelihood was written. Paying for the state-space model here
+would sharpen a number the decision does not turn on.
+
+Where it would earn its keep is the honest upper bound. If you needed the error model to be
+\emph{right} rather than merely \emph{sufficient}, a longer post-period is the case that forces it.
+A constant offset charges the total $n^2$; a genuine random-walk level charges $n^3$. The gap between
+the two widens with the window, so over a long horizon the inflated-$\rho$ approximation would drift
+away from honest coverage where a local-level model would hold it. That is the ceiling, and where it
+sits. It is a pointer, not a result: no state-space model is fitted in this chapter, and none of its
+numbers appear.
 
 % =====================================================================================
 \section{What can go wrong}
 \label{sec:sc:wrong}
 
+Three failure modes matter in practice, and this section demonstrates each on the panel rather than
+describing it: the naive shortcuts that book the shared wave as campaign effect, anticipation that
+contaminates the launch date, and spillover, the one violation no placebo can see. The first two are
+caught by tests the chapter has already built. The third is caught by nothing, which is why it ends
+in a design rule rather than a diagnostic.
+
 \subsection*{The naive estimators}
 
-\Cref{tab:sc:naive} runs the shortcuts of \cref{sec:sc:decision} on the same panel. Before-and-after
-books the trend and overstates the weekly lift badly. Treated-minus-average-control is
-\emph{worse}, because it differences nothing out and simply books the level gap between a large
-metro and the average one. Differencing out the shared pre-period level --- difference-in-differences
-against the average control --- removes the trend bias, but a residual gap survives, because the
-average control has the wrong factor loadings and so does not cancel the common wave cleanly. Only
-the reweighted control lands near the truth. Same data, four estimates: the estimator \emph{is} the
-identification strategy.
+\Cref{tab:sc:naive} runs the shortcuts of \cref{sec:sc:decision} on the same panel, against a true
+weekly lift of \keur{\nbSevenTrueAvg}. Before-and-after books whatever the shared factors did
+between the two windows, and in this panel they moved \emph{against} the campaign, so it comes
+in at \keur{\nbSevenNaiveBa}, roughly half the truth. That is worth dwelling on, because the folk
+version of the bias has the naive estimator always flattering the campaign. It does not: the trend
+bias has no fixed sign. It simply has nothing to do with the advertising, and an analyst who
+``knows'' which way it errs is guessing. Treated-minus-average-control errs in the opposite
+direction, at \keur{\nbSevenNaiveAvgctrl}, because it differences nothing out and carries the raw
+level gap between a large metro and an average one. A \emph{difference-in-differences} removes both
+problems at once: take the change in the treated market and subtract the change in the control, so
+anything that moved both markets cancels (\refdid{} treats it in full). It does markedly better.
+But a residual bias survives, because the average control
+has the wrong factor loadings and so does not cancel the common wave cleanly. Only the
+\emph{reweighted} control lands near the truth. The error column of \cref{tab:sc:naive} ranks them
+without commentary; the reweighted estimator's error is smaller than the next best by a
+factor of several, and \cref{fig:sc:naivebars} plots the four against the planted truth. Same data,
+four estimates: the estimator \emph{is} the identification strategy.
 
 \input{build/tables/nb07_naive}
+\input{build/floats/nb07_naivebars}
 
 \subsection*{Anticipation}
 
-\Cref{as:sc:anticip} is tested by moving the launch backwards. Refitting with a fake launch in week
-\nbSevenPlaceboTimeWeek{} --- inside the true pre-period, where by construction nothing happened ---
+\Cref{as:sc:anticip} is tested by moving the launch backwards, the \emph{placebo-in-time} test that
+\hyperref[app:sc:placebotimeapp]{Appendix~\thechapter.A.7} formalises. Refitting with a fake launch in week
+\nbSevenPlaceboTimeWeek{} (inside the true pre-period, where by construction nothing happened)
 must return an effect of approximately zero, and does: \keur{\nbSevenPlaceboTimeGap} per week,
-comfortably inside the pre-fit noise of \keur{\nbSevenBayesPreRmse}. The method does not invent
-lift where there is none.
+comfortably inside the pre-fit noise of \keur{\nbSevenClPreRmse}. The yardstick is the classical
+fit's, and deliberately so: the fake-launch gap is itself an SLSQP refit, so it must be graded
+against the SLSQP fitter's own pre-fit RMSE. The shipped posterior's \keur{\nbSevenBayesPreRmse} is
+context here, not the ruler. The method does not invent lift where there is none, as
+\cref{fig:sc:placebotime} shows.
+
+\input{build/floats/nb07_placebotime}
 
 \subsection*{Spillover, the assumption no placebo can see}
 
@@ -672,13 +1408,15 @@ synthetic rises, so the measured gap \emph{shrinks} by roughly the spilled weigh
 %
 At $\varphi = \nbSevenSpPhi$, with \pc{\nbSevenSpNeighbourWeight} of the weight on the
 contaminated donors, \cref{eq:sc:spill} predicts a bias of $\nbSevenSpPredicted$ (EUR 000) and
-the refit delivers $\nbSevenSpMeasured$ (\cref{tab:sc:spillover}).
+the refit delivers $\nbSevenSpMeasured$ (\cref{tab:sc:spillover}), and \cref{fig:sc:spillover} traces
+the attenuation as $\varphi$ grows.
 
 \input{build/tables/nb07_spillover}
+\input{build/floats/nb07_spillover_curve}
 
 Two consequences follow, and the first is more reassuring than most analysts expect.
 \textbf{Spillover attenuates}: synthetic control \emph{under}-states a real campaign, never
-inflates it. It is conservative for a \textsc{go} call --- though it can certainly turn a true
+inflates it. It is conservative for a \textsc{go} call, though it can certainly turn a true
 \textsc{go} into a \textsc{no-go}. And because no placebo can flag it, \textbf{the fix is design,
 not statistics}: excluding the suspect donors up front restores the estimate to
 \keur{\nbSevenSpExcluded}, against \keur{\nbSevenSpContaminated} for the contaminated pool and
@@ -691,31 +1429,39 @@ anything.
 Three remain, and they are properties of the design rather than defects of the code. \emph{One
 treated unit buys limited power}: with \nbSevenNDmas{} markets, the permutation $p$-value is
 granular and cannot resolve below roughly $1/\nbSevenNDmas$ however strong the effect. \emph{The
-pre-fit gate is a gate}: a high pre-RMSE makes the post gap uninterpretable, and no amount of
-Bayesian machinery repairs a bad donor pool. And \emph{the estimator is high-variance here}, as
-\cref{sec:sc:valid} measured --- which is the reason this chapter leads its conclusions with the
-placebo test rather than with either interval.
+design sits near the edge of its own resolution}, as \cref{sec:sc:model} measured: the decision-carrying
+fit clears the pre-fit gate, but the margin is thin, and the week-to-week wobble is of the same order
+as the weekly lift it must detect. A longer pre-period or a
+richer donor pool is the real fix, and the \textsc{test further} of \cref{sec:sc:euro} should be read in that
+light. And
+\emph{the estimator is high-variance here}, as \cref{sec:sc:valid} measured, which is the reason
+this chapter leads its conclusions with the placebo test rather than with any interval.
 
 % =====================================================================================
 \section{On real data}
 \label{sec:sc:real}
 
-Everything above was graded against a truth that was planted. The obvious objection --- that a
-method which recovers a lift someone put there is not thereby proved to work --- deserves a real
+Everything above was graded against a truth that was planted. The obvious objection (that a
+method which recovers a lift someone put there is not thereby proved to work) deserves a real
 answer, and there is one. A real advertiser spent \kusd{\nbSevenBSpend} on a real campaign in
 \nbSevenBNTreated{} US geos over \nbSevenBCampaignDays{} days in early 2015, leaving
-\nbSevenBNControl{} geos dark; the daily sales-and-cost panel is published with Google's geo
+\nbSevenBNControl{} geos dark. The daily sales-and-cost panel is published with Google's geo
 experiment methodology \citep{vaver2011, kerman2017}. It is exactly the shape of panel every
 advertiser's warehouse already holds: \nbSevenBNGeos{} units, \nbSevenBNDaysTotal{} days,
 one campaign window, and \nbSevenBCooldownDays{} days of cooldown after the money stops.
 
-Three things replace the planted truth.
+Three things replace the planted truth, one per subsection below. First, a \emph{referee}: because
+the geos were randomized, a model-free difference-in-differences gives an unbiased benchmark that
+every model-based estimate must land inside. Second, an \emph{exam}: does synthetic control land
+there, do its diagnostics pass, and does it refuse the one market it cannot match? Third, an
+\emph{off-switch}: the campaign ends, so a genuine effect must collapse when the spend stops.
 
 \subsection*{The referee: what randomization buys}
 
 The \nbSevenBNGeos{} geos were split into treatment and control \emph{at random}, in
 \nbSevenBNPairs{} size-matched pairs. That design licenses an estimator that fits no model at
-all. Take each pair's treated geo, take its change in mean daily sales from the pre-window to the
+all: a matched-pairs \emph{difference-in-differences} (\refdid{}). Take each pair's treated geo,
+take its change in mean daily sales from the pre-window to the
 campaign window, subtract the same change for its matched control partner, and average over the
 pairs:
 %
@@ -732,48 +1478,92 @@ pairs, and a standard error built from the scatter of the pair differences,
 $NT \cdot s_d / \sqrt{P}$. The covariance choice is not a default: randomization happened at the
 geo level within pairs, so the pair differences are the design's own unit of variability. A
 geo-day-level iid standard error would treat thousands of correlated geo-days as independent
-draws and report an interval several times too narrow --- \citeauthor{bertrand2004}'s warning,
-one chapter later and in a different costume. Pairing is itself variance reduction: the geo size
+draws and report an interval several times too narrow: \citeauthor{bertrand2004}'s warning,
+one chapter later and in a different costume. Pairing is itself variance reduction. The geo size
 factor (the largest geo sells \nbSevenBSizeRatio{} times the smallest) differences out
 \emph{within} each pair, and ignoring the pairs inflates the standard error from
 \kusd{\nbSevenBDidSe} to \kusd{\nbSevenBUnpairedSe}, a factor of \nbSevenBPairingGain{}.
+\Cref{fig:sc:realpairs} shows the pair differences themselves, the raw material of the benchmark,
+and \hyperref[app:sc:pairs]{Appendix~\thechapter.A.15} works the estimator through.
+
+\input{build/floats/nb07b_pairs}
 
 \Cref{eq:sc:did} is \emph{unbiased by construction}. It is the closest thing to truth that real
 data ever hands anyone, and it is what replaces the planted lift: every model-based estimate must
 land inside its interval. It gives \kusd{\nbSevenBDidTotal} of incremental sales, 90\,\% interval
 $[\kusd{\nbSevenBDidLo},\ \kusd{\nbSevenBDidHi}]$, an incremental return on ad spend of
-\nbSevenBDidIroas{}. Note the width. Unbiasedness is not precision, and that width --- nearly
-half the effect in each direction --- is the entire commercial reason to fit a model on top of a
+\nbSevenBDidIroas{}. Note the width. Unbiasedness is not precision, and that width, nearly
+half the effect in each direction, is the entire commercial reason to fit a model on top of a
 perfectly good experiment.
+
+One provenance note keeps the benchmark honest. Google's own methodology papers analyse this class
+of experiment with time-based regression \citep{kerman2017}, and a public replication of Google's
+reference implementation on this panel lands at the same sign and order as the matched-pairs anchor
+above. That readout is a replication of reference code, not a figure the paper itself prints (its
+worked example is a different, anonymized experiment), so the chapter cites it as corroboration and
+grades everything that follows against the randomized anchor computed here.
 
 \subsection*{The contestant, and the exam}
 
-The classical synthetic control of \cref{sec:sc:classical}, applied unchanged --- the treated unit
-being the \emph{cell}, the mean daily sales per treated geo, so that the target stays inside the
-donors' convex hull (\cref{as:sc:hull}) --- tracks the cell to a pre-fit RMSE of
+The classical synthetic control of \cref{sec:sc:classical} is applied unchanged. The treated unit
+is now the \emph{cell}, the mean daily sales per treated geo, so that the target stays inside
+the donors' convex hull (\cref{as:sc:hull}). It tracks the cell to a pre-fit RMSE of
 \usd{\nbSevenBScPreRmse} per geo per day on a level of \usd{\nbSevenBPreLevel}, or
-\pc{\nbSevenBScPreRmsePct} (\cref{fig:sc:realsc}). It returns \kusd{\nbSevenBScTotal} ---
+\pc{\nbSevenBScPreRmsePct} (\cref{fig:sc:realsc}). It returns \kusd{\nbSevenBScTotal}:
 $\nbSevenBScErrVsAnchor$ (USD 000) from the randomized referee, or \nbSevenBScAnchorSes{} anchor
 standard errors, comfortably inside its interval. The Bayesian fit of \cref{sec:sc:bayes} returns
 \kusd{\nbSevenBBayesTotal}, \nbSevenBBayesAnchorSes{} anchor standard errors from the referee.
 \Cref{tab:sc:realcompare} records all three.
 
+Before trusting that fit, the pre-period offers a plausibility check the simulator never needed.
+\Cref{tab:sc:realbalance} sets the treated cell beside the donor geos on level, pre-trend,
+volatility and correlation, so the convex-hull premise (\cref{as:sc:hull}) can be checked by eye
+rather than taken on faith.
+
+\input{build/tables/nb07b_walkthrough_balance}
+
 \input{build/floats/nb07b_sc}
 \input{build/tables/nb07b_compare}
+\input{build/floats/nb07b_posterior}
+
+\Cref{fig:sc:realposterior} is the picture this section is really about: the shipped posterior over
+the dollar total (the AR(1) fit argued for in \cref{sec:sc:compare} and detailed below), with the
+randomized anchor falling squarely inside its 90\,\% band. All three estimates land inside the
+anchor's interval (\cref{tab:sc:realcompare}); the model agrees with the experiment. Two things are
+then left, and they are the next two subsections: trust the sampler that drew the posterior, and
+price its width.
+
+The sampler's diagnostics are reported here rather than waved through.
+The chains converge ($\hat R = \nbSevenBRhat$ and a minimum bulk effective sample size of
+\nbSevenBEss{}). A \emph{divergent transition} is the one warning that can invalidate a posterior
+while every other diagnostic looks immaculate, so both fits' counts are stated: \nbSevenBDivergences{}
+on the fit of \cref{eq:sc:lik} and \nbSevenBArDivergences{} on the shipped AR(1) fit.
+The question a non-zero count raises is whether the geometry the sampler struggled
+with has moved the answer, and that question has an answer rather than a reassurance. The same
+objective admits a deterministic, divergence-free solution, the SLSQP fit of
+\cref{eq:sc:slsqp}, and the two land \kusd{\nbSevenBBayesMoved} apart, which is
+\pc{\nbSevenBBayesMovedPct} of the estimate and a small fraction of the posterior's own interval
+width; the shipped posterior additionally brackets the randomized anchor
+(\cref{fig:sc:realposterior}). Divergences on this model live at the corners of the simplex, where
+the Dirichlet's density pinches
+against a boundary that a donor's weight is being pushed towards; they cost sampling efficiency,
+not location. A cross-check of that kind is what a divergence count obliges an analyst to produce,
+and it is cheaper than the fit that raised the alarm.
 
 That is the exam, and it is the only exam real data can set: the method passes it. And the same
-bake-off runs, with no simulator, on a single real market --- pretending only one mid-size geo had
+bake-off runs, with no simulator, on a single real market. Pretending only one mid-size geo had
 been treated reproduces \cref{tab:sc:naive}'s failures exactly (\cref{tab:sc:realnaive}), including
 one the simulation could only warn about. The largest geo in the country is bigger than every
 control geo and therefore lies \emph{outside} its own donor hull. \Cref{as:sc:hull} fails, the
 simplex does its honest best by piling all its weight on the single largest donor, and the pre-fit
 gate \textbf{fails loudly}: a pre-RMSE of \usd{\nbSevenBHullPreRmse} against a bar of
-\usd{\nbSevenBHullGateRef}. The estimate it \emph{would} have shipped implies an iROAS of
-\nbSevenBHullIroas{} against the experiment's \nbSevenBDidIroas{} --- precisely the inflated
+\usd{\nbSevenBHullGateRef} (\cref{fig:sc:hullfail}). The estimate it \emph{would} have shipped implies an iROAS of
+\nbSevenBHullIroas{} against the experiment's \nbSevenBDidIroas{}, precisely the inflated
 number an unscrupulous deck would have quoted. The method's own diagnostic refuses it. That
 self-diagnosis is worth more than the estimate.
 
 \input{build/tables/nb07b_naive}
+\input{build/floats/nb07b_hull_fail}
 
 \subsection*{The off-switch}
 
@@ -782,25 +1572,26 @@ ends}. The spend stops, and a genuine advertising effect must collapse when the 
 does (\cref{fig:sc:realgap}): a sustained $\nbSevenBPostGap$ dollars per geo per day through the
 paid window, and $\nbSevenBCoolGap$ dollars per geo per day in the \nbSevenBCooldownDays-day
 cooldown. An effect that persisted after the spend stopped would smell of a confound rather than a
-campaign. This one switches off --- which simultaneously certifies the attribution and tells the
+campaign. This one switches off, which simultaneously certifies the attribution and tells the
 media planner there is no carryover annuity to book. The placebo apparatus of
-\cref{sec:sc:classical} agrees: on \nbSevenBNPseudo{} pseudo-cells of untreated geos, the real
-cell is the most extreme unit observed ($p = \nbSevenBPRatio$ on the RMSE ratio,
-$p = \nbSevenBPGap$ on the raw gap), and a fake launch inside the pre-period finds
-$\nbSevenBPlaceboTimeGap$ dollars per geo per day --- \pc{\nbSevenBPlaceboTimePct} of the real
+\cref{sec:sc:classical} agrees. On \nbSevenBNPseudo{} pseudo-cells of untreated geos, the real
+cell is the most extreme unit on the RMSE ratio ($p = \nbSevenBPRatio$) and second most extreme
+on the raw gap ($p = \nbSevenBPGap$). And a fake launch inside the pre-period finds
+$\nbSevenBPlaceboTimeGap$ dollars per geo per day: \pc{\nbSevenBPlaceboTimePct} of the real
 effect, and the wrong sign.
 
 \input{build/floats/nb07b_gap}
 
-\subsection*{The interval, re-priced --- the chapter's finding, confirmed without a simulator}
+\subsection*{How wide is the interval the dollar decision will use?}
 
 Fresh worlds are not available here, so coverage cannot be \emph{measured}. But it need not be
 guessed either. The placebos re-run \emph{the same estimator} under a known null, and that is the
 fair referee for the posterior's width. \Cref{tab:sc:realscales} sets the scales against each
-other. The posterior's standard deviation is \kusd{\nbSevenBBayesSd}. The placebo distribution of
-the same estimator gives \kusd{\nbSevenBPlaceboSd}, and even after deflating it for the fact that
-a half-size pseudo-cell is noisier than the real cell --- the conservative floor ---
-\kusd{\nbSevenBPlaceboSdFloor}. The posterior is too tight by
+other. The iid fit of \cref{eq:sc:lik} (the same likelihood, applied to the same estimator, on
+real data) puts the standard deviation of the window total at \kusd{\nbSevenBBayesSd}. The
+placebo distribution of the same estimator gives \kusd{\nbSevenBPlaceboSd}. A half-size
+pseudo-cell is noisier than the real cell, so deflating for that gives a conservative floor of
+\kusd{\nbSevenBPlaceboSdFloor}. The iid posterior is therefore too tight by
 \nbSevenBRatioPlaceboFloor--\nbSevenBRatioPlacebo$\times$.
 
 \input{build/tables/nb07b_scales}
@@ -810,8 +1601,8 @@ same cause. What was an imported claim from a simulator is now a measured one.
 
 One thing this does \emph{not} say, and the distinction is worth the sentence. The randomized
 anchor's standard error is \nbSevenBRatioAnchor$\times$ the posterior's, and that ratio is
-\textbf{not} the indictment. An unweighted matched-pairs difference-in-differences is a genuinely
-noisier estimator than a donor-matched synthetic control; cutting that variance is the entire job
+\textbf{not} the criticism. An unweighted matched-pairs difference-in-differences is a genuinely
+noisier estimator than a donor-matched synthetic control. Cutting that variance is the entire job
 of the model, and it really does cut it. The fair referee for the posterior's width is the placebo
 distribution of the \emph{same} estimator, and that referee returns a verdict of roughly two, not
 eight. Both statements hold at once: \textbf{synthetic control is far more precise than the raw
@@ -819,8 +1610,10 @@ experiment, and the posterior is still overconfident about how precise.}
 
 \subsection*{The dollar decision, and the margin trap}
 
-The trap in every iROAS deck: an iROAS of three is not a threefold return. Ad spend buys
-\emph{revenue}; the firm keeps only the gross margin on it. The campaign pays if
+This subsection splits the dollar decision into its two questions: does the campaign pay, and is the
+interval that says so honest? The first is the margin trap of \cref{sec:sc:euro}, now in dollars. An
+iROAS of three is not a threefold return: ad spend buys \emph{revenue}, and the firm keeps only the
+gross margin on it. The campaign pays if
 %
 \begin{equation}
   \text{iROAS} \times \text{margin} \;>\; 1
@@ -830,25 +1623,64 @@ The trap in every iROAS deck: an iROAS of three is not a threefold return. Ad sp
 \end{equation}
 %
 so at the assumed \pc{\nbSevenBMargin} gross margin the bar is not $1.0$ but
-\nbSevenBBreakEvenIroas{} --- and the posterior sits almost exactly on top of it. The break-even
+\nbSevenBBreakEvenIroas{}, and the posterior sits almost exactly on top of it. The break-even
 margin is $1/\text{iROAS} = \pc{\nbSevenBBreakEvenMargin}$, and the campaign reaches 90\,\%
 confidence of profitability only above \pc{\nbSevenBMarginNinety} (\cref{fig:sc:realmargin}). The
 lift is beyond doubt; the profitability turns entirely on a finance input the model cannot see.
 
 \input{build/floats/nb07b_margincurve}
 
-And the tension of \cref{sec:sc:compare} arrives here too, in dollars. At the posterior's own
-scale, $\Prob(\text{profitable}) = \nbSevenBPProfit$. Re-centre nothing and merely re-price at the
-placebo floor and it falls to \nbSevenBPProfitFloor{}; at the raw placebo scale,
-\nbSevenBPProfitRaw{}; at the anchor's, \nbSevenBPProfitAnchor{} (\cref{tab:sc:realscales}, last
-column). The call survives at every scale --- \nbSevenBDecision{}, because at a
-\pc{\nbSevenBMargin} margin the campaign is on a knife-edge that no re-scaling rescues --- but the
-confidence attached to it was borrowed, not earned.
+And the tension of \cref{sec:sc:compare} arrives here too, in dollars. The decision above is taken
+on the \emph{shipped} posterior (the AR(1) fit, the one that survived the diagnostics), which
+puts $\Prob(\text{profitable}) = \nbSevenBPProfitAr$ at the assumed margin. The discarded iid fit
+would have reported \nbSevenBPProfit{} for the same campaign on the same data. The same discipline
+that governs \cref{sec:sc:valid} governs the euros here, and a likelihood that under-prices its own
+uncertainty is not the one to price the decision. That gap is not academic: it is the difference
+between a call a board would barely question and one it would interrogate.
 
-\begin{remark}[The lecture point]
+The re-pricing ladder makes the point sharper still. Take the iid posterior and, re-centring
+nothing, merely re-price it at the placebo floor: its confidence falls to \nbSevenBPProfitFloor{};
+at the raw placebo scale, \nbSevenBPProfitRaw{}; at the anchor's, \nbSevenBPProfitAnchor{}
+(\cref{tab:sc:realscales}, last column). The call survives at every scale
+(\nbSevenBDecision{}), because at a \pc{\nbSevenBMargin} margin the campaign is on a knife-edge that
+no re-scaling rescues. But under the iid likelihood the confidence attached to it was borrowed,
+not earned. A re-pricing step can expose borrowed confidence, not replace it: the patched number
+comes from outside the model, quotable in a memo and impossible to propagate.
+
+The AR(1) likelihood of \cref{eq:sc:ar1lik}, fitted to this panel with the same donors and windows,
+needs no patch. Its posterior on the residual autocorrelation is centred at \nbSevenBArRho{}. The
+persistence is there in the real data, exactly as it was in the simulated panel. And it re-prices
+the iid standard deviation by a factor of \nbSevenBArVsIid{}, from \kusd{\nbSevenBBayesSd} to
+\kusd{\nbSevenBArSd}, moving the estimate not at all (\kusd{\nbSevenBArTotal}, against the anchor's
+\kusd{\nbSevenBDidTotal}, with a 90\,\% interval of
+$[\kusd{\nbSevenBArLo},\ \kusd{\nbSevenBArHi}]$ that brackets the randomized anchor,
+\cref{fig:sc:realposterior}). Now grade that width against the design: the
+corrected likelihood's own standard deviation sits at \nbSevenBArVsFloor$\times$ the conservative
+placebo floor. It has arrived, from a likelihood alone and with no placebo in sight, at the
+uncertainty scale the randomization itself implies. That is the whole claim of
+\cref{sec:sc:compare}, out of the simulator and on a real advertiser's panel. The width was never
+a fact about Bayesian inference; it was a fact about the error model. And a model that told the truth
+about the errors prices its own uncertainty the way the design does.
+
+One comparison closes the section, because a reader following both halves will ask how the two
+verdicts relate. The simulated campaign is a \nbSevenDecision{} ($\Prob(\text{profit} > c) =
+\nbSevenPGo$); the real one is a \nbSevenBDecision{} ($\nbSevenBPProfitAr$). Same method, same margin
+trap, an iROAS near three in both, and this time the same label, yet the two probabilities have
+opposite anatomies, which is what makes the comparison instructive. The simulated campaign clears its
+price by a wide margin on a \emph{wide} posterior; the real one clears its price by a sliver on a
+\emph{tight} one. The real ``unit'' is the \emph{cell}, the average over \nbSevenBNTreated{} treated
+geos, so its posterior standard deviation is a far smaller share of the total (\kusd{\nbSevenBArSd} on
+\kusd{\nbSevenBArTotal}) than the single simulated market's (\keur{\nbSevenBayesSd} on
+\keur{\nbSevenBayesTotal}). Aggregation across markets buys precision; what it cannot buy is a wider
+victory margin, which only the economics set. A probability quoted without its anatomy hides exactly
+this, so the deliverable should carry the margin and the width next to the $P$ they produce, which is
+also the practical reason a real geo test splits many markets into arms rather than lighting up a
+single one.
+
+\begin{remark}[Why grade the method on an experiment]
 The randomized experiment did not merely validate a number. It validated \emph{the method that
 will be used when there is no experiment}. The moment a firm has one treated market chosen by a
-media planner rather than a coin, everything in this section except the anchor disappears --- and
+media planner rather than a coin, everything in this section except the anchor disappears, and
 synthetic control is the only member of the family still standing. That is why the chapter grades
 it here, where the answer is known.
 \end{remark}
@@ -865,47 +1697,425 @@ it here, where the answer is known.
         (\cref{tab:sc:naive}); they fail by booking the shared macro wave as campaign effect.
 
   \item \textbf{The pre-fit is a gate, not a formality.} If the synthetic cannot track the
-        treated unit \emph{before} launch, the post-launch gap means nothing, and no Bayesian
-        machinery repairs a bad donor pool. On real data the gate is what stops the country's
-        largest market --- outside its own donor hull --- from shipping an iROAS of
+        treated unit \emph{before} launch, the post-launch gap means nothing. The fit that carries
+        the decision clears it here (classical pre-RMSE \keur{\nbSevenClPreRmse} against the
+        \keur{\nbSevenGateRef} bar); the looser regularized blend does not
+        (\keur{\nbSevenBayesPreRmse}), which is a reason to read the width cautiously, not to
+        distrust the number. Where the gate truly bites is a market no blend can match: on real data
+        it stops the country's largest market (outside its own donor hull) from shipping an iROAS of
         \nbSevenBHullIroas{} against a true \nbSevenBDidIroas{}.
 
   \item \textbf{Classical and Bayesian agree on the number.} They differ by
-        \pc{\nbSevenEstDiffPct} of the effect, and the classical point estimate is, if anything,
-        the better of the two. The sampler adds no causal content; the identification does all of
-        it.
+        \pc{\nbSevenEstDiffPct} of the effect (\keur{\nbSevenEstDiff} on an effect of
+        \keur{\nbSevenTrueTotal}) and both undershoot the planted truth, as does the discarded
+        iid fit. Neither is ``the better of the two'' in any sense worth reporting. The sampler
+        adds no causal content; the identification does all of it. What the two arms do not share
+        is the shape of the blend: \nbSevenClEffDonors{} effective donors against
+        \nbSevenBayesEffDonors{}, which is a trade in interpretability, not in accuracy.
 
-  \item \textbf{The Bayesian interval on the total under-covers badly --- and the reason is a
+  \item \textbf{The iid interval on the total under-covers badly, and the reason is a
         misspecified likelihood, not the paradigm.} A nominal 90\,\% credible interval covers on
         \pc{\nbSevenTotalCov} of fresh panels, against \pc{\nbSevenRiCov} for the design-based
-        randomization interval. The posterior prices the standard deviation of the
-        \nbSevenNPost-week total at \keur{\nbSevenBayesSd} when the truth is
-        \keur{\nbSevenSeedSd}. \Cref{eq:sc:n2} is the whole story: the errors are a persistent
-        offset, the variance of a sum under near-perfect autocorrelation approaches $n^2\sigma^2$
-        rather than $n\sigma^2$, and \cref{eq:sc:lik} set every autocorrelation to zero. Repair
-        the likelihood (correlated errors) or repair the posterior
-        \citep[sandwich-corrected;][]{mueller2013}. Do not repair your faith in Bayes.
+        randomization interval. That posterior prices the standard deviation of the
+        \nbSevenNPost-week total at \keur{\nbSevenIidSd} when the truth is \keur{\nbSevenSeedSd}.
+        \Cref{eq:sc:n2} is the whole story, and its shape matters more than its size: the error is
+        a \emph{persistent offset} plus weekly noise, so
+        $\Var(\sum e_t) = n^{2}\sigma_\omega^{2} + n\,\sigma_\varepsilon^{2}$. The $n^{2}$ rides on
+        the \emph{offset's} variance, and does \textbf{not} require the autocorrelation to be
+        large. It is not (\nbSevenRhoOne{} at lag one). What it is, is \emph{flat}
+        (\nbSevenRhoEight{} still, at lag eight), and a correlation that refuses to decay is the
+        signature of a level shift. \Cref{eq:sc:lik} set every one of them to zero. Repair the
+        likelihood or repair the posterior \citep[sandwich-corrected;][]{mueller2013}. Do not
+        repair your faith in Bayes.
 
-  \item \textbf{The classical robustness toolkit wins here because it committed to less.}
-        Randomization inference never wrote a likelihood, so it had no likelihood to get wrong; it
-        measures the estimator's error distribution from units known to be untreated, persistent
-        macro mismatch and all. That is not a defeat for Bayesian inference. It is a reminder of
-        what a design-based procedure is \emph{for}.
+  \item \textbf{Repairing the likelihood repairs the interval, and costs one parameter.} Giving
+        the residual an AR(1) law (\cref{eq:sc:ar1}; posterior $\rho = \nbSevenRhoPost$, 90\,\%
+        interval $[\nbSevenRhoLo,\ \nbSevenRhoHi]$) and propagating it forward into the
+        counterfactual widens the total-lift band by a factor of \nbSevenWidthRatio{}. That takes its
+        coverage from \pc{\nbSevenTotalCov} to \pc{\nbSevenTotalCovArone} (level with the
+        design-based interval's \pc{\nbSevenRiCov}) while nudging the estimate from the iid
+        fit's \keur{\nbSevenIidTotal} up beside the classical arm's \keur{\nbSevenClTotal}.
+        The same fix, applied to the real geo experiment of \cref{sec:sc:real}, lands at
+        \nbSevenBArVsFloor$\times$ the placebo floor. The transferable rule is not ``always use
+        AR(1)''; it is \emph{check the coverage, and suspect the specification when it fails}:
+        here the fix was the likelihood; in \refiv{} it is a default prior.
 
-  \item \textbf{Only the posterior can answer the question the business asked.}
-        $\Prob(\tau > \text{cost})$ has no classical counterpart, and \cref{eq:sc:rule} consumes
-        nothing else. Hence the discipline this chapter recommends, and the sentence the book will
-        keep returning to: \textbf{use the posterior for the decision, and design-based inference
-        for the confidence in it} --- and remember that the euro probability inherits whatever
-        optimism the interval carries.
+  \item \textbf{The design-based arm is the referee, not the rival.} Randomization inference never
+        wrote a likelihood, so it had no likelihood to get wrong. It measures the estimator's error
+        distribution from units known to be untreated, persistent macro mismatch and all. It cost
+        efficiency for that agnosticism (its interval is the widest in \cref{tab:sc:compare})
+        and it kept its promise throughout, which is precisely how the broken likelihood was caught.
+        Keep it on the payroll for the next one.
+
+  \item \textbf{The posterior states the decision as a probability; the classical arm reaches the
+        same call without one.} $\Prob(\text{profit} > \text{cost})$ has no classical counterpart, and
+        \cref{eq:sc:rule} consumes nothing else, but the rollout \emph{action} was already settled in
+        \cref{sec:sc:classical} by the point estimate and the randomization interval. So the
+        discipline worth keeping is a division
+        of labour, not a dependence: \textbf{state the decision as a probability from the posterior,
+        and take the confidence in it from design-based inference}. The euro probability inherits
+        whatever optimism the interval carries, which is why it is read off the repaired fit and never
+        \cref{eq:sc:lik}'s; re-pricing that posterior at the design's own scale moves it from
+        \nbSevenPGo{} to \nbSevenPGoRescaled{} and leaves the verdict where it was:
+        \nbSevenDecisionRescaled{}.
 
   \item \textbf{Significant and profitable are different questions.} The effect here is real
-        ($p = \nbSevenPRatio$) and marginal at the price paid ($\Prob(\tau > c) = \nbSevenPGo$,
-        expected net value \keur{\nbSevenExpNet}). Conflating the two is how marginal campaigns
-        get scaled nationally. The headroom curve --- this evidence clears the bar at a price of
-        \keur{\nbSevenHeadroom} --- is the more useful deliverable than either a $p$-value or a
-        verdict.
+        ($p = \nbSevenPRatio$) and it \emph{probably, but not provably}, cleared its price
+        ($\Prob(\text{profit} > c) = \nbSevenPGo$, expected net value \keur{\nbSevenExpNet},
+        \pc{\nbSevenExpRoi} return): \nbSevenDecision{}.
+        Conflating the two is how marginal campaigns get scaled nationally. The headroom curve
+        (this evidence clears the bar at a price of \keur{\nbSevenHeadroom}) is the more useful
+        deliverable than either a $p$-value or a verdict.
 \end{enumerate}
+
+% =====================================================================================
+\clearpage
+\phantomsection
+\section*{Appendix \thechapter.A\quad Formal machinery}
+\label{app:sc:formal}
+\addcontentsline{toc}{section}{Appendix \thechapter.A\quad Formal machinery}
+
+This appendix carries the machinery the body points to but does not stop for: the classical optimiser
+and the pre-fit statistic, the geometry of the simplex, the two priors, the two placebo tests and the
+interval each yields, and then the graduate-level core the chapter turns on, which referee grades
+which posterior, the AR(1) likelihood written in observables, and the persistent-offset error model
+that explains the under-covering total. Every section is stated with the worked numbers from this
+chapter's run and a figure that shows the concept.
+
+\phantomsection
+\subsection*{\thechapter.A.1\quad Constrained least squares, and SLSQP}
+\label{app:sc:slsqp}
+The classical fit solves \cref{eq:sc:slsqp}: minimise the pre-period sum of squared gaps over weights
+on the simplex. The objective is quadratic and the feasible set is convex, so the minimum is unique
+and there are no local traps. \emph{Sequential least-squares quadratic programming} (SLSQP) reaches it
+by repeatedly replacing the objective with its local quadratic model and the constraints with their
+linear model, solving that easy sub-problem, and iterating; on a convex quadratic it converges in a
+handful of steps and a few milliseconds. \Cref{fig:sc:appslsqp} slices the objective along the edge
+between the two heaviest donors and marks the optimum. Because the fit is deterministic and cheap, the
+same solver carries every robustness check in the chapter: the placebo refits, the leave-one-out
+drops, the launch-date sweep.
+\input{build/floats/nb07_app_slsqp}
+
+\phantomsection
+\subsection*{\thechapter.A.2\quad The pre-period fit: RMSE}
+\label{app:sc:rmse}
+\Cref{eq:sc:rmse} defines the pre-period RMSE as the root-mean-square of the weekly gaps over the
+weeks before launch: square each pre-launch miss, average over $t < T_0$, take the root. It is in the
+units of the outcome, thousands of euros per market-week, so it reads directly as the typical weekly
+tracking error. The classical fit reaches \keur{\nbSevenClPreRmse} here (\cref{fig:sc:apprmse}), and
+the pre-fit gate of \cref{sec:sc:model} compares that against a third of the weekly lift the design
+must detect. It is an RMSE, not a correlation or an $R^2$, because the decision cares about euros of
+miss, not the share of variance explained.
+\input{build/floats/nb07_app_rmse}
+
+\phantomsection
+\subsection*{\thechapter.A.3\quad The simplex and the convex hull}
+\label{app:sc:simplex}
+The constraint $w \in \simplex$ (\cref{eq:sc:vocab_simplex}) forces the synthetic into the
+\emph{convex hull} of the donors: each synthetic value is a weighted average of real donor values,
+weights non-negative and summing to one, so it can never leave the range the donors spanned that week.
+That is interpolation, never extrapolation (\cref{fig:sc:simplex}). Dropping the constraint (ordinary
+least squares) fits the pre-period more closely but extrapolates out of sample, which is why its
+zero-lift placebo error is \nbSevenHullOosRatio$\times$ the simplex fit's. The constraint is paid for
+in the weeks you can check and earns its keep in the weeks you cannot.
+
+\phantomsection
+\subsection*{\thechapter.A.4\quad The Dirichlet prior on the weights}
+\label{app:sc:dirichlet}
+The Bayesian fit needs a prior that lives on the simplex, and the Dirichlet is exactly that: every
+draw is a set of non-negative weights summing to one. Its single concentration parameter $\alpha$
+tunes the shape (\cref{fig:sc:appdirichlet}). At $\alpha = 1$ it is \emph{flat}, every blend equally
+likely, which is the no-donor-favoured default the chapter uses; below one it favours the corners
+(sparse blends on a few donors); above one it favours diffuse blends near the centre.
+\Cref{fig:sc:priorsens} shows the posterior of the total lift barely moves across these choices, which
+is why the prior is a detail here and the likelihood is the story.
+\input{build/floats/nb07_app_dirichlet}
+
+\phantomsection
+\subsection*{\thechapter.A.5\quad The posterior-predictive counterfactual}
+\label{app:sc:ppc}
+The counterfactual for a post-launch week is not the mean blend but the posterior \emph{predictive} of
+\cref{eq:sc:ppc}: the blend plus a fresh draw of that week's own noise $\varepsilon_t$. The
+$\varepsilon_t$ term earns its place, because the treated market's untreated path would itself have
+carried week-to-week noise; a band drawn from the mean blend alone carries the uncertainty in the
+weights but not that noise, and is too narrow per week. \Cref{fig:sc:gap} shows the predictive band
+hugging zero before launch and departing after it. That is the per-week uncertainty; the total's
+uncertainty is the separate and harder story of \hyperref[app:sc:acf]{Appendix~\thechapter.A.11}.
+
+\phantomsection
+\subsection*{\thechapter.A.6\quad The permutation p-value}
+\label{app:sc:perm}
+With one treated unit there is no sampling distribution to read a standard error from, so inference
+comes from \emph{permutation} (\cref{eq:sc:vocab_perm}): treat each donor in turn as if it had been
+treated, refit, and collect the placebo test statistics. The p-value is the share of units, treated
+plus placebos, whose statistic is at least the treated market's. Here the treated market ranks
+\nbSevenTreatedRank{} of \nbSevenNUnits{} on the RMSE-ratio statistic, for $p = \nbSevenPRatio$
+(\cref{fig:sc:placebo}). The $+1$ terms in \cref{eq:sc:vocab_perm} count the treated unit inside its
+own reference set, the standard finite-sample correction that floors the smallest achievable p-value
+at $1/(J{+}1)$ rather than at zero.
+
+\phantomsection
+\subsection*{\thechapter.A.7\quad Placebo-in-time}
+\label{app:sc:placebotimeapp}
+Placebo-in-space asks whether the treated \emph{unit} is unusual; placebo-in-\emph{time} asks whether
+the treated \emph{date} is. Move the launch earlier, into the true pre-period where nothing happened,
+refit, and the estimated effect must return near zero. It does (\cref{fig:sc:placebotime}): a fake
+launch at week \nbSevenPlaceboTimeWeek{} returns \keur{\nbSevenPlaceboTimeGap} per week, inside the
+pre-fit noise. A method that manufactured an effect at a placebo date could not be trusted at the real
+one; this one does not.
+
+\phantomsection
+\subsection*{\thechapter.A.8\quad The randomization interval by inversion}
+\label{app:sc:randint}
+The placebo totals yield an \emph{interval}, not only a p-value, by inverting the test
+(\cref{eq:sc:ri}). The placebo distribution is the spread of totals this estimator produces when the
+true effect is zero; subtract its upper and lower percentiles from the point estimate and the result
+is a 90\,\% interval that never assumed a shape for the errors but measured one, from units known to be
+untreated. Here it is $[\keur{\nbSevenRiLo},\ \keur{\nbSevenRiHi}]$ and it contains the planted
+\keur{\nbSevenTrueTotal}; \cref{fig:sc:inversion} draws the construction. Its width is honest
+precisely because it committed to nothing about the
+error's autocorrelation, which is what makes it the referee for the posterior in \cref{sec:sc:compare}.
+
+\phantomsection
+\subsection*{\thechapter.A.9\quad Which referee grades which posterior}
+\label{app:sc:referee}
+
+Grading an interval means asking how often it would cover across fresh draws of the world, so each
+posterior must be weighed against the sampling variability of \emph{its own} estimator, and the
+iid and autocorrelated fits are different estimators. \Cref{tab:sc:scales}'s referee column,
+\keur{\nbSevenSeedSd} (EUR 000), is the seed-to-seed spread of the \emph{iid} arm's error, and it is
+the right yardstick for the iid posterior. That posterior fails against it: the iid posterior's
+\keur{\nbSevenIidSd} underprices that spread by \nbSevenUnderprice$\times$. The autocorrelated arm makes different errors, and its
+own spread across the same \nbSevenNPanels{} fresh panels is \keur{\nbSevenSeedSdArone}. That wider
+number, not \keur{\nbSevenSeedSd}, is the only referee entitled to judge the autocorrelated
+posterior. Graded against it, the autocorrelated interval is close to calibrated rather than tight:
+its coverage is \pc{\nbSevenTotalCovArone} against a nominal ninety (\cref{fig:sc:coverage}), and
+the small shortfall traces
+to the arm's modest \nbSevenBiasArone{} (EUR 000) bias, not to a too-narrow interval. The trap the
+single ``referee'' column of \cref{tab:sc:scales} invites is to grade both posteriors against the
+iid arm's spread, which would wrongly flag the autocorrelated fit as narrow.
+
+\phantomsection
+\subsection*{\thechapter.A.10\quad The AR(1) likelihood as GLS re-weighting}
+\label{app:sc:ar1}
+
+Written in observables, the AR(1) residual law \cref{eq:sc:ar1} gives the likelihood
+%
+\begin{align}
+  Y_{00} &\;\sim\; \mathcal N\!\Big(\mu_0,\ \tfrac{\sigma^{2}}{1 - \rho^{2}}\Big),
+        \qquad
+  Y_{0t} \;\sim\; \mathcal N\!\big(\mu_t + \rho\,(Y_{0,t-1} - \mu_{t-1}),\ \sigma^{2}\big),
+        \quad t \ge 1, \label{eq:sc:ar1lik}
+\end{align}
+%
+with $\mu_t = \sum_j w_j Y_{jt}$. The first line is the \emph{stationary initial condition}: at
+$t = 0$ there is no earlier residual to condition on, so the marginal variance of a stationary
+AR(1), $\sigma^{2}/(1-\rho^{2})$, stands in for $\sigma^{2}$. Dropping it makes the likelihood treat
+the first week as if it carried no accumulated persistence, and biases $\rho$ upward.
+
+An AR(1) likelihood is a generalised-least-squares re-weighting of the pre-period. Independent-error
+least squares (\cref{eq:sc:slsqp}) weights every pre-period week equally; GLS with an AR(1)
+covariance down-weights a week its neighbours already predict and up-weights a surprising one. That
+changes which weeks the fit trusts, hence the donor weights, hence the counterfactual, hence the
+point estimate, which is why the repaired estimate in \cref{sec:sc:compare} moves off the iid
+number \keur{\nbSevenIidTotal} to \keur{\nbSevenBayesTotal}, beside the classical
+\keur{\nbSevenClTotal} though by a different weight profile (\cref{fig:sc:weightprofiles}).
+\Cref{fig:sc:glsweights} draws the re-weighting itself: the flat weight the iid likelihood gives
+every pre-period week against the AR(1) profile at the posterior-mean $\rho$. The
+identification is untouched; the estimator is not.
+\input{build/floats/nb07_gls_weights}
+
+\phantomsection
+\subsection*{\thechapter.A.11\quad The autocorrelation of a persistent offset}
+\label{app:sc:acf}
+
+Under independence, the uncertainty of an $n$-week total scales as
+%
+\begin{equation}
+  \sd\Big(\sum_{t \in \text{post}} e_t\Big) \;=\; \sqrt{n}\,\sigma
+  \qquad \text{(iid errors)} .
+  \label{eq:sc:sqrtn}
+\end{equation}
+%
+But the blend's error is not iid. Whatever share of the treated market's factor loadings the weights
+fail to match leaks the \emph{shared} factors straight into the gap,
+%
+\begin{equation}
+  e_t \;\approx\; \big(\lambda_0 - \textstyle\sum_j w_j \lambda_j\big)^{\!\top}
+        (g_t,\, s_t,\, m_t) \;+\; \varepsilon_{0t},
+  \label{eq:sc:leak}
+\end{equation}
+%
+and $m_t$ is a random walk (\cref{eq:sc:macro}). Over a \nbSevenNPost-week window a random walk
+barely turns around, so the mismatch term is, to a good approximation, a \emph{constant}: one
+draw of ``how badly did this donor pool match?'', held for the whole post-period. Write the error
+as an offset plus noise, writing $\omega$ for the offset draw (a letter of its own, so it cannot be
+mistaken for the campaign cost $c$ or a market baseline $c_i$):
+%
+\begin{equation}
+  e_t \;=\; \omega \;+\; \varepsilon_t,
+  \qquad \omega \sim (0,\ \sigma_\omega^{2}) \ \text{drawn once per panel},
+  \qquad \varepsilon_t \sim (0,\ \sigma_\varepsilon^{2}) \ \text{fresh each week}.
+  \label{eq:sc:offset}
+\end{equation}
+%
+Two consequences follow. First, the autocorrelation is flat:
+%
+\begin{equation}
+  \rho_k \;=\; \frac{\sigma_\omega^{2}}{\sigma_\omega^{2} + \sigma_\varepsilon^{2}}
+  \qquad \textbf{for every lag } k,
+  \label{eq:sc:flatrho}
+\end{equation}
+%
+which does not decay. A short-memory process, an AR(1) with $|\rho| < 1$, \emph{dies out}
+($\rho_k = \rho^k \to 0$); a persistent offset does not. So the question to ask of \cref{fig:sc:acf}
+is not how large $\rho_1$ is but whether $\rho_8$ is still there. Second, the variance of the sum
+picks up an $n^{2}$ term. In general
+$\Var(\sum_1^n e_t) = \sigma^2\big(n + 2\sum_{k<n}(n-k)\rho_k\big)$; under \cref{eq:sc:offset} that
+collapses to
+%
+\begin{equation}
+  \Var\Big(\sum_{t=1}^{n} e_t\Big) \;=\; n^{2}\,\sigma_\omega^{2} \;+\; n\,\sigma_\varepsilon^{2}.
+  \label{eq:sc:n2}
+\end{equation}
+%
+The $n^{2}$ term rides on $\sigma_\omega^{2}$, not on $\rho$ being large: a \emph{modest} autocorrelation
+that refuses to decay is enough. Per-week bands need only the marginal variance
+$\sigma_\omega^{2} + \sigma_\varepsilon^{2}$, which \cref{eq:sc:ppc} gets roughly right, which is why
+they cover at \pc{\nbSevenWeekCov}. The total needs the covariances too, and \cref{eq:sc:lik} sets
+every $\rho_k$ to zero, missing the entire $n^{2}$ term.
+
+The decomposition confirms itself on a worked example. Splitting the placebo errors into their two
+parts gives $\sigma_\omega = \nbSevenOffsetSd$ and $\sigma_\varepsilon = \nbSevenNoiseSd$, and
+\cref{eq:sc:flatrho} then predicts an autocorrelation of \nbSevenRhoImplied{} at every lag, against
+the \nbSevenRhoOne{} and \nbSevenRhoEight{} measured in \cref{fig:sc:acf}. Substituting the same two
+numbers into \cref{eq:sc:n2} gives a true standard deviation of \keur{\nbSevenTotalSdTrue} for the
+\nbSevenNPost-week total against the \keur{\nbSevenTotalSdIid} an iid likelihood charges, an
+under-pricing of \nbSevenTotalSdRatio$\times$ from the error's structure alone. Measured directly
+across fresh panels it is \nbSevenUnderprice$\times$ (\keur{\nbSevenSeedSd} against
+\keur{\nbSevenIidSd}). The two agree on the factor; they agree only roughly on the level, since
+\cref{eq:sc:offset} is a two-parameter caricature of the error and not a full account of it.
+
+Why does the caricature sit \emph{below} the measured spread (\keur{\nbSevenTotalSdTrue} structural
+against the seed-to-seed \keur{\nbSevenSeedSd})? Because treating the mismatch as a \emph{constant}
+$\omega$ understates it. The mismatch is really $(\lambda_0 - \sum_j w_j \lambda_j)^{\!\top}(g_t, s_t, m_t)$,
+and its worst-behaved piece is the macro random walk $m_t$, which is \emph{integrated}, not constant:
+it drifts over the post-period, and the sum of an integrated series compounds faster than the sum of
+a constant. Formally $\sum_{t=1}^{n} m_t = \sum_u (n - u + 1)\,\eta_u$ has variance
+$\approx n^{3}\sigma_\eta^{2}/3$, an $n^{3}$ growth against the offset model's $n^{2}$. At
+$n = \nbSevenNPost$ this is not the asymptotic regime, but the direction is exactly right: the true
+total variance grows \emph{faster} than the constant-offset caricature admits, which is why the
+structural \keur{\nbSevenTotalSdTrue} lands below the measured \keur{\nbSevenSeedSd}. The constant
+offset is the leading, tractable term; the integrated remainder is why the honest number is larger,
+and it is the same near-integrated structure that makes a stationary AR(1) (\cref{eq:sc:ar1}) a
+convenient caricature of the error rather than its true law, one that matches the variance of the
+sum without matching its flat autocorrelation. \Cref{fig:sc:growth} puts the three growth laws on
+one axis, with the measured \nbSevenNPost-week point sitting between the offset and level curves,
+which is the whole argument of \cref{sec:sc:sts} in one picture.
+\input{build/floats/nb07_growth}
+
+\begin{intuition}{Why the pre-period fit could never have warned you}
+The obvious objection is that we fitted the weights on forty weeks of pre-period, so surely a
+persistent error would have shown up there. It does not, and the reason is worth keeping. The
+weights were chosen \emph{to make the pre-period gap small}: the fit absorbs, and thereby
+whitens, most of the serial correlation it can see in the weeks it was shown. The persistence only
+announces itself out of sample, in the weeks the fit was not allowed to touch. This is the same
+lesson as an over-fitted regression's residuals looking beautifully white on the training set, and
+it is why the diagnostic in \cref{fig:sc:acf} is run on \emph{placebo} panels rather than on the
+fitted one. A residual you fitted to is not evidence.
+\end{intuition}
+
+The in-sample residual makes the point numerically. The pre-period residual of the fitted model
+shows only mild autocorrelation: $\nbSevenAcfPreOne$, $\nbSevenAcfPreTwo$ and
+$\nbSevenAcfPreThree$ at lags one to three, against a noise band of roughly $\pm\nbSevenAcfNoiseBand$.
+It is positive throughout, but tame enough to shrug at, and only the first lag clears its own band. The fit
+\emph{whitens} what it can see, because the weights were chosen to absorb precisely the in-sample
+structure. Eyeballing the pre-fit residual would therefore have raised no serious alarm. The
+persistence is a property of the \emph{out-of-sample} error, and only a design-based procedure
+(one that refits the estimator on units known to be untreated) ever gets to look at it.
+
+\phantomsection
+\subsection*{\thechapter.A.12\quad Value of information}
+\label{app:sc:voi}
+\Cref{eq:sc:voi} prices the decision's remaining uncertainty. Acting now on the mean earns
+$\max(\E[\text{profit}] - c,\, 0)$; acting \emph{after} the uncertainty resolves earns
+$\E[\max(\text{profit} - c,\, 0)]$, because you would commit only in the worlds where profit clears
+cost. The gap between the two is the value of perfect information, the most any study could be worth
+(\cref{fig:sc:appvoi}). Here it is \keur{\nbSevenVoi}, small because the posterior sits close to the
+cost line on the losing side, so perfect information would rarely overturn the hold the mean already
+implies. Being an upper bound, it caps the confirmatory-research budget: a study costing more than
+\keur{\nbSevenVoi} cannot be justified on this decision alone.
+\input{build/floats/nb07_app_voi}
+
+\phantomsection
+\subsection*{\thechapter.A.13\quad Bernstein--von Mises}
+\label{app:sc:bvm}
+Why do the classical and Bayesian point estimates agree (\cref{sec:sc:compare})? The
+Bernstein--von Mises theorem: with a well-specified likelihood and enough data, the posterior
+concentrates around the maximum-likelihood estimate, so a credible interval and a confidence interval
+converge. \Cref{fig:sc:appbvm} shows the \emph{centres} doing exactly that: the bootstrap sampling
+distribution of the classical total (resample the pre-period, refit, repeat) is centred on the
+Bayesian posterior mean. Their widths are in the same ballpark rather than identical, and, tellingly,
+both are narrow, because both inherit the same iid error model and so under-price the total in the
+same direction (\cref{sec:sc:compare}). The two paradigms answer different questions yet return the
+same estimate. Where they part is not the estimate but the interval \emph{width} once the likelihood
+is repaired (\cref{sec:sc:compare}) and the ability to state $\Prob(\text{profit} > c)$ at all
+(\cref{sec:sc:euro}).
+\input{build/floats/nb07_app_bvm}
+
+\phantomsection
+\subsection*{\thechapter.A.14\quad The margin trap: break-even algebra}
+\label{app:sc:margin}
+Advertising buys revenue; the firm keeps only its gross margin $m$ on it, so the profit a lift
+$\tau$ earns is $m\tau$. The campaign pays exactly when $m\tau > c$, and two equivalent thresholds
+follow: a \emph{break-even lift} $b = c/m$, and a \emph{break-even iROAS} of
+$\text{iROAS} = \tau/c > 1/m$. Worked on this campaign: at $m = \pc{\nbSevenMargin}$ and
+$c = \keur{\nbSevenCost}$ the break-even lift is \keur{\nbSevenBreakevenLift} and the break-even
+iROAS is \nbSevenBreakevenIroas{}. The estimated lift \keur{\nbSevenClTotal} converts to
+\keur{\nbSevenClProfit} of profit and a net of \keur{\nbSevenClNet}; \cref{fig:sc:marginfunnel}
+draws the whole waterfall. The trap is reading the gross \nbSevenIroas{} as the return: the number
+that decides anything is the net after margin, and it is two orders of magnitude smaller than the
+apparent \keur{\nbSevenApparentProfit} win.
+
+\phantomsection
+\subsection*{\thechapter.A.15\quad The matched-pairs estimator and its standard error}
+\label{app:sc:pairs}
+The randomized benchmark of \cref{sec:sc:real} averages one number per pair: the pair difference
+$d_p$ of \cref{eq:sc:did}, the treated geo's pre-to-post change minus its size-matched partner's.
+Randomization happened at the geo level \emph{within pairs}, so the pair differences are the
+design's own unit of variability, and the standard error is built from their scatter,
+$NT \cdot s_d / \sqrt{P}$: no model, no likelihood. Two properties do the work. First, pairing is
+variance reduction: the geo-size factor differences out within each pair, and ignoring the pairs
+inflates the standard error from \kusd{\nbSevenBDidSe} to \kusd{\nbSevenBUnpairedSe}, a factor of
+\nbSevenBPairingGain{} (\cref{fig:sc:realpairs}). Second, treating geo-days as the unit instead
+would count thousands of correlated observations as independent, the \citet{bertrand2004} error in
+another costume. The scatter of the $d_p$, not any fitted curve, is what ``unbiased by
+construction'' looks like on the page.
+
+\phantomsection
+\subsection*{\thechapter.A.16\quad The effective donor count}
+\label{app:sc:effdonors}
+A weight vector on \nbSevenNDonors{} donors can act like a blend of three markets or of thirty, and
+the \emph{effective donor count} $1/\sum_j w_j^{2}$ (the inverse Herfindahl index) measures which.
+It equals $J$ when the weight is spread evenly over $J$ donors and $1$ when a single donor carries
+everything. Worked here: the classical fit concentrates its blend on \nbSevenClEffDonors{}
+effective donors, the flat-Dirichlet posterior spreads the same reconstruction over
+\nbSevenBayesEffDonors{} (\cref{fig:sc:weightprofiles}, \cref{tab:sc:weights}). The number is a
+readability statistic for the estimator itself: a small count reads as a nameable portfolio of
+markets, a large one as a diffuse average, and \cref{sec:sc:model} prices that trade.
+
+\phantomsection
+\subsection*{\thechapter.A.17\quad The Monte-Carlo error of a coverage estimate}
+\label{app:sc:mcerr}
+A coverage rate measured on $n$ fresh panels is a binomial proportion, and it carries sampling
+error of its own: $\widehat{\text{se}} = \sqrt{\hat p\,(1-\hat p)/n}$. On the
+$n = \nbSevenNPanels$ panels of \cref{sec:sc:valid} that is \nbSevenCovSeIid{} percentage points at
+the iid arm's \pc{\nbSevenTotalCov} and \nbSevenCovSeArone{} points at the repaired arm's
+\pc{\nbSevenTotalCovArone} (\nbSevenCovSeRi{} at the design-based \pc{\nbSevenRiCov}). The
+conclusion this arithmetic protects: the iid arm's \pc{\nbSevenTotalCov} sits many standard errors
+below the nominal ninety and is broken by any reckoning, while the repaired and design-based rates
+are within about one standard error of ninety and of each other, indistinguishable at this
+resolution (\cref{fig:sc:coverage}). Quoting their digits as a ranking would be reading noise.
 
 \notebooknote{%
   The analysis of \crefrange{sec:sc:dgm}{sec:sc:wrong} is

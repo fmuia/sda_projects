@@ -19,7 +19,7 @@ customer; regressing it on the email and the one variable the causal graph deman
 \eur{\nbFiveAdjEst}, against a planted truth of \eur{\nbFiveTrueAte}. Budgeting on the first
 books \eur{\nbFivePhantom} of incremental revenue that does not exist. And the instinct that
 looks like caution --- control for everything, since more information cannot hurt --- returns
-\eur{\nbFiveKsBar}, puts the truth outside its 94\,\% credible interval, and reverses the
+\eur{\nbFiveKsBayesEst}, puts the truth outside its 94\,\% credible interval, and reverses the
 campaign decision from \nbFiveDecision{} to \nbFiveDecisionKs. Its interval is not wider as a
 penalty for being wrong: it is \eur{\nbFiveKsBayesWidth} against the correct model's
 \eur{\nbFiveBayesWidth}. No diagnostic in the output --- not the standard error, not $\hat R$,
@@ -37,8 +37,10 @@ argument, and it decides whether the number that emerges is the causal effect or
 This chapter is about that moment.
 
 The concrete decision is the smallest one in the book. A retailer sends a discount email; the
-question is what the email adds to a customer's spend, and whether that exceeds the
-\eur{\nbFiveCost} it costs to send, target and fulfil. At \nbFiveCampaignN{} customers the
+question is what the email adds to a customer's spend, and whether that clears the
+\eur{\nbFiveCost} break-even --- the contact cost of sending, targeting and fulfilling, already
+expressed on the scale of incremental \emph{spend} rather than of contribution
+(\cref{sec:ctrl:euro} states the conversion). At \nbFiveCampaignN{} customers the
 campaign is worth roughly a quarter of a million euros in contact cost, so the per-customer
 effect is multiplied by fifty thousand before anyone sees it: an error of one euro per customer
 is an error of \nbFiveCampaignN{} euros in the budget.
@@ -344,6 +346,8 @@ whether it moved anything.
 \Cref{tab:ctrl:sets} reports both, along with three further adjustment sets that
 \cref{sec:ctrl:wrong} will need. Read the first two rows.
 
+\input{build/tables/nb05_sets}
+
 \begin{itemize}[leftmargin=*, itemsep=.2em]
   \item $Z = \varnothing$, the \textbf{naive} read --- spend on email and nothing else, the
         number a dashboard hands you: \eur{\nbFiveNaiveEst}, 90\,\% interval
@@ -359,8 +363,8 @@ $\nbFiveNaiveErr$ and \emph{excludes} it. And the estimator has no idea which is
 
 Look at \emph{how} the naive fit fails, because the manner of the failure is the chapter's
 thesis. It is not vague. It is not hedged. Its interval is \eur{\nbFiveNaiveWidth} wide against
-the adjusted fit's \eur{\nbFiveAdjWidth} --- the same order --- and it sits three and a half
-euros from the truth, which it rules out. That is the definition of \textbf{confidently wrong}.
+the adjusted fit's \eur{\nbFiveAdjWidth} --- the same order --- and it sits $\nbFiveNaiveErr$
+from the truth, which it rules out. That is the definition of \textbf{confidently wrong}.
 The bias from omitting \code{loyalty} is a fixed offset, and a confidence interval quantifies
 sampling noise around whatever the estimator converges to --- never the distance between that
 limit and the truth. \textbf{Precision is not validity}, and no standard error, however robust,
@@ -387,6 +391,34 @@ the direction of the naive bias before any data exists: \emph{biased up}. The
 data-generating coefficients turn that direction into a magnitude, and \cref{sec:ctrl:valid}
 checks the arithmetic against the fit.
 
+The same pre-statement is available for the other three sets, and it costs no new estimation
+either --- only the signs of the edges into the collider.
+
+\begin{proposition}[Collider sign rule; \citealp{elwert2014}]\label{prop:ctrl:collider}
+Let $C$ be a common effect receiving $C \leftarrow a\,T$ and $C \leftarrow b\,Y$ with $T \perp Y$
+in the population. Conditioning on $C$ induces a non-causal $T$--$Y$ association of sign
+%
+\begin{equation}
+  -\operatorname{sign}(a\,b).
+  \label{eq:ctrl:collidersign}
+\end{equation}
+%
+The minus sign is \emph{explaining away} made quantitative: if $T$ and $Y$ both push $C$ up, then
+within a stratum of fixed $C$ a high $T$ must be offset by a low $Y$, and the two read as
+negatively related.
+\end{proposition}
+
+\Cref{prop:ctrl:collider} applies to \cref{eq:ctrl:responded} directly: \code{responded} receives
+$a = 1.2$ from the email and $b = 0.05$ from spend, both positive, so conditioning on it must bias
+the estimate \emph{down}. It applies to \cref{eq:ctrl:opened} one hop away: \code{opened\_email} is
+a common effect of the email ($a = 1.5$) and of the latent trait $G$ ($b = 0.7$), so conditioning
+induces a negative email--$G$ association, and $G$'s coefficient of $+3$ in \cref{eq:ctrl:outcome}
+carries that negative sign into the estimate. The kitchen sink opens both paths at once and stacks
+the two downward pulls. Three predicted directions, all down, all stated before the data
+existed --- and \cref{tab:ctrl:sets} returns $\nbFiveRespBarErr$, $\nbFiveOpenBarErr$ and
+$\nbFiveKsBarErr$ respectively. The graph gives the sign; the coefficients give the size; the fit
+is only the confirmation.
+
 Finally, the boundary that recurs in every chapter of this book: a 90\,\% confidence interval is
 a property of the \emph{procedure}, not a probability about $\tau$. The decision rule this
 campaign runs on --- $\Prob(\tau > \text{cost}) \ge 0.9$ --- is a statement about the effect
@@ -405,17 +437,25 @@ and priors attached:
   \text{spend}_i \mid \beta, \sigma
     &\;\sim\; \mathcal N\big(\beta_0 + \tau\,\text{email}_i + \gamma\,\text{loyalty}_i,\ \sigma^2\big),
     \label{eq:ctrl:lik}\\
-  \beta_0 &\;\sim\; \mathcal N(20,\ 20^2), \qquad
-  (\tau, \gamma) \;\sim\; \mathcal N(0,\ 10^2), \label{eq:ctrl:prior_b}\\
-  \sigma &\;\sim\; \text{HalfNormal}(10). \label{eq:ctrl:prior_s}
+  (\beta_0,\ \tau,\ \gamma) &\;\sim\; \mathcal N(0,\ 10^2), \label{eq:ctrl:prior_b}\\
+  \sigma &\;\sim\; \text{HalfNormal}(1). \label{eq:ctrl:prior_s}
 \end{align}
 %
-The priors are weak and tied to the units of the data: spend has a standard deviation of
-\eur{\nbFiveSpendSd}, so a $\mathcal N(0, 10^2)$ prior on a per-email effect spans every
-commercially conceivable value and several inconceivable ones, and a HalfNormal$(10)$ on the
-residual scale is wide enough for any plausible noise level. Nothing here is doing any work, and
-that is deliberate. \textbf{The prior is not the interesting object in this chapter; the
-adjustment set is.} Inference is by the No-U-Turn sampler \citep{hoffman2014} in PyMC
+\Cref{eq:ctrl:prior_b,eq:ctrl:prior_s} are the priors the declaring library attaches by default,
+reported here as fitted rather than as one might have written them. Two remarks, and the second is
+the honest one. The coefficient prior is genuinely weak: spend has a standard deviation of
+\eur{\nbFiveSpendSd}, so $\mathcal N(0, 10^2)$ on a per-email effect spans every commercially
+conceivable value and several inconceivable ones --- and it covers the intercept as well, which the
+data pins near \eur{20} without difficulty. The scale prior is the one mildly \emph{informative}
+prior in the chapter, and it is worth naming as such: the residual scale of \cref{eq:ctrl:outcome},
+once the unobserved $3G$ is folded into the $\mathcal N(0, 4^2)$ noise, is
+$\sqrt{3^2 + 4^2}$ euros, which sits several prior standard deviations into HalfNormal$(1)$'s
+tail. At \nbFiveN{}
+rows the likelihood overrules it without a struggle: the posterior mean of $\sigma$ comes back at
+\eur{\nbFiveSigmaPost}. That is the general lesson of this book in miniature, arrived at by
+accident. \textbf{The prior is not the interesting object in this chapter; the adjustment set is.}
+
+Inference is by the No-U-Turn sampler \citep{hoffman2014} in PyMC
 \citep{salvatier2016}: \nbFiveNDraws{} post-warmup draws, $\hat R = \nbFiveRhat$, minimum bulk
 effective sample size \nbFiveEss{} \citep{vehtari2021}, \nbFiveDivergences{} divergent
 transitions.
@@ -423,12 +463,21 @@ transitions.
 The posterior mean is \eur{\nbFiveBayesEst} with a 94\,\% highest-density interval of
 $[\nbFiveBayesLo,\ \nbFiveBayesHi]$.
 
+\begin{remark}
+The fit declared to the graph library is a \emph{joint} model of all four equations of
+\cref{sec:ctrl:dgm}, not of the spend equation alone. It changes nothing: the joint likelihood
+factorizes into one term per equation, and the spend equation's parameters appear in no other
+factor, so the auxiliary regressions --- including the Gaussian likelihoods it places on the two
+binary variables --- cannot move $\tau$. \Cref{eq:ctrl:lik} is the whole of what identifies it.
+\end{remark}
+
 Then the same machinery is pointed at the \textbf{kitchen sink}: the identical likelihood, the
-identical priors and the identical sampler, on spend regressed against the email, loyalty,
-\code{responded} and \code{opened\_email} --- the ``control for everything'' instinct, implemented
-faithfully. It converges just as well ($\hat R = \nbFiveKsRhat$, minimum ESS
-\nbFiveKsEss, \nbFiveKsDivergences{} divergences). Its posterior mean is \eur{\nbFiveKsBar}. The
-truth falls \emph{outside} its 94\,\% HDI. \Cref{sec:ctrl:compare} reads the consequences.
+identical priors of \cref{eq:ctrl:prior_b,eq:ctrl:prior_s} and the identical sampler, on spend
+regressed against the email, loyalty, \code{responded} and \code{opened\_email} --- the ``control
+for everything'' instinct, implemented faithfully. It converges just as well
+($\hat R = \nbFiveKsRhat$, minimum ESS \nbFiveKsEss, \nbFiveKsDivergences{} divergences). Its
+posterior mean is \eur{\nbFiveKsBayesEst}. The truth falls \emph{outside} its 94\,\% HDI.
+\Cref{sec:ctrl:compare} reads the consequences.
 
 % =====================================================================================
 \section{Diagnostics and validation}
@@ -449,9 +498,16 @@ suspect the graph --- which is the next diagnostic.
 
 \subsection*{Falsifying the graph against the data}
 
-\Cref{as:ctrl:graph} is the load-bearing one, and this is where it is put at risk. The declared
-DAG green-lit $\{\text{loyalty}, \text{opened\_email}\}$: \code{opened\_email} is not a collider
-\emph{in the graph as drawn}, because the graph as drawn does not contain $G$. And yet
+\Cref{as:ctrl:graph} is the load-bearing one, and this is where it is put at risk. Be precise about
+which piece of the machinery failed, because the two are routinely conflated. The backdoor
+enumeration of \cref{sec:ctrl:ident} was never fooled: it returned exactly \nbFiveNAdjSets{}
+admissible set, $\{\text{loyalty}\}$, and \code{opened\_email}, being a descendant of $T$ in the
+declared graph, is excluded by clause (a) of \cref{prop:ctrl:backdoor}. What stayed silent is the
+\emph{collider check}. Asked whether $\{\text{loyalty}, \text{opened\_email}\}$ conditions on a
+collider, the declared graph raises no warning --- in the graph as drawn, \code{opened\_email} is a
+childless effect of the email, so conditioning on it appears to open nothing, because the graph as
+drawn does not contain $G$. That silence is the green light, and it is the one an analyst who
+reasons from \emph{``is it a collider?''} rather than from clause (a) will act on. And
 \cref{tab:ctrl:sets} shows that exact set is biased by $\nbFiveOpenBarErr$. The software was not
 wrong. It reasoned faithfully about the graph it was given, and the graph was incomplete.
 
@@ -486,6 +542,14 @@ centred on the truth --- its mean error is $\nbFiveSeedBiasDag$, which is sampli
 naive set sits $\nbFiveSeedBiasNaive$ away, sample after sample, and the kitchen sink
 $\nbFiveSeedBiasKs$. Those offsets do not shrink and do not wander: they are properties of the
 identification, not of the draw.
+
+Repeated sampling also settles the complementary question, the one the chapter's rhetoric leans on
+everywhere else: whether the \emph{right} model's interval means what it says. Across
+\nbFiveCovN{} fresh samples, the endorsed set's 90\,\% HC1 interval covers the planted
+\eur{\nbFiveTrueAte} on \nbFiveCovK{} of them --- \pc{\nbFiveCovPct} against a nominal 90\,\%,
+inside the binomial noise of that many draws. The endorsed adjustment set is therefore not merely
+centred on the truth; it is \emph{calibrated} around it. That is the property the four wrong sets
+forfeit, and no diagnostic in their own output reports the loss.
 
 \input{build/floats/nb05_bars}
 
@@ -567,7 +631,8 @@ believe.
         \emph{outside} its 94\,\% HDI $[\nbFiveKsBayesLo,\ \nbFiveKsBayesHi]$.
   \item \textbf{It is not punished with a wider interval.} This is the sentence to take away. Its
         HDI is \eur{\nbFiveKsBayesWidth} wide against the correct model's
-        \eur{\nbFiveBayesWidth}. The extra six cents is not a warning; it is nothing. A model
+        \eur{\nbFiveBayesWidth}. The extra \eur{\nbFiveKsWidthGap} is not a warning; it is
+        nothing. A model
         that is confidently wrong is \emph{not} flagged by its own uncertainty, because
         uncertainty prices sampling noise and this is not sampling noise
         (\cref{eq:ctrl:asymptotic}).
@@ -627,7 +692,15 @@ throughout,
   \label{eq:ctrl:rule}
 \end{equation}
 %
-and under the endorsed adjustment set the posterior gives
+with one unit convention that must be said out loud, because the incrementality and geo chapters
+both stop to say it. The estimand $\tau$ is incremental \emph{spend} --- revenue, not contribution
+--- so comparing it directly against a contact cost would implicitly assume a hundred per cent
+gross margin. It does not. The \eur{\nbFiveCost} in \cref{eq:ctrl:rule} is the break-even
+\emph{already expressed on the revenue scale}: the contact cost grossed up by the working margin,
+$c = \text{cost}/m$. A firm whose true out-of-pocket cost is lower and whose margin is thinner
+lands at the same threshold; what may not be done is to net the two scales against each other.
+
+Under the endorsed adjustment set the posterior gives
 $\Prob(\tau > 0) = \nbFivePPos$ and $\Prob(\tau > c) = \nbFivePCost$: \textbf{\nbFiveDecision}.
 The entire 94\,\% HDI sits above the cost line, so this is not a knife-edge call --- had the HDI
 straddled the line, the honest answer would have been \emph{test before you spend}.
@@ -652,12 +725,29 @@ effect is \eur{\nbFiveObservedAte}, that requires $\gamma\delta \approx \nbFiveO
 a hidden variable more strongly associated with both email and spend than loyalty itself is.
 
 The second is \citeauthor{vanderweele2017}'s \textbf{E-value} \citep{vanderweele2017}, which
-lives on the risk-ratio scale and therefore requires the euro effect to be standardized first:
-$d = |\hat\tau - c| / \sd(\text{spend}) = \nbFiveDStd$ outcome standard deviations, mapped to a
-risk ratio by $\text{RR} \approx \exp(0.91\,d)$. The E-value is the minimum association --- with
-\emph{both} treatment and outcome --- that an unmeasured confounder would need in order to move
-the estimate to the threshold. Against the null it is \nbFiveEValue. Against the
-\eur{\nbFiveCost} break-even it is \nbFiveEValueBe.
+lives on the risk-ratio scale and therefore requires the euro effect to be standardized first.
+The standardization is always taken \emph{against a threshold} $t$,
+%
+\begin{equation}
+  d(t) \;=\; \frac{|\hat\tau - t|}{\sd(\text{spend})},
+  \qquad \text{RR} \;\approx\; \exp(0.91\,d),
+  \label{eq:ctrl:evalue}
+\end{equation}
+%
+and the E-value is the minimum association --- with \emph{both} treatment and outcome --- that an
+unmeasured confounder would need in order to move the estimate to that threshold. At $t = 0$ the
+effect is $d = \nbFiveDStd$ outcome standard deviations and the E-value is \nbFiveEValue. The
+identical calculation at $t = c$, the break-even of \cref{eq:ctrl:rule}, is a far shorter
+distance --- $d = \nbFiveDStdBe$ --- and returns \nbFiveEValueBe.
+
+Both are deliberately conservative, and it is worth being explicit about why. The
+standardized-mean-difference-to-risk-ratio conversion behind \cref{eq:ctrl:evalue} takes $d$ in
+\emph{within-group} standard deviations \citep{vanderweele2017}, whereas $\sd(\text{spend}) = \eur{\nbFiveSpendSd}$ is the \emph{marginal}
+standard deviation of the outcome column --- inflated by loyalty, by the latent trait and by the
+treatment itself, all of which the residual scale (\eur{\nbFiveSigmaPost}, from
+\cref{sec:ctrl:bayes}) has already netted out. A larger denominator is a smaller $d$ is a smaller
+E-value, so both numbers below understate the confounding strength required. That is the direction
+to err in when the number is going to a skeptic.
 
 \input{build/floats/nb05_sensitivity}
 
@@ -677,9 +767,8 @@ missing, and with nothing else.
 \section{What can go wrong}
 \label{sec:ctrl:wrong}
 
-\input{build/tables/nb05_sets}
-
-\Cref{tab:ctrl:sets} is the chapter in one table: the same OLS, the same HC1 covariance, the same
+\Cref{tab:ctrl:sets}, introduced in \cref{sec:ctrl:classical}, is the chapter in one table: the
+same OLS, the same HC1 covariance, the same
 \nbFiveN{} rows, five adjustment sets. \nbFiveNCover{} of the \nbFiveNSets{} intervals cover the
 truth. The widths span only \eur{\nbFiveWidthMin} to \eur{\nbFiveWidthMax} --- so the four wrong
 sets are not vaguer than the right one, not noisier, not flagged. They are precise, and they are
@@ -715,7 +804,7 @@ coupon history and who the targeting model emails, and brand affinity $U_2$, whi
 coupon history and spend. The only $T$--$Y$ path,
 $T \leftarrow U_1 \to W \leftarrow U_2 \to Y$, contains a collider at $W$ and is therefore
 \emph{already blocked}. The naive estimate is unbiased before anyone touches anything:
-\eur{\nbFiveMbNone} against a truth of \eur{6}. Conditioning on $W$ opens the path --- once $W$
+\eur{\nbFiveMbNone} against a truth of \eur{\nbFiveMbTrue}. Conditioning on $W$ opens the path --- once $W$
 is known, a high $U_1$ implies a low $U_2$, so the two latent causes become correlated, splicing
 $T \leftarrow U_1$ onto $U_2 \to Y$ --- and the estimate moves to \eur{\nbFiveMbCtrl}, a bias of
 $\nbFiveMbBias$ \citep{ding2015}.
@@ -775,6 +864,45 @@ $[\nbFiveKsBarLo,\ \nbFiveKsBarHi]$ that excludes the truth. It stacks the colli
 that flips the campaign decision. And it is what a well-meaning analyst produces when told to be
 thorough.
 
+\subsection*{The controls that help --- and the good-looking one that makes things worse}
+\label{sec:ctrl:good}
+
+Everything so far has been prohibition, and a taxonomy of prohibitions is only half of
+\citeauthor{cinelli2022}'s \emph{crash course in good and bad controls} \citep{cinelli2022}. ``Adjust
+for the confounder and stop'' is not the rule either. Two further cases complete the picture, and
+both run on this chapter's own world.
+
+\medskip\noindent
+\textbf{Free precision: the pure outcome predictor.} A pre-treatment variable that predicts the
+outcome but has no path to treatment cannot open or close anything between $T$ and $Y$: it is
+harmless for bias, and it shrinks the standard error by mopping residual variance out of $Y$.
+\Cref{eq:ctrl:outcome} contains exactly such a variable --- the latent engagement trait $G$, which
+enters spend with a coefficient of $3$ and enters \cref{eq:ctrl:treat} not at all. Exposing it, as
+if the CRM had measured it after all, and refitting the endorsed regression: the standard error
+falls from \eur{\nbFivePrecBaseSe} to \eur{\nbFivePrecPlusSe}, a drop of \pc{\nbFivePrecSeDropPct},
+while the estimate moves by $\nbFivePrecEstMove$ --- inside the noise, as it must be, since there
+was no path for it to close. Nothing was risked and an interval was bought. This is the one
+adjustment in the chapter that is free.
+
+\medskip\noindent
+\textbf{Bias amplification: the near-instrument.} Now the mirror image, and it is the case that
+should unsettle anyone who has just been taught to fear only post-treatment variables. Consider a
+variable that strongly predicts \emph{who gets emailed} but has no direct path to spend --- a
+send-batch quirk, a deliverability score. It is pre-treatment, it is not a descendant of $T$, and it
+``explains treatment'', which makes it look like the safest control on the list. It is not. If any
+confounder remains \emph{unmeasured}, conditioning on such a variable makes the residual bias
+\emph{worse}: it absorbs the clean, exogenous variation in the treatment and leaves the comparison
+resting on precisely the part that the hidden confounder contaminates \citep{ding2015}. Simulated
+with a hidden $U$ in both equations, the raw comparison carries a bias of $\nbFiveAmpBiasNone$;
+controlling the instrument-like variable takes it to $\nbFiveAmpBiasCtrl$ ---
+$\nbFiveAmpFactor\times$ worse. The adjustment did not adjust. It amplified.
+
+The moral is the chapter's, sharpened. Neither verdict is readable off a timestamp or a
+correlation: both variables are pre-treatment, and both correlate with something. And the second
+case bears directly on \cref{sec:ctrl:euro}, whose entire subject is bounding the residual
+unmeasured confounding --- because conditioning on a near-instrument is the one adjustment that
+makes that bound worse without anything in the output moving.
+
 \subsection*{A practitioner's covariate checklist}
 
 The toy variables map one-to-one onto the columns of a real campaign table.
@@ -794,14 +922,23 @@ Responded, converted, unsubscribed
 Survey participation, post-campaign app install
   & Selection collider & \textbf{exclude}; distrust any panel filtered on them \\[2pt]
 Pre-treatment \emph{proxy} of an unmeasured trait (historical open rate, coupon history)
-  & It depends --- draw the graph & M-bias risk if it is a common effect of latents \\
+  & It depends --- draw the graph & M-bias risk if it is a common effect of latents \\[2pt]
+Store distance, category affinity, household size --- predicts spend, plays no part in who is emailed
+  & Pure outcome predictor: predicts $Y$ only & \textbf{keep} --- free precision; it cannot move
+    the estimate \\[2pt]
+Send-batch, deliverability score, assignment-rule quirks --- predicts \emph{who} is emailed, no
+  direct path to spend
+  & Instrument-like: predicts $T$ only & \textbf{leave out} --- it amplifies whatever confounding
+    is still unmeasured \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 \medskip\noindent
 Pocket rule: \textbf{pre-treatment \emph{and} a plausible common cause of $T$ and $Y$ $\Rightarrow$
-in; caused by $T$ $\Rightarrow$ out; anything else $\Rightarrow$ draw the DAG.}
+in; caused by $T$ $\Rightarrow$ out; predicts $Y$ only $\Rightarrow$ in, for free precision;
+predicts $T$ only $\Rightarrow$ out, because it amplifies the bias it cannot see; anything else
+$\Rightarrow$ draw the DAG.}
 
 % =====================================================================================
 \section{On real data}
@@ -860,7 +997,8 @@ dataset is instructive precisely because the estimators changed and the \emph{an
 
 \begin{enumerate}[leftmargin=*, itemsep=.45em]
   \item \textbf{``Control for everything you have'' is wrong, and it is expensive.} The kitchen
-        sink returns \eur{\nbFiveKsBar} against a true \eur{\nbFiveTrueAte}, excludes the truth
+        sink returns a posterior mean of \eur{\nbFiveKsBayesEst} against a true
+        \eur{\nbFiveTrueAte}, excludes the truth
         from its interval, and \emph{reverses} the campaign decision
         (\nbFiveDecisionKs{} against \nbFiveDecision). The instinct that feels like caution is
         the one that kills a profitable campaign.
@@ -901,8 +1039,10 @@ dataset is instructive precisely because the estimators changed and the \emph{an
         as \nbFivePCostKs, for an estimand that is not the causal effect.
 
   \item \textbf{The DAG is an assumption --- so falsify it.} The graph declared here was wrong: it
-        could not see the latent trait behind \code{opened\_email}, and it green-lit an adjustment
-        set that is biased by $\nbFiveOpenBarErr$. The data caught it anyway.
+        could not see the latent trait behind \code{opened\_email}, so its \emph{collider check}
+        raised no warning against an adjustment set that is biased by $\nbFiveOpenBarErr$ --- the
+        green light an analyst gets for asking ``is it a collider?'' instead of applying clause (a).
+        The data caught it anyway.
         \nbFiveFalsifNViolations{} of the \nbFiveFalsifNTests{} conditional independences the
         graph implies is rejected, at $p = \nbFiveFalsifP$. Let the machine choose the adjustment
         set from the graph; then test the graph against the data before believing either.

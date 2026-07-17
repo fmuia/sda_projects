@@ -1,11 +1,9 @@
 # Book — open items (carry these to the final review pass)
 
-## Cross-chapter dependency, MUST close
-**Ch.2 §2.8 + takeaway 7 cite Ch.10's "~6x too wide" DiD result WITHOUT a number**, because
-`book/build/results/nb08.json` did not exist when Ch.2 was written. It states the *direction*
-only. **Once nb08 emits, inject the macro** (the width ratio) into that sentence and the
-takeaway. Ch.2 is the book's spine — the claim "misspecification goes both ways, which is the
-proof it is specification not paradigm" is only half-evidenced until this lands.
+## Cross-chapter dependency — CLOSED (2026-07-14 final pass)
+Ch.2 §2.8 + takeaway 7 now cite Ch.10's DiD width result via `\nbEightBayesOverCluster` and
+`\nbEightPooledOverScatter` (point_vs_posterior.tex:461–463, 558–560); `nb08.json` emits both.
+The "misspecification goes both ways" claim is fully evidenced.
 
 ## Corrections measurement forced on MY briefs (do not reintroduce)
 - **ITS cumulative impact is NOT "€1.824M vs €1.825M"** — that is C_T in *proportion-days*. In

@@ -90,7 +90,7 @@ of history; three carry \nbThreeObsMin{}. A separate regression on sixteen weeks
 elasticity that is mostly sampling noise, and acting on it is not boldness but arithmetic error.
 The classical toolbox offers exactly two ways out --- pretend the regions are identical, or trust
 each region's own numbers --- and both are wrong in opposite directions. This is the same
-bias--variance bracket as Chapter~4, now with a coefficient rather than a mean, and this
+bias--variance bracket as \Cref{ch:seg}, now with a coefficient rather than a mean, and this
 chapter's third option is a hierarchical model that learns \emph{how much} to pool.
 
 \textbf{Second, the model is chosen for interpretability, not convenience.} Take logs of both
@@ -117,7 +117,7 @@ coincide for reasons that have nothing to do with the price cut. This is \emph{e
 it is the failure mode that no amount of clever averaging repairs. \Cref{sec:pe:wrong} shows the
 hierarchical posterior inheriting the bias to within \nbThreeHierVsOls{} of naive OLS, and shows
 the pricing recommendation reversing outright. The cure is an instrument, and this chapter hands
-the problem to Chapter~13.
+the problem to \Cref{ch:iv}.
 
 % =====================================================================================
 \section{The data-generating model}
@@ -163,7 +163,8 @@ equation and the demand equation --- managers responding to the very thing that 
 is the simultaneity that no pooling scheme can undo.
 
 Two features of the planted world set the difficulty. The fleet-mean elasticity is
-$\nbThreeTrueFleet$ and the between-region spread is $\nbThreeTrueTau$, so the regions genuinely
+$\nbThreeTrueFleet$ and the twelve drawn slopes have a realized spread of $\nbThreeTrueTau$ around
+it --- \cref{eq:pe:beta} plants a population $\tau_\beta$ of $0.35$ --- so the regions genuinely
 differ --- a single national price is leaving money somewhere. And of the \nbThreeNRegions{}
 planted elasticities, \nbThreeNTrueElastic{} lie below $-1$ and exactly \nbThreeNTrueInelastic{}
 lies above it (\nbThreeInelasticRegion{}, at $\nbThreeInelasticBeta$). That one region is the trap:
@@ -234,14 +235,21 @@ Genuine price movement survives the controls:
   \Var(\log P_{rt} \mid Z_{rt},\, r) \;>\; 0 .
 \]
 %
-No variation, no slope. This is positivity, wearing continuous-treatment clothes. It is
-testable, and tested: the within-region standard deviation of log-price runs from
-\nbThreeLpSdMin{} to
-\nbThreeLpSdMax{} (median \nbThreeLpSdMed), which is the quasi-experimental wiggle
-$\nu_{rt} \sim \mathcal N(0, 0.05^2)$ of \cref{eq:pe:price} showing up in the data. In a real firm
-this is the assumption most often \emph{silently} violated: uniform corporate pricing or a rigid
-cost-plus rule leaves $\Var(\log P \mid Z) \approx 0$, and the ``elasticity'' estimated from it is
-noise wearing a number's clothes.
+No variation, no slope. This is positivity, wearing continuous-treatment clothes. It is testable,
+and it is tested \emph{as stated} --- which means on the \textbf{conditional} variance, not the raw
+one. Residualizing log-price on the $Z$ block and the region dummies and taking the standard
+deviation of what survives gives \nbThreeLpResidSdMin{} to \nbThreeLpResidSdMax{} (median
+\nbThreeLpResidSdMed), which is the quasi-experimental wiggle
+$\nu_{rt} \sim \mathcal N(0, 0.05^2)$ of \cref{eq:pe:price} showing up in the data. The raw
+within-region standard deviation of log-price is barely different here
+(\nbThreeLpSdMin{}--\nbThreeLpSdMax) only because the competitor passthrough in
+\cref{eq:pe:price} is weak by construction, and the distinction is not pedantry: it is the whole
+assumption. In a real firm this is the assumption most often \emph{silently} violated --- and it is
+violated in exactly the way the raw diagnostic cannot see. A rigid cost-plus rule generates a
+\emph{large} raw variation in log-price, because price tracks cost week by week; it leaves
+$\Var(\log P \mid Z) \approx 0$, because every one of those moves is explained by a control. The
+raw number sails through, the conditional number collapses, and the ``elasticity'' estimated from
+it is noise wearing a number's clothes.
 \end{assumption}
 
 \begin{assumption}[No dynamics, no cross-region spillover]\label{as:pe:sutva}
@@ -365,9 +373,17 @@ One caveat belongs \emph{before} the number is quoted, not in a footnote after i
 \nbThreeNClusters{} clusters. Cluster-robust standard errors are a large-$G$ approximation, and at
 $G = \nbThreeNClusters$ they are themselves \emph{downward}-biased: the usual rule of thumb wants
 thirty to fifty clusters, and below that the recommended repair is a wild cluster bootstrap
-\citep{cameron2008, cameron2015}. So the clustered interval of \cref{tab:pe:covariance},
-$[\nbThreeFleetLo,\ \nbThreeFleetHi]$, is the best interval the classical toolbox has in this
-problem --- and it is still, mildly, an optimistic one. No covariance option fixes that. The honest
+\citep{cameron2008, cameron2015}. And the sandwich is not the only casualty of a small $G$: the
+\emph{reference distribution} is one too. With a region-clustered covariance the degrees of freedom
+belong to the clusters, not to the rows, so a quantile of the interval should be read off $t(G-1)$
+and not off the $t$ at $n-k$ degrees of freedom --- which, with \nbThreeNObs{} rows, is the standard
+normal to four decimals, and correspondingly more generous. The endpoints move only in the second
+decimal here and no conclusion in this chapter turns on it, but the discipline is the point:
+\cref{tab:pe:counts} scores complete pooling's action bound on $t(G-1)$ for exactly that reason. So
+the
+clustered interval of \cref{tab:pe:covariance}, $[\nbThreeFleetLo,\ \nbThreeFleetHi]$, is the best
+interval the classical toolbox has in this problem --- and it is still, mildly, an optimistic one.
+No covariance option fixes that. The honest
 fix is to \emph{model} the region-level variation, which is what \cref{sec:pe:bayes} does. This is
 the register in which a covariance estimator should be chosen: pick the one that makes the fewest
 false promises, then say out loud which promises it is still making.
@@ -389,9 +405,14 @@ does not shrink with more data. It is small here only because the competitor pas
 construction; with a strong one the same mechanism is ruinous.
 
 Dropping season and trend is a different animal entirely. The mean error stays near zero
-($\nbThreeBiasNoseason$) --- no bias, exactly as the graph advertises --- but the typical standard
-error widens by \nbThreeSeWiden$\times$ (from \nbThreeSeLadderFull{} to
-\nbThreeSeLadderNoseason), and the seed-to-seed scatter inflates to match. On the \emph{working}
+($\nbThreeBiasNoseason$) --- no bias, exactly as the graph advertises --- but the precision
+collapses: averaged over the same \nbThreeNseed{} fresh panels, the typical \emph{HC1} standard
+error widens by \nbThreeSeWiden$\times$ (from \nbThreeSeLadderFull{} to \nbThreeSeLadderNoseason),
+and the seed-to-seed scatter inflates to match. Those last two figures are HC1 standard errors on
+un-thinned panels, and so a \emph{different estimator} from the region-clustered standard errors in
+column~3 of \cref{tab:pe:ladder}, which is why the ratio they report is the larger one: HC1
+understates the full model's standard error by \nbThreeSeRatioHc$\times$ to begin with, so the same
+widening is measured from a smaller base. On the \emph{working}
 panel it happened to throw the point estimate a long way, which is noise, and which is precisely
 what one sample can never tell you and \nbThreeNseed{} panels can. The general lesson outlives this
 notebook: when the treatment barely moves --- and here $\log P$ has a standard deviation of about
@@ -459,8 +480,24 @@ identical); as $\tau_\beta$ grows large it approaches \textbf{no pooling} (every
 own). The two classical baselines of \cref{sec:pe:classical} are the \emph{limiting cases} of the
 model actually being fitted, and where the fit lands between them is \emph{learned, not assumed}.
 The posterior puts $\tau_\beta$ at \nbThreeTauBeta{} (90\,\% credible interval
-$[\nbThreeTauBetaLo,\ \nbThreeTauBetaHi]$) against a planted \nbThreeTrueTau. The data chose the
-pooling regime, and it chose neither extreme.
+$[\nbThreeTauBetaLo,\ \nbThreeTauBetaHi]$) against a realized spread of \nbThreeTrueTau{} across the
+twelve planted slopes. The data chose the pooling regime, and it chose neither extreme.
+
+That last sentence is the one place where this chapter's own motto --- an assumption with no
+accompanying test is a wish --- could be quietly broken, because ``learned, not assumed'' is a claim
+about a prior, and one posterior fitted under one prior cannot support it. So the model is refit
+twice more, moving that single line and nothing else: $\tau_\beta \sim \text{HalfNormal}(0.1)$, a
+prior that all but asserts complete pooling, and $\tau_\beta \sim \text{HalfNormal}(2)$, one that all
+but asserts none. The posterior $\tau_\beta$ lands at \nbThreeTauTight{} under the tight prior and
+\nbThreeTauLoose{} under the loose one, against \nbThreeTauBeta{} under
+\cref{eq:pe:priors}; the mean absolute error against the twelve planted slopes moves from
+\nbThreeMaePartialOne{} to \nbThreeMaeTight{} and \nbThreeMaeLoose; and the roster of regions
+clearing the action bar of \cref{eq:pe:rule} --- the only column a CMO would ever see --- goes
+\nbThreeActPpTight, \nbThreeActPp, \nbThreeActPpLoose{} across the sweep. It is
+\nbThreeTauVerdict. With \nbThreeNObs{} region-weeks the likelihood, not the prior, is picking the
+pooling regime, which is what the book's spine claims in general and what this chapter is entitled to
+claim only after checking. Port the model to four regions and twelve weeks and the same sweep will
+not be this quiet; \cref{sec:pe:wrong} returns to it as a failure mode.
 
 \subsection*{Shrinkage, and what it is worth}
 
@@ -553,25 +590,33 @@ formula the reader was asked to trust in \cref{eq:pe:shrink} is the formula the 
 \subsection*{Calibration, and an honest look at a below-nominal number}
 
 The 90\,\% credible intervals cover the twelve planted elasticities \pc{\nbThreeCover} of the time
---- \nbThreeCoverHits{} of \nbThreeNRegions. That is below nominal, and it should not be waved
-away. Two checks, and they say different things.
-
-\emph{Where do the misses live?} \nbThreeCoverThin{} of the three thin regions are covered and
-\nbThreeCoverRich{} of the nine rich ones. This is the known price of shrinkage, and it is
-structural rather than a bug: shrinkage intervals are calibrated for the \emph{ensemble}, not for
-each pre-shrinkage slope, so they run too narrow precisely for regions whose true elasticity sits
-far from the fleet mean and for the hard-shrunk thin ones.
+--- \nbThreeCoverHits{} of \nbThreeNRegions. That is below nominal, and the temptation is to reach
+straight for the mechanism. Resist it, and ask first whether there is anything to explain.
 
 \emph{Is the shortfall even signal?} With only \nbThreeNRegions{} regions, a perfectly calibrated
 90\,\% procedure still misses a couple regularly. The binomial probability that a truly-90\,\%
-method covers \nbThreeCoverHits{} or fewer of twelve is \nbThreePAsbad. Read that number before
-reading anything into the coverage.
+method covers \nbThreeCoverHits{} or fewer of twelve is \nbThreePAsbad{} --- which is to say the
+observed shortfall is indistinguishable from luck. And the split does not localize it either:
+\nbThreeCoverThin{} of the three thin regions are covered against \nbThreeCoverRich{} of the nine
+rich ones, so most of the misses are in the regions with the \emph{most} data, which is the reverse
+of the story shrinkage would tell.
 
-The trade is real and worth naming, because it is the trade the chapter's decision rule is built
-around: partial pooling buys the \emph{best point estimates} (\cref{sec:pe:compare}) at the cost of
-slightly overconfident \emph{per-region intervals}. That is one more reason \cref{sec:pe:euro}
-leans on $\Prob(\beta_r < -1)$ --- a probability computed across the whole posterior --- rather
-than on interval endpoints.
+\emph{So run it \nbThreeNseed{} times.} This is the chapter that lectures the reader that one sample
+cannot separate bias from luck, and twelve intervals on one panel are one sample. The
+\nbThreeNseed{} hierarchical refits of \cref{sec:pe:compare} carry \nbThreeNIntMulti{} region
+intervals between them, and across all of them coverage is \pc{\nbThreeCoverMulti} against a nominal
+90 --- \pc{\nbThreeCoverMultiThin} for the thin regions and \pc{\nbThreeCoverMultiRich} for the rich
+ones. \emph{That} is the number to quote, and the mechanism, if there is one to name, has to be
+named against it: shrinkage intervals are calibrated for the \emph{ensemble} rather than for each
+pre-shrinkage slope, so they can run narrow for a region whose true elasticity sits far from the
+fleet mean. The one-panel \pc{\nbThreeCover} was never evidence for that claim, and this chapter
+does not get to use it as such.
+
+The trade is real either way, and worth naming, because it is the trade the chapter's decision rule
+is built around: partial pooling buys the \emph{best point estimates} (\cref{sec:pe:compare}) at
+whatever cost there is in \emph{per-region interval} calibration. That is one more reason
+\cref{sec:pe:euro} leans on $\Prob(\beta_r < -1)$ --- a probability computed across the whole
+posterior --- rather than on interval endpoints.
 
 % =====================================================================================
 \section{Point estimate versus posterior}
@@ -607,13 +652,15 @@ the same sampler settings.
 
 The working panel says partial pooling beats the better classical arm by \pc{\nbThreeGainOne}. That
 number is an anecdote, and this chapter has already spent a section refusing to read bias off one
-draw (\cref{tab:pe:ladder}); the headline gets no exemption. Over \nbThreeNseed{} panels:
+draw (\cref{tab:pe:ladder}); the headline gets no exemption. Over \nbThreeNseed{} panels
+(\cref{tab:pe:bakeoff}, and the per-panel spread in \cref{fig:pe:bakeoff}):
 
 \begin{enumerate}[leftmargin=*]
   \item \textbf{The average margin is \pc{\nbThreeGainMean}, not \pc{\nbThreeGainOne}}, with a
         standard deviation of \nbThreeGainSd\,pp. Across panels the edge runs from
         \pc{\nbThreeGainMin} --- on its worst panel partial pooling is \emph{worse}, and by a wide
-        margin --- to \pc{\nbThreeGainMax}. The working panel sits at the \nbThreePctileOne th
+        margin --- to \pc{\nbThreeGainMax}; that whole distribution is the right-hand histogram of
+        \cref{fig:pe:bakeoff}. The working panel sits at the \nbThreePctileOne th
         percentile of that spread: a flattering draw, not a representative one.
   \item \textbf{It loses on \nbThreeNLosses{} of \nbThreeNseed{} panels}, winning
         \nbThreeNWins{}. And the comparator is deliberately unhelpful to the Bayesian arm: it is
@@ -671,14 +718,64 @@ mismatched bar the same fits would act on only \nbThreeActNpStrict, and the gap 
 90\,\% bounds of \nbThreeFlipBounds, just past $-1$. The finding still points the same way, which is
 why the chapter's conclusion survives. It simply stops being inflated.
 
-Where the classical arm \emph{does} fail on this decision, fair scoring does not save it, and it
-fails expensively. \textbf{Complete pooling's bound also clears $-1$, so it certifies all twelve
-regions as elastic} --- including \nbThreeInelasticRegion, which the simulator planted as genuinely
-inelastic at $\nbThreeInelasticBeta$ and which would consequently receive a price cut it cannot
-support. That is a \emph{wrong} action, not a missed one, and it is the only wrong action anywhere
-in \cref{tab:pe:counts}. No pooling, scored fairly, leaves \nbThreeActNpMissed{} of the elastic
+Where the classical arm \emph{does} fail on this decision, fair scoring does not save it.
+\textbf{Complete pooling's bound also clears $-1$, so it certifies all twelve regions as elastic}
+--- including \nbThreeInelasticRegion, which the simulator planted as genuinely inelastic at
+$\nbThreeInelasticBeta$ and which would consequently receive a price \emph{rise} it cannot support
+(every action in this chapter is a rise: \cref{eq:pe:lerner} at these elasticities and a marginal
+cost of \eur{\nbThreeMarginalCost} sends every $P^\star$ above the prices on the shelf today). That
+is a \emph{wrong} action, not a missed one, and it is the only wrong action anywhere in
+\cref{tab:pe:counts}. No pooling, scored fairly, leaves \nbThreeActNpMissed{} of the elastic
 regions on the table; the posterior leaves \nbThreeActPpMissed. On counts, that is a rounding
-error --- and it is the right moment to stop pretending the win is about counts.
+error --- and it is the right moment to stop grading in counts altogether.
+
+\subsection*{Counts are not money --- so price the rosters}
+
+Each arm is now made to publish a price list. Complete pooling certifies everyone, so it sends every
+region to $P^\star$ at its single fleet elasticity: \eur{\nbThreeCpPstar}, one price for the whole
+country. No pooling and partial pooling price the regions their own bars certify and hold the rest
+at today's price. The oracle prices at the planted $\beta_r$. Every list is then evaluated at the
+\emph{planted} elasticities and the fleet profit added up (\cref{tab:pe:policy}).
+
+\input{build/tables/nb03_policy}
+
+On the planted curve, the oracle's price list is worth \pc{\nbThreePolicyValueOracle} of fleet
+profit, the posterior's \pc{\nbThreePolicyValuePp}, no pooling's \pc{\nbThreePolicyValueNp}, and
+complete pooling's \pc{\nbThreePolicyValueCp}. (None of these is the
+\pc{\nbThreeFleetUplift} of \cref{sec:pe:euro}: that figure is a posterior \emph{expected} uplift,
+averaged over draws and over the priced regions only. The column above is what a price list actually
+earns once the truth is known, and it gives no credit for being uncertain in the right direction.)
+And then the uncomfortable part, which the count in \cref{tab:pe:counts} hid.
+
+\begin{remark}[The wrong action, priced --- and it is not a loss]
+Complete pooling's certification of \nbThreeInelasticRegion{} is worth
+\pc{\nbThreeCpWrongGain} in that region's own profit, evaluated at its planted
+$\nbThreeInelasticBeta$. Not a typo, and not a defence of complete pooling. Read
+\cref{eq:pe:revenue} again: for $\beta > -1$ the first-order condition never crosses zero, so profit
+climbs with price without limit, and a false verdict of ``elastic'' pushes an inelastic region's
+price in the direction its true elasticity was asking for anyway. Under a demand curve that is
+log-log at every price forever --- which is precisely what the simulator plants --- the wrong action
+cannot be punished.
+\end{remark}
+
+That is a statement about the demand curve, not an argument for one $\beta$. What complete pooling
+has actually done is stake \nbThreeInelasticRegion's entire gain on constant elasticity at
+\nbThreeCpExtrap$\times$ the highest price that region has ever charged --- the region of the price
+axis where \cref{sec:pe:valid}'s curvature probe has no power whatsoever, and where
+\cref{as:pe:form} is therefore an article of faith. Let the demand curve bend outside the observed
+band --- elasticity steepening by \nbThreeBendShow{} per log-point above the highest price ever
+charged, an \cref{as:pe:form} violation no in-sample test in this chapter could detect --- and the
+same roster is worth \pc{\nbThreePolicyValueCpBend} against the posterior's
+\pc{\nbThreePolicyValuePpBend} (column~4 of \cref{tab:pe:policy}). The bend at which complete
+pooling's price list falls below the posterior's is \nbThreeBendFlip, which implies an elasticity of
+$\nbThreeBendElast$ at the price it wants to charge: a curve no data in this panel can rule out, and
+none can rule in.
+
+\textbf{So the honest sentence is not that complete pooling ``fails expensively''. It is that
+complete pooling's gain is an extrapolation, taken on a region it was demonstrably wrong about, and
+priced as if the model held where the model was never tested.} The posterior never prices that
+region. That is what the third tier of \cref{eq:pe:rule} is for, and it is worth more than the count
+in \cref{tab:pe:counts} suggests.
 
 \subsection*{The dial exists. It just does not turn the knob the CMO needs}
 
@@ -724,7 +821,9 @@ What it \emph{did} buy is two things, and both are real. The \textbf{third pooli
 panels, with the weight between the extremes chosen by the data through $\tau_\beta$ rather than
 asserted. And the \textbf{probability statement}: twelve honest per-region elasticities instead of
 one, each carrying a $\Prob(\beta_r < -1)$ that a pricing rule can actually be written in. On the
-euros, the edge over a fairly-scored classical arm is narrow. On the \emph{vocabulary}, the gap is
+euros --- \cref{tab:pe:policy}, where each arm's price list is graded at the planted elasticities ---
+the edge over a fairly-scored classical arm is narrow, and what separates the arms is less the profit
+than \emph{where each is willing to extrapolate to get it}. On the \emph{vocabulary}, the gap is
 total --- and it is the vocabulary, not the euros, that lets \cref{sec:pe:euro} run a three-tier
 \textsc{set} / \textsc{test} / \textsc{hold} policy instead of a coin flip.
 
@@ -771,6 +870,16 @@ prices \nbThreeNSet{} regions, sends \nbThreeNTest{} to a controlled test, and l
 $[\pc{\nbThreeFleetUpliftLo},\ \pc{\nbThreeFleetUpliftHi}]$ --- the uncertainty in the elasticity
 carried all the way through to the euro, which is the entire point of having a posterior.
 
+And an uncomfortable fact about where that headline comes from, which \cref{tab:pe:pricing} shows to
+anyone who reads down the $P^\star$ column. The uplift is largest exactly where the posterior is
+least confident, because $P^\star$ blows up as $\beta \to -1^{-}$: the regions promising forty per
+cent are the ones whose recommended price sits furthest outside anything the firm has ever charged.
+Restrict the average to the \nbThreeNInband{} priced regions whose median $P^\star$ lands within
+\nbThreeBandMult$\times$ the highest price ever observed --- prices that are at least in the same
+county as the data --- and the uplift is \pc{\nbThreeUpliftInband}, not \pc{\nbThreeFleetUplift}.
+\textbf{The difference between those two numbers is not profit. It is extrapolation.} Quote the
+first to a CMO and the second to an auditor, and know which one is which.
+
 \input{build/floats/nb03_decision}
 \input{build/tables/nb03_pricing}
 
@@ -804,13 +913,44 @@ extrapolation risk stack, and the region is routed to a test.
 
 Note the sobering detail visible even in the confident panel: $P^\star$ typically sits
 \emph{above} the observed price range, which runs \eur{\nbThreePriceObsLo}--\eur{\nbThreePriceObsHi}
-against recommended prices of \eur{\nbThreePstarLo}--\eur{\nbThreePstarHi}. \textbf{The
+against recommended prices of \eur{\nbThreePstarLo}--\eur{\nbThreePstarHi} --- the highest of them
+\nbThreePstarOverBand$\times$ the highest price ever charged anywhere in the fleet. \textbf{The
 recommendation is itself an extrapolation.} That is why the operational advice is a staged
 rollout --- move a minority of stores first, watch a few weeks, re-estimate as the new prices
-generate data --- rather than a fleet-wide overnight change, even where the posterior is sure. And
-it is why the \textsc{controlled test} tier is a deliverable rather than a shrug: randomized
-$\pm 10\,\%$ price cells for eight weeks deliberately manufacture the exogenous price variation
-that \cref{as:pe:variation} feeds on.
+generate data --- rather than a fleet-wide overnight change, even where the posterior is sure.
+
+\subsection*{The controlled test, sized rather than asserted}
+
+The middle tier is the chapter's answer to the regions it will not price, and a tier that is
+described but never designed is a shrug with better manners. So design it. Randomize each week in a
+routed region to a high cell at $+10\,\%$ or a low cell at $-10\,\%$ of today's price. The
+elasticity then falls out of a two-sample comparison --- the difference in mean log-demand between
+the cells, divided by the log-price gap --- which is the primitive \code{cmp.design} exists for, and
+which makes three numbers computable before a single week is run.
+
+\emph{What the test manufactures.} The design's own standard deviation of log-price is
+\nbThreeTestSdLogp, against the \nbThreeLpSdMed{} these regions have today: the cell
+\nbThreeTestSdRatio$\times$ the exogenous price variation that \cref{as:pe:variation} feeds on. That
+multiplication \emph{is} the mechanism of the test, and it is the reason a test can settle what
+observation cannot.
+
+\emph{What it buys in \nbThreeTestWeeksPlanned{} weeks.} Not much. With the posterior's residual
+scale, \nbThreeTestWeeksPlanned{} weeks of cells estimate $\beta_r$ with a standard error of
+\nbThreeTestSeBeta{} --- no tighter than the posterior standard deviation of \nbThreeSdRouted{} the
+routed regions already carry --- and the design's minimum detectable effect at conventional power is
+\nbThreeTestMde, which is larger than the entire distance from those regions' posterior means to the
+$-1$ line.
+
+\emph{What it would take.} Treating today's posterior as the prior and letting the test's precision
+add to it, the weeks required to carry a routed region past the $0.9$ bar run to a median of
+\nbThreeTestWeeks{} and a worst case of \nbThreeTestWeeksWorst{} --- and
+\nbThreeNTestClears{} of the \nbThreeNTest{} routed regions clear within the
+\nbThreeTestWeeksPlanned{} weeks the memo promises. Running the cells is cheap: at the planted
+elasticities the two cells together cost \pc{\nbThreeTestCostPct} of those regions' weekly profit
+while the test runs. \textbf{The expensive input to the middle tier is not the discount. It is the
+calendar.} A firm that wants a decision on these regions must fund the weeks, or move the bar and
+say out loud that it has --- which is a defensible choice, and a different one from promising eight
+weeks and an answer.
 
 \subsection*{The cost assumption --- the other number in the formula}
 
@@ -856,8 +996,15 @@ The result is the most important negative finding in this chapter. The hierarchi
 returns a fleet elasticity of $\nbThreeHierEndog$, biased toward zero by $\nbThreeObsBias$ --- and
 \cref{eq:pe:ovb} predicted $\nbThreePredBias$ from the planted constants alone, so the bias is
 \emph{computable}, not mysterious. More pointedly still: that posterior sits within
-\textbf{\nbThreeHierVsOls} of naive OLS on the same raw panel ($\nbThreeOlsEndogRaw$). The
+\textbf{\nbThreeHierVsOls} of naive OLS fitted on the same raw panel ($\nbThreeOlsEndogRaw$). The
 hierarchy, the priors, the sampler, the borrowed strength --- none of it moved the number.
+
+\Cref{tab:pe:endog} keeps two panels apart, and the distinction matters for reading it. The first
+three rows are fitted on the \emph{raw} $\kappa = \nbThreeKappaDemo$ panel --- the data a firm would
+actually hold. The last two are fitted on the \emph{instrument-augmented} panel: the same weeks with
+the planted cost shifter added to log-price, which is the only panel on which 2SLS can be run at
+all. That is why naive OLS reads $\nbThreeBetaOls$ there and $\nbThreeOlsEndogRaw$ on the raw panel.
+Same story, different data; the call is inelastic on both.
 
 \begin{remark}[The sentence to take away]
 \textbf{Partial pooling is not a substitute for identification.} It shrinks noise; endogeneity is
@@ -895,8 +1042,19 @@ The fix is not a better estimator of the same correlation. It is an \textbf{inst
 that moves price and affects demand \emph{only} through price. In pricing, the canonical one is a
 \textbf{cost shifter} --- an input-cost shock, an exchange-rate move, a freight surcharge --- which
 by construction pushes the price without appearing in the demand equation. Planting one here and
-running two-stage least squares \citep{imbens1994} gives the picture in \cref{fig:pe:iv} and the
-last two rows of \cref{tab:pe:endog}.
+running two-stage least squares \citep{angrist2009} gives the picture in \cref{fig:pe:iv} and the
+last two rows of \cref{tab:pe:endog} --- both fitted, as \cref{sec:pe:wrong} has just insisted, on
+the instrument-augmented panel.
+
+One caveat travels with the estimand rather than with the algebra, and this chapter's own
+\cref{eq:pe:beta} makes it unavoidable: the twelve $\beta_r$ are heterogeneous by construction, so
+what 2SLS recovers is not the unweighted fleet mean but a \emph{first-stage-weighted average} of the
+regional elasticities, weighted by how hard the instrument moves each region's price
+\citep{imbens1994}. Here that distinction is nearly invisible, because the planted cost shifter loads
+identically on every region, and $\nbThreeBetaIv$ can therefore be compared to the unweighted planted
+$\nbThreeTrueFleetEndog$ without apology. On real data it cannot: an instrument that moves price
+hard in three regions and barely at all in nine returns those three regions' elasticity, and calls it
+the fleet's.
 
 Naive OLS is \textbf{precisely wrong}: $\nbThreeBetaOls \pm \nbThreeSeOls$, which is
 \nbThreeOlsSesOff{} standard errors from the planted $\nbThreeTrueFleetEndog$, on the inelastic side
@@ -917,7 +1075,7 @@ That asymmetry \emph{is} the instrumental-variables bargain: the cure costs vari
 estimates are noisier and need bigger samples, and a \emph{weak} instrument (first-stage
 $F \lesssim 10$) is worse than none, because it amplifies small exclusion violations into large
 bias. Managing that trade-off --- with honest IV uncertainty, weak-instrument diagnostics, and a
-Bayesian wrapper --- is the job of Chapter~13, which also repeats it on real advertising data. This
+Bayesian wrapper --- is the job of \Cref{ch:iv}, which also repeats it on real advertising data. This
 chapter's job was to show why the instrument is not optional.
 
 \subsection*{The remaining limits}
@@ -940,9 +1098,13 @@ chapter's job was to show why the instrument is not optional.
         moment absolute euros or units are quoted, it bites.
   \item \textbf{Pooling is a modelling choice, and it can be pushed too far.} Too few regions, or a
         prior on $\tau_\beta$ that is too tight, and the model over-pools --- every region gets the
-        fleet answer, which is complete pooling with extra steps. Inspect $\tau_\beta$'s posterior
-        (here \nbThreeTauBeta, comfortably away from zero) rather than trusting the machinery to
-        notice.
+        fleet answer, which is complete pooling with extra steps. On \emph{this} panel it does not:
+        \cref{sec:pe:bayes} refits under $\text{HalfNormal}(0.1)$ and $\text{HalfNormal}(2)$ and the
+        posterior $\tau_\beta$ moves only from \nbThreeTauTight{} to \nbThreeTauLoose{} while the
+        priced roster is \nbThreeTauVerdict. That is a fact about \nbThreeNObs{} region-weeks, not a
+        law. Inspect $\tau_\beta$'s posterior (here \nbThreeTauBeta, comfortably away from zero) and
+        sweep its prior --- the one modelling choice in this chapter that could rewrite a price list
+        without leaving a diagnostic behind.
   \item \textbf{And the cluster count does not improve with the data.} There are
         \nbThreeNClusters{} regions and there will still be \nbThreeNClusters{} regions next year.
         The classical interval of \cref{tab:pe:covariance} is mildly optimistic for that reason and
@@ -985,11 +1147,18 @@ chapter's job was to show why the instrument is not optional.
         the \emph{procedure}. Only the first can be routed into a three-tier \textsc{set} /
         \textsc{test} / \textsc{hold} policy.
 
-  \item \textbf{Complete pooling's failure is a \emph{wrong} action, not a missed one.} One verdict
-        imposed on twelve regions certifies \nbThreeInelasticRegion{} --- planted genuinely
-        inelastic at $\nbThreeInelasticBeta$ --- as elastic, and would cut its price. That is the
-        only wrong action in \cref{tab:pe:counts}, and it is the cost of pretending regions are
-        identical.
+  \item \textbf{Complete pooling's failure is a \emph{wrong} action, not a missed one --- and the
+        wrong action is not a loss.} One verdict imposed on twelve regions certifies
+        \nbThreeInelasticRegion{} --- planted genuinely inelastic at $\nbThreeInelasticBeta$ --- as
+        elastic, and would raise its price to \eur{\nbThreeCpPstar}. Priced at the planted curve that
+        is \pc{\nbThreeCpWrongGain} in that region (\cref{tab:pe:policy}): above $-1$ profit rises
+        monotonically with price, so a false ``elastic'' pushes the price the way the truth wanted
+        anyway. The gain is nonetheless indefensible, because it is bought
+        \nbThreeCpExtrap$\times$ above the highest price that region has ever charged, where
+        \cref{as:pe:form} is untestable --- let the curve bend by \nbThreeBendFlip{} per log-point
+        beyond the observed band and the same roster falls below the posterior's. \textbf{Grade a
+        pricing rule on where it is willing to extrapolate, not only on what it earns in a
+        simulator whose curve never bends.}
 
   \item \textbf{Hierarchy is not identification.} On an endogenous panel the Bayesian posterior's
         fleet elasticity sits within \nbThreeHierVsOls{} of naive OLS on the same data. The bias is
@@ -1006,10 +1175,24 @@ chapter's job was to show why the instrument is not optional.
         \emph{downward}-biased \citep{cameron2015}. The best interval the classical toolbox has here
         is still the optimistic one, and saying so is part of the estimate.
 
-  \item \textbf{Every recommended price is an extrapolation.} The observed band is
+  \item \textbf{Every recommended price is an extrapolation, and the headline profit is concentrated
+        in the worst of them.} The observed band is
         \eur{\nbThreePriceObsLo}--\eur{\nbThreePriceObsHi}; the recommendations are
-        \eur{\nbThreePstarLo}--\eur{\nbThreePstarHi}. Constant elasticity was only ever tested where
-        the data lives. Stage the rollout, and re-estimate on what it generates.
+        \eur{\nbThreePstarLo}--\eur{\nbThreePstarHi}, the highest of them
+        \nbThreePstarOverBand$\times$ the highest price ever charged. Restrict the
+        \pc{\nbThreeFleetUplift} fleet uplift to the \nbThreeNInband{} regions whose $P^\star$ is
+        within \nbThreeBandMult$\times$ the observed maximum and it is \pc{\nbThreeUpliftInband}.
+        Constant elasticity was only ever tested where the data lives. Stage the rollout, and
+        re-estimate on what it generates.
+
+  \item \textbf{A tier that is described but not designed is a shrug.} The \textsc{controlled test}
+        tier promises randomized $\pm 10\,\%$ cells for \nbThreeTestWeeksPlanned{} weeks. Sized, that
+        design manufactures \nbThreeTestSdRatio$\times$ today's price variation (which is the whole
+        mechanism) but buys a standard error of only \nbThreeTestSeBeta{} in
+        \nbThreeTestWeeksPlanned{} weeks, and carries \nbThreeNTestClears{} of the \nbThreeNTest{}
+        routed regions past the $0.9$ bar; the median region needs \nbThreeTestWeeks{} weeks. The
+        discount is cheap (\pc{\nbThreeTestCostPct} of weekly profit while it runs); the calendar is
+        not. Design the test, or do not promise it.
 \end{enumerate}
 
 \notebooknote{%
@@ -1019,4 +1202,4 @@ chapter's job was to show why the instrument is not optional.
   injected as a macro. The simulator is \code{cmp.dgp.price\_panel}, the classical estimators
   (\code{ols}, \code{no\_pooling}, \code{iv\_2sls}) are \code{cmp.classical}, the hierarchical model
   is PyMC, and the seeds are fixed in the notebook. The instrumental-variables treatment previewed
-  in \cref{sec:pe:wrong} is Chapter~13.}
+  in \cref{sec:pe:wrong} is \Cref{ch:iv}.}

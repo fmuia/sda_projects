@@ -13,118 +13,265 @@
 \label{ch:iv}
 
 \begin{quote}\small
-\emph{An ad platform reports that exposed users convert far more --- and it is telling the truth.
-On Criteo's incrementality experiment the exposed visit the advertiser \nbElevenBNaive{} percentage
-points more often than the unexposed, with a standard error of \nbElevenBNaiveSe{} pp: the tightest
-interval anywhere in this chapter, wrapped around a number that misses the
-\nbElevenBNFullM-million-row anchor by \nbElevenBNaiveErr{} pp --- an anchor its own interval
-excludes. The platform chose whom to expose, and it chose people who were already going to buy. A
-randomized lockout that no user could see instruments the exposure, prices it at
-\nbElevenBAnchorWald{} pp, and turns a dashboard bid cap of \eur{\nbElevenBFullNaiveCap} per exposed
-user into a defensible one of \eur{\nbElevenBCap}. The chapter's second finding is about the
-machinery rather than the marketing: on those rows two-stage least squares and the posterior agree
-to \nbElevenBAgreePp{} pp --- \nbElevenBAgreeSes{} classical standard errors --- and the posterior's
-interval is \nbElevenBWidthRatio$\times$ the classical one. This is the chapter where Bayes buys the
-least, and \cref{sec:iv:compare} says so.}
+\emph{An ad platform reports that exposed users convert far more, and it is telling the truth. On
+Criteo's incrementality experiment the exposed visit the advertiser \nbElevenBNaive{} percentage
+points more often than the unexposed, with a standard error of \nbElevenBNaiveSe{} pp. That is the
+tightest interval in the chapter, yet it misses the \nbElevenBNFullM-million-row anchor by
+\nbElevenBNaiveErr{} pp, and the anchor sits outside it. The platform chose whom to expose, and it
+chose people who were already going to buy. A randomized lockout prices the exposure at
+\nbElevenBAnchorWald{} pp and turns a dashboard bid cap of \eur{\nbElevenBFullNaiveCap} into a
+defensible one of \eur{\nbElevenBCap}. On those rows two-stage least squares and the posterior agree
+to \nbElevenBAgreePp{} pp (\nbElevenBAgreeSes{} classical standard errors), and the posterior's
+interval is \nbElevenBWidthRatio$\times$ the classical one. What the posterior adds is the one thing
+a bid cap needs: the probability the effect clears its cost. \cref{sec:iv:compare} draws that line
+precisely.}
 \end{quote}
 
 % =====================================================================================
 \section{The decision}
 \label{sec:iv:decision}
 
-A demand-side platform sends a quarterly report. Users who saw the campaign's ads convert at a
-far higher rate than users who did not; the platform proposes to bid harder, and asks the firm to
-raise its cap on the price it will pay per exposed user. The report's number is not a fabrication.
-It is a correctly computed difference of means between two groups of real customers.
+A demand-side platform sends its quarterly report. Users who saw the campaign's ads converted far
+more often than users who did not, so the platform proposes to bid harder and asks the firm to
+raise the cap on what it will pay to reach an exposed user. The report's number is real: a
+correctly computed difference between two groups of actual customers.
 
-It is also useless, and for a reason that has nothing to do with arithmetic. Nobody flipped a coin
-to decide who saw the ad. The platform did --- and it is paid to expose the people most likely to
-convert. It bids more for users who have been browsing the category, who searched the brand last
-week, who linger. Those users would have converted at an elevated rate whether or not an ad ever
-reached them. The exposed and the unexposed are not two arms of an experiment; they are the output
-of a targeting rule that was optimizing for exactly the outcome now being measured.
+It is also the wrong number to set a bid on, and the reason has nothing to do with arithmetic.
+Nobody flipped a coin to decide who saw the ad. The platform decided, and it is paid to show ads
+to the people most likely to convert. It bids up users who have been browsing the category, who
+searched the brand last week, who linger. Those users would have converted at an elevated rate with
+or without the ad. The exposed and the unexposed are not two arms of an experiment; they are the
+output of a targeting rule built to chase the very outcome the report now measures.
 
-The consequence is a specific, priceable error. Let $X_i \in \{0,1\}$ record exposure, $Y_i$ the
-outcome, and $U_i$ the customer's unobserved purchase intent --- the thing the auction was bidding
-on and the analyst never sees. The naive regression of $Y$ on $X$ is consistent for the causal
-effect only if exposure is uncorrelated with everything else that drives the outcome, and here it
-is correlated with the largest thing that does:
+So exposure is tangled up with the customer's own intent to buy, and intent is exactly what
+nobody records. Write $U_i$ for that hidden intent, the thing the auction was bidding on and the
+analyst never sees. The naive comparison is trustworthy only if exposure is uncorrelated with
+everything else that drives the outcome, and here it is correlated with the largest such thing,
+which reaches the outcome through a coefficient $\kappa$ fixed in \cref{sec:iv:dgm}:
 %
 \begin{equation}
-  \operatorname{Cov}\big(X_i,\ \underbrace{12\,U_i + \varepsilon_i}_{\text{the full error}}\big)
+  \operatorname{Cov}\big(X_i,\ \underbrace{\kappa\,U_i + \varepsilon_i}_{\text{the full error}}\big)
   \;\neq\; 0 .
   \label{eq:iv:endog}
 \end{equation}
 %
-\Cref{eq:iv:endog} is worth reading slowly, because the condition is stated against the
-\emph{whole} error term and not against the idiosyncratic noise $\varepsilon$ alone. The noise is
-independent of exposure by construction and always will be; it is $U$ --- omitted, unrecorded,
-unrecordable --- that leaks. This is what \emph{endogenous} means: the treatment is correlated with
-the hidden drivers of the outcome. No amount of controlling for what \emph{was} measured fixes it.
-The adjustment toolkit of the earlier chapters --- back-door sets, propensity scores, doubly robust
-estimation --- assumes the confounder is in the data. Here, by construction, it is not.
+The idiosyncratic noise $\varepsilon$ is independent of exposure and always will be. It is $U$,
+omitted, unrecorded and unrecordable, that leaks. That is what \emph{endogenous} means: the
+treatment is correlated with the hidden drivers of the outcome. And it is why the adjustment toolkit
+of the earlier chapters (back-door sets, propensity scores, doubly robust estimation) cannot
+help here. Every one of those tools assumes the confounder sits somewhere in the data; this one does
+not, and by construction never will.
 
-The cost of believing the platform is not abstract. In this chapter's simulated market the naive
-number prices an exposure at \eur{\nbElevenNaive} against a truth of \eur{\nbElevenTrue}; buying a
-million exposures a quarter at an OLS-calibrated cap authorizes \eur{\nbElevenOverpayM}\,M per
-quarter for value that does not exist. On Criteo's real rows the same error runs at
-\eur{\nbElevenBPremium} per exposed user, or roughly \eur{\nbElevenBPremiumQuarter} per quarter at
-a million exposures. What is needed is a source of variation in exposure that the platform did not
-choose --- and a customer's intent could not have caused.
+The error has a price. In this chapter's simulated market the naive number values an exposure at
+\eur{\nbElevenNaive} against a true worth of \eur{\nbElevenTrue}. Measured against the causal
+estimate a firm can actually compute, that gap authorizes about \eur{\nbElevenOverpayM}\,M a quarter
+for value that is not there (\cref{sec:iv:euro}). On Criteo's real rows the same gap runs at roughly
+\eur{\nbElevenBPremium} per exposed user. What is needed is a lever that moves exposure but that the
+customer's intent could not have caused: a source of variation the platform did not choose. That
+lever is an \emph{instrument}, and finding one is the rest of the chapter.
+
+% =====================================================================================
+\section{Setup and notation}
+\label{sec:iv:vocab}
+
+This section carries a debt. \Cref{ch:foundations} deliberately \emph{omitted} the LATE from its
+catalogue of estimands, on the grounds that it cannot be defined honestly without instruments, and
+promised that this chapter would define it. Everything the promise requires is here, built on the
+campaign itself, before any of it is used.
+
+\subsection*{The instrument, and the three regressions}
+
+Exposure $X$ is chosen by an auction, on the basis of intent the analyst cannot see. An
+\textbf{instrument} $Z$ is a variable that (i) \emph{moves} exposure, (ii) is assigned by
+something other than the customer's intent, and (iii) affects the outcome \emph{only} through
+exposure. Here $Z$ is a randomized \textbf{encouragement}: a serving-priority lottery that makes
+the ad more likely to reach a customer, but is not itself an ad.
+
+Three regressions carry the entire method, and each has a name worth knowing:
+%
+\begin{align}
+  \text{\textbf{first stage}} \;&:\; \pi \;=\; \E[X \mid Z{=}1] - \E[X \mid Z{=}0]
+    &&\text{\small $Z$'s effect on \emph{exposure}}, \label{eq:iv:vocab_first}\\
+  \text{\textbf{reduced form}} \;&:\; \delta \;=\; \E[Y \mid Z{=}1] - \E[Y \mid Z{=}0]
+    &&\text{\small $Z$'s effect on \emph{sales}}, \label{eq:iv:vocab_reduced}\\
+  \text{\textbf{Wald ratio}} \;&:\; \hat\beta_{\text{IV}} \;=\; \delta / \pi
+    &&\text{\small the effect of \emph{exposure} itself}. \label{eq:iv:vocab_wald}
+\end{align}
+%
+Both $\pi$ and $\delta$ are differences between randomized groups, so both are clean: $Z$ was
+assigned by a coin, and nothing a customer wants can have caused it. The ratio is the whole trick,
+and \cref{fig:iv:wald} draws it as two slopes.
+
+\begin{intuition}{Why dividing gives the effect}
+The encouragement raised sales by $\delta$. But it did so only by pushing some customers into
+exposure, $\pi$ of them. If the encouragement had pushed \emph{everyone} into exposure
+($\pi = 1$), then $\delta$ \emph{would be} the effect of exposure, straight off. It pushed only a
+fraction, so the sales it produced are diluted by exactly that fraction, and dividing undoes the
+dilution. \emph{The reduced form is the effect of the offer; the Wald ratio is the effect of the
+thing the offer causes.} And notice what happens as $\pi \to 0$: the denominator vanishes, the
+ratio explodes, and the estimate becomes meaningless. That is not a numerical curiosity. It is
+the weak-instrument problem, and \cref{sec:iv:wrong} demonstrates it.
+\end{intuition}
+
+\input{build/floats/nb11_wald_slopes}
+
+\subsection*{Who does an instrument speak for? The four types}
+
+Here is the idea that makes IV different from every other estimator in this book, and the reason
+\cref{ch:foundations} could not define it.
+
+Each customer has \emph{two potential treatments}, not just two potential outcomes: $X_i(0)$, what
+she would do if \emph{not} encouraged, and $X_i(1)$, what she would do if encouraged. That pair
+sorts every customer into one of four \textbf{principal strata} \citep{angrist1996, imbens1994}:
+
+\begin{description}[leftmargin=*, style=nextline]
+  \item[Always-taker \textmd{:} $X(0) = 1,\ X(1) = 1$.]
+    Sees the ad either way. The loyalist the auction was always going to reach. The encouragement
+    changes nothing about her.
+  \item[Never-taker \textmd{:} $X(0) = 0,\ X(1) = 0$.]
+    Sees the ad neither way. Ad-blocked, or simply never scrolls that far. The encouragement
+    changes nothing about her either.
+  \item[Complier \textmd{:} $X(0) = 0,\ X(1) = 1$.]
+    Sees the ad \emph{only because} she was encouraged. \textbf{These are the only customers the
+    instrument moves.}
+  \item[Defier \textmd{:} $X(0) = 1,\ X(1) = 0$.]
+    Would have seen the ad, and the encouragement \emph{put her off}. Perverse, and assumed away
+    (\cref{as:iv:mono}).
+\end{description}
+
+Now the punchline. The encouragement does not change whether an always-taker or a never-taker is
+exposed, by definition. So when we compare the encouraged group with the un-encouraged group,
+\emph{those two types contribute nothing to the difference}: they cancel. The entire reduced form
+is produced by compliers. The instrument therefore speaks for compliers, and \textbf{for no one
+else}. That is the \textbf{LATE} (the local average treatment effect), and ``local'' means
+exactly this: local to the people the instrument moved.
+
+\Cref{tab:iv:strata} makes the sorting concrete, printing both potential treatments so the
+classification can be read off customer by customer. Two notes on how to read it. The table
+\emph{shows} a handful of customers but \emph{computes} its shares on a larger draw of
+\nbElevenStN{} from the same simulator, so that the percentages are precise rather than noisy:
+they are properties of the mechanism, not of a sample, and the estimates in \cref{sec:iv:classical}
+are the ones fitted on the chapter's own \nbElevenN{} rows. And both potential treatments are
+printed only because this is a simulator: in any real dataset, exactly one of the $X(0)$, $X(1)$
+columns is observed for each customer, and the whole classification is therefore \emph{latent}.
+Nobody ever knows who the compliers are. What follows is the remarkable part: three claims that
+can be checked rather than believed.
+
+\input{build/tables/nb11_strata}
+
+\textbf{First, the defier row is empty}, and the emptiness is built in, not estimated. It reads
+\pc{\nbElevenStShareDefier}. Each customer draws one fixed willingness and takes the ad whenever her
+exposure propensity clears it. A positive encouragement coefficient can only raise that propensity,
+so the lottery can push a customer into exposure but never out of it: nobody defies.
+\Cref{fig:iv:monotone} draws this one customer at a time. The derivation is in
+\cref{app:iv:forensic}, and its lesson is the honest one: monotonicity is a claim about the
+\emph{joint} law of a customer's two potential treatments $\big(X(0), X(1)\big)$, and no dataset can
+check it, because each customer reveals only one of the two. A simulator can make it \emph{true}; an
+analyst can only make it \emph{plausible}. \Cref{sec:iv:real} is the one place in this book where it
+holds visibly: a locked-out user has $\Prob(\text{exposed}) = 0$ \emph{exactly}, so nobody can defy.
+
+\input{build/floats/nb11_monotonicity}
+
+\textbf{Second, the first stage \emph{is} the complier share.} The strata split
+\pc{\nbElevenStShareComplier} compliers, \pc{\nbElevenStShareAlways} always-takers and
+\pc{\nbElevenStShareNever} never-takers, and the first stage of \cref{eq:iv:vocab_first},
+computed from the observed data alone with no knowledge of anybody's type, comes to
+\nbElevenStFirstPp{} pp. Those are the same number. They must be: the encouragement moves exactly
+the compliers, so the share of people it moves into exposure \emph{is} the share of compliers.
+This is why a weak instrument is not merely imprecise. It is an instrument that speaks for
+almost nobody.
+
+\textbf{Third, the Wald ratio recovers the complier effect.} The reduced form is
+\eur{\nbElevenStReduced} and the first stage \nbElevenStFirst, so
+%
+\[
+  \hat\beta_{\text{IV}} \;=\; \frac{\eur{\nbElevenStReduced}}{\nbElevenStFirst}
+  \;=\; \eur{\nbElevenStWald},
+\]
+%
+against a true average effect \emph{among the customers the table classifies as compliers} of
+\eur{\nbElevenStLate}. The estimator lands on the estimand, and \cref{eq:iv:vocab_wald} is not a
+formula to memorise but a statement that has just been verified line by line.
+
+\begin{recap}
+An instrument moves treatment without touching the outcome any other way. It divides the world
+into always-takers, never-takers, compliers and defiers; the first two cancel out of any
+comparison based on it, defiers are assumed not to exist, and so \textbf{the instrument speaks for
+compliers alone}. The first stage is the share of them; the reduced form is the sales the
+encouragement produced; and their ratio, the Wald estimate, is the effect of exposure on the
+people the encouragement moved. That is the LATE, it is \emph{not} the ATE, and
+\cref{sec:iv:ident} is about the price of that distinction.
+\end{recap}
+
+\begin{remark}[When the LATE \emph{is} the ATE, and why that is a special case]
+In this chapter's simulator the planted effect is the same \eur{\nbElevenTrue} for every customer,
+so the complier average and the population average coincide. That is a deliberate simplification:
+it lets the estimator be graded against a single known number. Remove it, let the effect vary
+with the same intent $U$ that drives exposure, and the LATE and the ATE come apart, because
+compliers are a \emph{selected} group. \Cref{sec:iv:ident} states that consequence in full, and it
+is the most commonly ignored sentence in applied IV.
+\end{remark}
 
 % =====================================================================================
 \section{The data-generating model}
 \label{sec:iv:dgm}
 
-A causal method cannot be graded on real data, because on real data the answer is missing --- that
+A causal method cannot be graded on real data, because on real data the answer is missing. That
 is the entire problem. So the estimator is first marked against a world whose answer is known by
 construction, and only then trusted on one whose answer is not. \Cref{sec:iv:real} performs the
 second half of that bargain on \nbElevenBNFull{} rows of a real advertising experiment; this
 section builds the first.
 
 The simulator draws $n = \nbElevenN$ customers. Each carries an \textbf{unobserved} engagement
-$U_i$ --- the intent the auction can see and the analyst cannot --- and receives a
+$U_i$, the intent the auction can see and the analyst cannot, and receives a
 \textbf{randomized} encouragement $Z_i$: a serving-priority lottery that makes the ad more likely
 to reach them but is not itself an ad. Writing $\sigma(\cdot)$ for the logistic function,
 %
 \begin{align}
   U_i &\sim \mathcal N(0, 1), \qquad Z_i \sim \text{Bernoulli}(\tfrac12),
         \label{eq:iv:latent}\\
-  X_i &\sim \text{Bernoulli}\Big(\sigma\big(0.3 + 1.1\,Z_i + 0.8\,U_i\big)\Big),
+  X_i &\sim \text{Bernoulli}\Big(\sigma\big(\alpha_0 + \gamma\,Z_i + \lambda\,U_i\big)\Big),
         \label{eq:iv:first}\\
-  Y_i &= 50 \;+\; 15\,X_i \;+\; 12\,U_i \;+\; \varepsilon_i,
-        \qquad \varepsilon_i \sim \mathcal N\!\left(0,\ 6^{2}\right).
+  Y_i &= \mu \;+\; \beta\,X_i \;+\; \kappa\,U_i \;+\; \varepsilon_i,
+        \qquad \varepsilon_i \sim \mathcal N\!\left(0,\ \sigma_\varepsilon^{2}\right).
         \label{eq:iv:dgp}
 \end{align}
 %
-The planted causal effect of an exposure is \eur{\nbElevenTrue}, and it is the grade every
-estimator in this chapter is marked against.
+The planted causal effect of an exposure is $\beta = \eur{\nbElevenTrue}$, and it is the grade
+every estimator in this chapter is marked against. \Cref{tab:iv:params} gives every constant, its
+value, and why it has that value rather than another; three of them are load-bearing and are worth
+naming here. $\gamma$ is what makes $Z$ an instrument at all: it is the strength of the first
+stage, and \cref{sec:iv:wrong} turns it down until the estimator breaks. $\lambda$ and $\kappa$
+are the two ends of the confounding: $U$ pushes a customer toward exposure through the first, and
+toward buying through the second. Set either to zero and there is nothing for IV to repair.
+
+\input{build/tables/nb11_params}
 
 Everything the chapter is about is visible in where $U$ appears. It enters \emph{both}
-\cref{eq:iv:first} and \cref{eq:iv:dgp}: $0.8\,U$ pushes a customer toward exposure, $12\,U$ pushes
-the same customer toward buying. That double appearance \emph{is} the self-selection, and it is
+\cref{eq:iv:first} and \cref{eq:iv:dgp}: $\lambda U$ pushes a customer toward exposure, $\kappa U$
+pushes the same customer toward buying. That double appearance \emph{is} the self-selection, and it is
 what makes \cref{eq:iv:endog} bite. Because the model is known, the damage can be computed before
 a single regression is run. The omitted-variable-bias formula, specialised to \cref{eq:iv:dgp},
-says the OLS slope converges not to 15 but to
+says the OLS slope converges not to $\beta$ but to
 %
 \begin{equation}
-  \hat a_1 \;\xrightarrow{\;p\;}\; 15 \;+\;
-  \frac{\operatorname{Cov}\big(X,\ 12U + \varepsilon\big)}{\Var(X)}
-  \;=\; 15 \;+\; 12\,\frac{\operatorname{Cov}(X, U)}{\Var(X)},
+  \hat a_1 \;\xrightarrow{\;p\;}\; \beta \;+\;
+  \frac{\operatorname{Cov}\big(X,\ \kappa U + \varepsilon\big)}{\Var(X)}
+  \;=\; \beta \;+\; \kappa\,\frac{\operatorname{Cov}(X, U)}{\Var(X)},
   \label{eq:iv:ovb}
 \end{equation}
 %
 the second equality holding because $\varepsilon$ is independent structural noise. Even the sign is
 knowable in advance: the first stage loads on $U$ with a positive coefficient, so
 $\operatorname{Cov}(X,U) > 0$ and OLS \emph{must} come out too high. Evaluated on the simulator's
-own (normally invisible) $U$, \cref{eq:iv:ovb} predicts $15 + \nbElevenOvb =
+own (normally invisible) $U$, \cref{eq:iv:ovb} predicts $\beta + \nbElevenOvb =
 \eur{\nbElevenOlsPredicted}$. The regression, run afterwards, returns \eur{\nbElevenNaive}. Theory
 called the number before the data was allowed to speak, and that is the most useful thing a
 simulator ever does: on real data the same formula still gives the \emph{sign} of the bias even
 when its size cannot be computed.
 
-The instrument $Z$ is the escape. It shifts exposure --- the coefficient $1.1$ in
-\cref{eq:iv:first} is not zero --- and it appears nowhere in \cref{eq:iv:dgp}. The slice of exposure
+The instrument $Z$ is the escape. It shifts exposure (the coefficient $1.1$ in
+\cref{eq:iv:first} is not zero), and it appears nowhere in \cref{eq:iv:dgp}. The slice of exposure
 that $Z$ drives is therefore as good as randomly assigned, uncontaminated by $U$. IV isolates that
 slice and reads the effect off it. \Cref{fig:iv:dag} states the structure in one picture, and the
 important thing about the picture is what is missing from it.
@@ -146,17 +293,17 @@ generate four customer types, and the whole of IV's interpretation lives in that
 \toprule
  & $X_i(1) = 1$ & $X_i(1) = 0$ \\
 \midrule
-$X_i(0) = 1$ & \textbf{Always-taker} --- the loyalist who & \textbf{Defier} --- so annoyed by the \\
+$X_i(0) = 1$ & \textbf{Always-taker}, the loyalist who & \textbf{Defier}, so annoyed by the \\
              & seeks the ad out; the lottery changes & nudge they block the ad they would \\
              & nothing & otherwise have seen \\[3pt]
-$X_i(0) = 0$ & \textbf{Complier} --- the lottery tips them & \textbf{Never-taker} --- ad-blocked,
+$X_i(0) = 0$ & \textbf{Complier}, the lottery tips them & \textbf{Never-taker}, ad-blocked,
                                                              barely \\
              & into seeing the ad & online; unreachable either way \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-The object IV identifies is the average effect \emph{among compliers} --- the local average
+The object IV identifies is the average effect \emph{among compliers}, the local average
 treatment effect, or LATE \citep{imbens1994, angrist1996}:
 %
 \begin{equation}
@@ -165,8 +312,8 @@ treatment effect, or LATE \citep{imbens1994, angrist1996}:
 \end{equation}
 %
 This is \textbf{not} the average treatment effect. Always-takers and never-takers are not merely
-down-weighted in \cref{eq:iv:late}; they are \emph{absent} from it. And --- the part most often
-lost in translation --- the complier population is \textbf{defined by the instrument}.
+down-weighted in \cref{eq:iv:late}; they are \emph{absent} from it. And here is the part most often
+lost in translation: the complier population is \textbf{defined by the instrument}.
 A different encouragement moves a different set of customers, and so estimates a different
 quantity, even on identical data with an identical outcome. Two valid instruments that
 disagree are not evidence that one is broken \citep{imbens2014, deaton2010}. Report the
@@ -175,6 +322,15 @@ scope, always.
 For a budget decision this is the right scope rather than a compromise: a bid buys
 \emph{incremental} exposure, so the relevant question is what an exposure does for the customers a
 bid can actually move.
+
+One disclosure is owed to the reader before any estimator is graded. In \emph{this} simulator the
+treatment effect is planted \emph{constant} across customers (the coefficient on $X_i$ in
+\cref{eq:iv:dgp} is the same 15 for everyone), so the complier average of \cref{eq:iv:late}
+coincides with the average treatment effect, and marking every estimator against \eur{\nbElevenTrue}
+is a fair test rather than a category error. That coincidence is a property of the simulator, not of
+IV. Where effects vary across customers the two quantities genuinely differ, and the LATE is the one
+IV returns. That includes \cref{sec:iv:real}, where \cref{eq:iv:bloom} makes the compliers
+\emph{literally} the exposed and the estimand is an ATT.
 
 \subsection*{The assumptions}
 
@@ -198,8 +354,8 @@ notation, writing $Y_i(z, x)$ for the outcome when encouragement is set to $z$ a
 \end{equation}
 %
 Holding exposure fixed, flipping the lottery changes nothing. \textbf{This is untestable from data
-and it is the whole ballgame.} It is defended on design --- a serving-priority lottery sells nothing
-by itself; an encouragement \emph{email that shows the product} would violate it flatly --- and it
+and it is the whole ballgame.} It is defended on design (a serving-priority lottery sells nothing
+by itself; an encouragement \emph{email that shows the product} would violate it flatly), and it
 is \emph{priced} rather than assumed away in \cref{sec:iv:euro}, where a hypothetical direct effect
 $\delta$ is subtracted from the reduced form and the $\delta$ that would overturn the decision is
 computed.
@@ -207,7 +363,7 @@ computed.
 
 \begin{assumption}[Exogeneity]\label{as:iv:exog}
 $Z \perp (U, \varepsilon)$: the instrument is independent of the hidden drivers of both exposure
-and outcome. Here it holds \emph{by randomization} --- the lottery is a fair coin. On real data this
+and outcome. Here it holds \emph{by randomization}: the lottery is a fair coin. On real data this
 is the condition that separates an instrument from a hopeful covariate, and \cref{sec:iv:real}
 audits it directly, by checking that twelve user features are balanced across the instrument while
 being wildly imbalanced across exposure.
@@ -215,7 +371,7 @@ being wildly imbalanced across exposure.
 
 \begin{assumption}[Monotonicity / no defiers]\label{as:iv:mono}
 $X_i(1) \ge X_i(0)$ for every customer: the encouragement never pushes anyone \emph{away} from
-exposure. Untestable, usually plausible for a gentle nudge --- and, as the derivation below shows,
+exposure. Untestable, usually plausible for a gentle nudge, and, as the derivation below shows,
 it is precisely what turns a ratio of two experimental contrasts into an interpretable average
 effect. In \cref{sec:iv:real} it holds \emph{by construction}: locked-out users cannot be exposed at
 all, so a defier is a logical impossibility rather than an assumption.
@@ -223,8 +379,8 @@ all, so a defier is a logical impossibility rather than an assumption.
 
 \subsection*{The LATE theorem, in two lines}
 
-Decompose the intent-to-treat effect --- the average outcome difference between encouraged and
-unencouraged customers, which is nothing but the reduced form --- over the four types.
+Decompose the intent-to-treat effect (the average outcome difference between encouraged and
+unencouraged customers, which is nothing but the reduced form) over the four types.
 Randomization (\cref{as:iv:exog}) makes the two groups comparable. Exclusion
 (\cref{as:iv:excl}) says the outcome can only react to $Z$ if exposure changed, which silences
 always-takers and never-takers, for whom $X_i(1) = X_i(0)$. Monotonicity (\cref{as:iv:mono})
@@ -266,7 +422,7 @@ IV's machinery predates the computer.
 \subsection*{Three regressions, naked, in this order}
 
 \begin{equation}
-  \underbrace{Y = a_0 + a_1 X}_{\textbf{(1) naive OLS --- biased}}, \qquad
+  \underbrace{Y = a_0 + a_1 X}_{\textbf{(1) naive OLS: biased}}, \qquad
   \underbrace{X = b_0 + \pi Z}_{\textbf{(2) first stage}}, \qquad
   \underbrace{Y = c_0 + \delta Z}_{\textbf{(3) reduced form}} .
   \label{eq:iv:three}
@@ -274,7 +430,7 @@ IV's machinery predates the computer.
 %
 Regression (1) is the number the business would otherwise have used, and \cref{eq:iv:ovb} already
 convicted it. Regressions (2) and (3) each regress on the \emph{randomized} lottery, so each is a
-clean experiment --- but neither is the answer, because one is denominated in exposures and the
+clean experiment. But neither is the answer, because one is denominated in exposures and the
 other in euros. Divide, the units cancel into euros \emph{per exposure}, and
 \cref{eq:iv:wald} is recovered. \Cref{tab:iv:rungs} runs all four rows.
 
@@ -287,7 +443,7 @@ rather than asking for faith: it computes both and checks
 $|\hat\delta/\hat\pi - \hat\beta_{\text{2SLS}}| < 10^{-8}$.
 \end{proposition}
 
-Which raises the obvious question --- why run 2SLS at all, if the answer is a division? For the two
+Which raises the obvious question: why run 2SLS at all, if the answer is a division? For the two
 things a bare ratio cannot carry: a \textbf{standard error} and the \textbf{first-stage F}. Both
 turn out to repay the trouble.
 
@@ -295,48 +451,21 @@ turn out to repay the trouble.
 
 Two-stage least squares is often taught as a recipe: regress $X$ on $Z$, keep the fitted $\hat X$,
 regress $Y$ on $\hat X$. Followed literally, the recipe gives the right \emph{coefficient} and the
-wrong \emph{standard error}, and the received wisdom about the direction of that error is
-\textbf{false}. The usual warning is that the hand-rolled second stage comes out too narrow. Here it
-comes out too \emph{wide}, by a factor of \nbElevenSeHandRatio (\cref{tab:iv:se}), and the algebra
-says it must.
-
-Write $b$ for the 2SLS coefficient. The correct residual is formed against the real regressor,
-$e = y - Xb$. The hand-rolled second stage forms it against the fitted one, and the two differ by
-exactly the first-stage prediction error:
-%
-\begin{equation}
-  \underbrace{y - \hat X b}_{\text{what the naive fit residualises}}
-  \;=\; \underbrace{(y - Xb)}_{e,\ \text{the correct residual}}
-      \;+\; \underbrace{(X - \hat X)\,b}_{\text{first-stage prediction error}} .
-  \label{eq:iv:resid}
-\end{equation}
-%
-The two terms on the right are orthogonal in sample --- $\hat X$ is the projection of $X$ onto the
-instrument space, so $X - \hat X$ is orthogonal to everything the second stage regresses on --- and
-therefore the sums of squares simply add:
-%
-\begin{equation}
-  \text{SSR}_{\text{naive}} \;=\; \text{SSR}_{\text{correct}}
-    \;+\; b^{2}\!\sum_i (X_i - \hat X_i)^{2}
-  \;\;\ge\;\; \text{SSR}_{\text{correct}} .
-  \label{eq:iv:ssr}
-\end{equation}
-%
-The extra term is a sum of squares: non-negative, always. The hand-rolled fit therefore charges
-itself for first-stage \emph{prediction} error, which is not sampling error in $\hat\beta$ at all,
-and reports an interval that is \textbf{conservative}. Here the inflation is
-\nbElevenSeHandRatio$\times$: \eur{\nbElevenSeHand} against the correct \eur{\nbElevenSeCorrect}.
-That is not a licence to be sloppy --- a wrong standard error is wrong in either direction, and it
-will not stay conservative when controls or multiple instruments enter --- but it is worth stating
-plainly, because a chapter that repeated the folklore would have been repeating something the
-notebook can measure and refute.
+wrong \emph{standard error}, and the usual warning about that error points the wrong way. The
+folklore says the hand-rolled interval comes out too narrow. Here it comes out too \emph{wide}, by a
+factor of \nbElevenSeHandRatio: \eur{\nbElevenSeHand} against the correct \eur{\nbElevenSeCorrect}
+(\cref{tab:iv:se}). Regressing $Y$ on $\hat X$ charges the estimate for first-stage prediction error
+that is no part of the sampling error in $\hat\beta$. \Cref{app:iv:forensic} does the term-by-term
+algebra and shows why, in this positively-confounded market, both extra pieces push the interval
+wider rather than narrower. The sign is not a law (it flips once controls, several instruments or
+negative endogeneity enter), so the point is only that the folklore is not one either.
 
 \input{build/tables/nb11_se}
 
 The covariance choice needs one line of justification, as everywhere in this book. This is a
 cross-section of \nbElevenN{} customers: no panel, no time series, so no clustering and no HAC. But
 exposure is binary, so the outcome variance differs between the exposed and unexposed arms by
-construction --- the errors are heteroskedastic \emph{by design}. All three regressions of
+construction: the errors are heteroskedastic \emph{by design}. All three regressions of
 \cref{eq:iv:three} therefore take HC1 standard errors \citep{white1980, mackinnon1985}. For the IV
 estimate itself the homoskedastic 2SLS formula and an HC1 sandwich agree to
 \nbElevenSeRobustRatio$\times$ (\cref{tab:iv:se}), so the interval printed above is safe as it
@@ -366,7 +495,7 @@ the F:
 So $F = 10$ means: no more than about a tenth of the OLS bias leaks back in. That is a rule with
 teeth rather than a superstition, and it can be cashed out in euros on any particular instrument.
 Here OLS is off by \eur{\nbElevenNaiveErr}; at $F = \nbElevenFStat$, \cref{eq:iv:oneoverF} prices
-the residual leakage at \eur{\nbElevenFLeak} per exposure. Negligible --- which is precisely why the
+the residual leakage at \eur{\nbElevenFLeak} per exposure. Negligible, which is precisely why the
 small residual bias \cref{sec:iv:valid} finds in the \emph{posterior mean} cannot be blamed on the
 instrument. \Cref{sec:iv:wrong} runs the rule backwards and watches the estimator come apart.
 
@@ -376,33 +505,42 @@ Against the planted \eur{\nbElevenTrue}: naive OLS returns \eur{\nbElevenNaive},
 \eur{\nbElevenNaiveErr}, and the truth sits \textbf{outside} its 90\,\% interval of
 $[\eur{\nbElevenNaiveLo}, \eur{\nbElevenNaiveHi}]$. Two-stage least squares returns
 \eur{\nbElevenIvEst}, off by \eur{\nbElevenIvErr}, and the truth sits comfortably \emph{inside}
-$[\eur{\nbElevenIvLo}, \eur{\nbElevenIvHi}]$. The gap between them --- \eur{\nbElevenWedge} per
-exposure --- \emph{is} the self-selection the instrument removed.
+$[\eur{\nbElevenIvLo}, \eur{\nbElevenIvHi}]$. The gap between them (\eur{\nbElevenWedge} per
+exposure) \emph{is} the self-selection the instrument removed.
 
 One detail in that paragraph deserves to be pulled out and set in bold, because it is the single
 most useful thing in the classical arm. \textbf{The naive interval is the tightest in the chapter
-and it misses the truth entirely.} Its standard error is \eur{\nbElevenNaiveSe} --- a half-width of
-\eur{\nbElevenNaiveHalf} against 2SLS's \eur{\nbElevenIvHalf} --- and it is wrapped around a number
+and it misses the truth entirely.} Its standard error is \eur{\nbElevenNaiveSe} (a half-width of
+\eur{\nbElevenNaiveHalf} against 2SLS's \eur{\nbElevenIvHalf}), and it is wrapped around a number
 that is \eur{\nbElevenNaiveErr} wrong. More data would not have saved it; more customers would only
 have shrunk that interval further around the same wrong number. \textbf{Precision is not accuracy,
 and a confident interval on a biased estimator is a confident lie.}
 
 What this classical apparatus cannot produce, at any level of effort, is $\Prob(\beta > c)$: the
 probability that an exposure is worth more than the price the firm would have to bid for it. A
-confidence interval is a property of the \emph{procedure} --- 90\,\% of intervals built this way
-would cover the truth across repeated samples --- and this particular interval either covers the
+confidence interval is a property of the \emph{procedure} (90\,\% of intervals built this way
+would cover the truth across repeated samples), and this particular interval either covers the
 truth or it does not. \Cref{sec:iv:euro}'s rule is nothing but that probability. That is the gap the
-next section exists to fill --- and, as \cref{sec:iv:compare} will insist, it is the \emph{only} gap
+next section exists to fill, and, as \cref{sec:iv:compare} will insist, it is the \emph{only} gap
 the next section fills.
 
 % =====================================================================================
 \section{The Bayesian model}
 \label{sec:iv:bayes}
 
-The Bayesian IV changes the identification by not one comma: same instrument, same four
-assumptions, same complier LATE. It changes the apparatus for expressing uncertainty about that
-number, and it estimates one object the classical route structurally cannot hand over --- the
-endogeneity itself.
+The Bayesian IV keeps the identification unchanged: same instrument, same four assumptions, same
+complier LATE. It changes only how uncertainty is expressed, and it estimates one thing the
+classical route cannot: the endogeneity itself.
+
+The section has two movements, because the notebook fits it that way. The first is the model the
+standard library ships. It is misspecified: it describes a 0/1 treatment with a Gaussian density.
+The second repairs that one row (\cref{eq:iv:probit} below) and re-measures. The posterior
+this chapter reports in \cref{tab:iv:compare}, and the bid cap \cref{sec:iv:euro} spends, belong to
+the repaired model. The two models differ in two places, not one: the likelihood and the priors on
+the error scales both change. \Cref{sec:iv:valid} disentangles them, and the repair that mattered is
+not the one the eye is drawn to.
+
+\subsection*{The joint Gaussian, as the library ships it}
 
 The model fits the first stage and the outcome equation \emph{jointly}, allowing their errors to be
 correlated:
@@ -427,50 +565,139 @@ errors that the hidden $U$ induces and that OLS ignores. The LKJ prior \citep{lk
 standard weakly-informative distribution over correlation matrices; at $\eta = 2$ it pulls $\rho$
 gently toward zero, so the data has to argue for endogeneity rather than have it assumed. Inference
 is by the No-U-Turn sampler \citep{hoffman2014} in PyMC \citep{salvatier2016}, via CausalPy:
-\nbElevenNDraws{} post-warmup draws, $\hat R = \nbElevenRhat$, minimum bulk effective sample size
-\nbElevenEss{} \citep{vehtari2021}, \nbElevenDivergences{} divergent transitions. The chains have
-converged.
+\nbElevenGaussNDraws{} post-warmup draws, $\hat R = \nbElevenGaussRhat$, minimum bulk effective
+sample size \nbElevenGaussEss{} \citep{vehtari2021}, \nbElevenGaussDivergences{} divergent
+transitions. The chains have converged. That, as this section is about to show, is a statement
+about the sampler and not about the model.
 
-The fit returns a posterior mean of \eur{\nbElevenBayesMean}, with a 90\,\% credible interval of
-$[\eur{\nbElevenBayesLo}, \eur{\nbElevenBayesHi}]$ --- against 2SLS's \eur{\nbElevenIvEst} and
-$[\eur{\nbElevenIvLo}, \eur{\nbElevenIvHi}]$ (\cref{fig:iv:bias}). The two agree to
-\eur{\nbElevenEstDiff}, and their interval widths --- \eur{\nbElevenBayesWidth} against
-\eur{\nbElevenIvWidth} --- are the same to within a rounding error. That is by design, and it is
-the first thing \cref{sec:iv:compare} will hold the sampler to.
-
-\input{build/floats/nb11_bias}
+The fit returns a posterior mean of \eur{\nbElevenGaussMean}, with a 90\,\% credible interval of
+$[\eur{\nbElevenGaussLo}, \eur{\nbElevenGaussHi}]$, against 2SLS's \eur{\nbElevenIvEst} and
+$[\eur{\nbElevenIvLo}, \eur{\nbElevenIvHi}]$. It sits \eur{\nbElevenGaussErr} above the planted
+truth, further out than the classical arm. The next two subsections rule out the obvious suspects
+by fitting the alternatives rather than arguing, and \cref{sec:iv:valid} names the one that remains.
 
 \subsection*{The prior, priced rather than warned about}
 
 A book that told the reader ``choose weakly-informative priors'' and moved on would be asserting
 exactly the kind of thing this book exists to measure. So the notebook \emph{fits} the alternative.
 CausalPy's library default centres the coefficient priors on the 2SLS point estimate with a
-standard deviation of one. Same data, same sampler, only the priors differ:
+standard deviation of one. Same data, same sampler, same \cref{eq:iv:joint}; only the priors differ,
+and every number in the two bullets below is a width of \emph{that} posterior:
 
 \begin{itemize}[leftmargin=*, itemsep=.25em]
   \item \textbf{Library default:} posterior mean \eur{\nbElevenPriorDefMean}, 90\,\% interval
-        $[\eur{\nbElevenPriorDefLo}, \eur{\nbElevenPriorDefHi}]$ --- width
+        $[\eur{\nbElevenPriorDefLo}, \eur{\nbElevenPriorDefHi}]$, width
         \eur{\nbElevenPriorDefWidth}. The planted \eur{\nbElevenTrue} lies \textbf{outside} it.
-  \item \textbf{$\mathcal N(0, 50^2)$, used here:} width \eur{\nbElevenPriorWeakWidth}, and the
-        truth is inside.
+  \item \textbf{$\mathcal N(0, 50^2)$, used here:} the interval quoted above,
+        $[\eur{\nbElevenGaussLo}, \eur{\nbElevenGaussHi}]$, width
+        \eur{\nbElevenPriorWeakWidth}, and the truth is inside.
 \end{itemize}
 
 The default band is \nbElevenPriorNarrowFactor$\times$ too narrow, and the independent yardstick is
 not a matter of taste: the classical Wald interval, which knows nothing about any prior, is
 \eur{\nbElevenIvWidth} wide. A prior centred on the point estimate with $\sigma = 1$ does not let
-the data speak. It hard-codes the answer and then reports false confidence in it --- and the failure
+the data speak. It hard-codes the answer and then reports false confidence in it. The failure
 is not a Bayesian failure but a defaulting failure, of the kind that ships silently because nobody
 fitted the alternative. This chapter fitted it.
+
+Notice, though, what the exercise did \emph{not} do. Widening the coefficient prior by a factor of
+fifty moved the posterior mean by well under a euro and left it above the truth. \textbf{The
+coefficient prior is not what biases $\beta$.} Two suspects remain: the Gaussian likelihood on a
+binary $X$, and the one prior this exercise never touched, on the scale of the errors, and
+\cref{sec:iv:valid} settles between them.
+
+\subsection*{The row that cannot be true}
+
+Look again at the top row of \cref{eq:iv:joint}. It is a Gaussian density over $X_i$, and $X_i$ is
+either $0$ or $1$. A linear probability model in a Bayesian coat: the point estimate of such a first
+stage survives (2SLS, after all, is a ratio of two slopes and does not care what shape the first
+stage really has), but a \emph{posterior} inherits every claim in its likelihood, and this one claims
+that an exposure of $-0.3$ is a thing that can happen. \Cref{sec:iv:valid} photographs that claim,
+prices it in bias and in coverage, and the repair follows immediately.
+
+\subsection*{The repair: a first stage that knows the treatment is binary}
+
+The fix is not a different identification, a different instrument or a different estimand. It is one
+row of the likelihood, rewritten so that it describes the process a binary treatment actually comes
+from: a \textbf{latent index crossing a threshold}. Write $T_i = X_i$ for the exposure, keep the
+outcome equation exactly as it was, and let the two errors be correlated:
+%
+\begin{align}
+  T_i^{*} &= \alpha_0 + \alpha_1 Z_i + u_i, \qquad
+  T_i = \mathbf 1\{T_i^{*} > 0\}, \qquad u_i \sim \mathcal N(0, 1),
+    \label{eq:iv:probit}\\
+  Y_i &= \beta_0 + \beta\,T_i + e_i, \qquad e_i \sim \mathcal N(0, \sigma^{2}),
+    \qquad \operatorname{corr}(u_i, e_i) = \rho .
+    \label{eq:iv:probit_out}
+\end{align}
+%
+The variance of $u$ is pinned at $1$ because a probit index is identified only up to scale: that is a
+normalisation, not an assumption. And $\rho \neq 0$ is, again, the endogeneity: the same
+$\operatorname{Cov}(X, U)$ that \cref{eq:iv:ovb} priced at \eur{\nbElevenOvb} with a pen.
+
+The likelihood factors honestly: the continuous outcome times the binary first stage, with the
+index error conditioned on the outcome error. That conditioning is what carries the confounding
+through: one joint model, no two-step control function, no plug-in residual.
+\Cref{app:iv:forensic} writes the factorization out. The short version is that an endogeneity term
+$\rho\,e/\sigma$ enters the first stage; set it to zero and the model reverts to an ordinary probit
+that ignores the confounding. And, crucially, \cref{eq:iv:probit} cannot predict an exposure of
+$1.4$, because a Bernoulli cannot.
+
+The priors are the same weakly-informative choices, transposed to the two scales the model now has
+(euros in the outcome equation, a unit-variance index in the first stage):
+%
+\begin{equation}
+  \beta_0,\ \beta \sim \mathcal N(0, 50^{2}), \quad
+  \sigma \sim \text{Half-}\mathcal N(25), \quad
+  \alpha_0,\ \alpha_1 \sim \mathcal N(0, 5^{2}), \quad
+  \rho \sim \text{Uniform}(-0.95,\ 0.95).
+  \label{eq:iv:probit_priors}
+\end{equation}
+%
+None of them is centred on the 2SLS point, and none of them is doing any work: the exercise of the
+previous subsection (fit the alternative, print the band) is what licenses that sentence.
+
+One caveat, stated rather than buried: \cref{eq:iv:first} assigns exposure through a
+\emph{logistic} sigmoid, so \cref{eq:iv:probit} is an approximation to the data-generating link, not
+a transcription of it. That is the right trade. What the Gaussian row got fatally wrong was the
+\emph{support} (the set of values the treatment can take), and respecting the support matters far
+more than matching the link. \Cref{app:iv:forensic} checks, at $n = \nbElevenProbitBignN$, that the
+residual is finite-sample rather than a structural probit-versus-logistic penalty.
+
+Fitted with the same sampler on the same \nbElevenN{} customers, \cref{eq:iv:probit,eq:iv:probit_out}
+return a posterior mean of \eur{\nbElevenBayesMean} with a 90\,\% credible interval of
+$[\eur{\nbElevenBayesLo}, \eur{\nbElevenBayesHi}]$, against 2SLS's \eur{\nbElevenIvEst} and
+$[\eur{\nbElevenIvLo}, \eur{\nbElevenIvHi}]$ (\cref{fig:iv:bias,fig:iv:probit}). \nbElevenNDraws{}
+post-warmup draws, $\hat R = \nbElevenRhat$, minimum bulk effective sample size \nbElevenEss,
+\nbElevenDivergences{} divergent transitions. The two arms now agree to \eur{\nbElevenEstDiff}, and
+their interval widths (\eur{\nbElevenBayesWidth} against \eur{\nbElevenIvWidth}) are the same to
+within a rounding error. That is by design, and it is the first thing \cref{sec:iv:compare} will hold
+the sampler to. \textbf{This is the posterior \crefrange{sec:iv:compare}{sec:iv:euro} mean when
+they say ``the posterior''}. There is one exception, flagged here so it cannot mislead:
+\cref{sec:iv:real}, on Criteo, ships CausalPy's \emph{joint Gaussian} rather than this probit, and
+\cref{sec:iv:real}'s own \cref{tab:iv:realprobit} explains at length why that is the right choice
+there and not a lapse.
+
+\input{build/floats/nb11_bias}
+\input{build/floats/nb11_probit}
 
 \subsection*{The one genuinely new object: $\rho$}
 
 Two-stage least squares \emph{removes} the endogeneity by projection. It never names it, and it has
-no $\rho$ to report at any width. The joint model estimates it:
-$\rho = \nbElevenRho$, with a 90\,\% interval of $[\nbElevenRhoLo, \nbElevenRhoHi]$. That posterior
-is the Bayesian image of exactly the $\operatorname{Cov}(X, U)$ that \cref{eq:iv:ovb} priced at
-\eur{\nbElevenOvb} --- a positive $\rho$ \emph{is} the reason the naive number sat above the causal
-one. On real data, where there is no answer key, a credibly positive $\rho$ is evidence that the
-dashboard number \emph{was} inflated: evidence the classical arm cannot produce.
+no $\rho$ to report at any width. The joint model estimates it. Under \cref{eq:iv:probit} the
+posterior is $\rho = \nbElevenRho$, with a 90\,\% interval of $[\nbElevenRhoLo, \nbElevenRhoHi]$ and
+$\Prob(\rho > 0) = \nbElevenRhoPPos$; under \cref{eq:iv:joint} it was $\nbElevenRhoGauss$,
+$[\nbElevenRhoGaussLo, \nbElevenRhoGaussHi]$.
+
+The two disagree on the magnitude, and the disagreement is not a puzzle: $\rho$ is a correlation
+between an error whose scale is \emph{normalised to one} in the probit index and an error measured in
+units of exposure in the Gaussian row. It is a scale artefact of the two likelihoods, and a
+correlation coefficient is only interpretable against the scale of the thing it correlates. What the
+two agree on is the \textbf{sign}, and the sign is the whole of the argument: a positive $\rho$
+\emph{is} the reason the naive number sat above the causal one. It is the Bayesian image of exactly
+the $\operatorname{Cov}(X, U)$ that \cref{eq:iv:ovb} priced at \eur{\nbElevenOvb}, and on real data,
+where there is no answer key, a credibly positive $\rho$ is evidence that the dashboard number
+\emph{was} inflated: evidence the classical arm cannot produce.
 
 % =====================================================================================
 \section{Diagnostics and validation}
@@ -480,48 +707,62 @@ dashboard number \emph{was} inflated: evidence the classical arm cannot produce.
 
 Exposure is 0/1. \Cref{eq:iv:joint} models it with a Gaussian. Something has to give, and the
 posterior predictive check is where it gives (\cref{fig:iv:ppc}). Replicate datasets simulated from
-the fitted joint model reproduce the \emph{sales} margin well --- replicate standard deviation
-\eur{\nbElevenPpcRepSd} against an observed \eur{\nbElevenPpcObsSd}, with a faint under-dispersion
---- which is what licenses reading $\beta$ off the outcome equation. But \pc{\nbElevenPpcOutPct} of
+the fitted joint model reproduce the \emph{sales} margin well (replicate standard deviation
+\eur{\nbElevenPpcRepSd} against an observed \eur{\nbElevenPpcObsSd}, with a faint under-dispersion),
+which is what licenses reading $\beta$ off the outcome equation. But \pc{\nbElevenPpcOutPct} of
 the replicated \emph{exposures} land outside $[0, 1]$: exposures of $-0.3$ and $1.4$, values no
 customer can have.
 
 \input{build/floats/nb11_ppc}
 
-This is not a bug to be fixed. It is the linear-probability approximation made visible, and running
-the check is how a modelling note stops being a footnote and becomes a measurement. It has two
-consequences the chapter honours throughout: the exposure equation's \emph{point estimate} and
-$\rho$ may be read, its posterior \emph{width} may not; and the small bias the next subsection
-measures has a named suspect.
+This is not a bug to be tolerated. It is the linear-probability approximation made visible, and
+running the check is how a modelling note stops being a footnote and becomes a measurement. It is
+also, precisely, the diagnostic that earned the repair of \cref{eq:iv:probit}: a Bernoulli cannot
+replicate an exposure of $1.4$.
 
-\subsection*{Recovery across fresh samples}
+\subsection*{Recovery across fresh samples, for both likelihoods}
 
 One sample can land off by luck. The honest question is whether the estimator is centred on the
-truth over repeated samples and whether its interval covers at the stated rate. Refitting on
-\nbElevenNSeeds{} fresh datasets: the posterior mean averages \eur{\nbElevenSeedMean} against a
-planted \eur{\nbElevenTrue} --- a bias of \eur{\nbElevenSeedBias}, or \pc{\nbElevenSeedBiasPct} ---
-with a seed-to-seed standard deviation of \eur{\nbElevenSeedSd}, and its 90\,\% interval covers the
-truth in \nbElevenSeedCovN{} of \nbElevenNSeeds{} samples (\pc{\nbElevenSeedCovPct} against a
-90\,\% target: modest under-coverage, consistent with that bias).
+truth over repeated samples and whether its interval covers at the stated rate. Both models are
+therefore refit on the \emph{same} \nbElevenNSeeds{} fresh datasets: same simulator, same
+instrument, same estimand, same weakly-informative priors, same sampler settings. The only thing that
+differs between the two rows of \cref{tab:iv:likelihoods} is the density the first stage is asked to
+have.
 
-\subsection*{Whose fault is the bias --- the identification's, or the model's?}
+\input{build/tables/nb11_likelihoods}
 
-This is the diagnostic that pays for the simulator, and it is a clean experiment. The Wald ratio
-\emph{is} the IV identification with nothing else attached: two least-squares slopes and a division,
-no prior, no likelihood, no sampler. Re-run it on fresh draws at growing $n$ and whatever bias it
-does \emph{not} show cannot belong to the identification.
+The joint Gaussian of \cref{eq:iv:joint} averages \eur{\nbElevenGaussSeedMean} against a planted
+\eur{\nbElevenTrue} (a bias of \eur{\nbElevenGaussSeedBias}, or \pc{\nbElevenGaussSeedBiasPct}),
+and its nominal-90\,\% interval covers the truth in only \nbElevenGaussSeedCovN{} of
+\nbElevenNSeeds{} samples: \pc{\nbElevenGaussSeedCovPct}. \textbf{An interval that covers less often
+than it promises is not a 90\,\% interval}, and \cref{sec:iv:euro} would have spent it as though it
+were.
 
-\input{build/tables/nb11_waldn}
+The probit of \cref{eq:iv:probit} averages \eur{\nbElevenSeedMean} (a bias of
+\eur{\nbElevenSeedBias}, roughly half the Gaussian's) with a seed-to-seed standard deviation of
+\eur{\nbElevenSeedSd}, and its interval covers the truth in \nbElevenSeedCovN{} of \nbElevenNSeeds{}
+samples: \pc{\nbElevenSeedCovPct}, which is nominal. \textbf{The binary-aware respecification bought
+the interval back.} It changed two things at once (the first stage's likelihood and, with it, the
+default scale prior on the errors) while the identification did not change by one comma. Which of
+those two repairs actually removed the bias is a forensic question; its answer is summarised next and
+established in full, by refitting each alternative in turn, in \cref{app:iv:forensic}.
 
-It shows none (\cref{tab:iv:waldn}). The closed-form Wald stays pinned on the planted truth at
-every sample size --- a bias of \eur{\nbElevenWaldBiasBig} at $n = 10{,}000$ --- while its spread
-shrinks like $1/\sqrt{n}$. The verdict is therefore precise, and it does not flatter the sampler:
-\textbf{the identification is clean, and the posterior mean's residual bias is the Bayesian model's
-own} --- the Gaussian first stage \cref{fig:iv:ppc} just caught in the act, plus the ordinary
-skewness of a ratio posterior at modest draw counts. \Cref{eq:iv:oneoverF} already priced the pure
-IV leakage at \eur{\nbElevenFLeak}, an order of magnitude smaller. \textbf{The Bayesian machinery
-introduced a modelling error that the two \code{lstsq} calls of \cref{sec:iv:classical} could not
-have made}, because they never modelled $X$ at all.
+\subsection*{Whose mistake it was, and why it changes the workflow}
+
+The coverage study settles what the decision needs: the off-the-shelf default \emph{ships biased and
+under-covering} here, and the binary-aware model fixes it. The diagnostic question of \emph{which}
+component of the default model tilted the estimate is worth answering too, because the answer decides
+what an analyst must routinely check. Stated forward, and established piece by piece in
+\cref{app:iv:forensic}: the linear-probability likelihood is innocent (its own maximiser is 2SLS,
+exactly, so it adds no bias to $\beta$), and so is the mild prior on the endogeneity correlation,
+which can be flattened to a uniform law without moving the mean (\eur{\nbElevenGaussFlatMean} against
+\eur{\nbElevenGaussMean}). The culprit is the one nuisance nobody inspects: a silent, mis-scaled
+\emph{default} prior on the error scales, calibrated for a unit-scale variable and left to meet sales
+in the tens. That is a specification error in exactly the sense a misspecified likelihood is (the
+analyst's mistake, not the paradigm's), and it is the reason the workflow never spends a default
+posterior without first checking its coverage and its support. A small residual bias survives even
+the repair; \cref{app:iv:forensic} shows it is mostly finite-sample rather than a structural penalty
+of the probit link, and the euro decision of \cref{sec:iv:euro} never turns on the last euro of it.
 
 % =====================================================================================
 \section{Point estimate versus posterior}
@@ -529,35 +770,45 @@ have made}, because they never modelled $X$ at all.
 
 \input{build/tables/nb11_compare}
 
-\subsection*{On the number, they agree --- and Bayes does not win}
+\subsection*{The number the bid cap spends is the same from either apparatus}
 
 \Cref{tab:iv:compare} puts all three estimators on the estimand of \cref{eq:iv:late}, on the same
-\nbElevenN{} customers, under the same four assumptions. Only the apparatus differs.
+\nbElevenN{} customers, under the same four assumptions. Only the apparatus differs. The Bayesian row
+is the binary-aware fit of \cref{eq:iv:probit}, which is the only posterior this chapter reports and
+the only one it spends.
 
-The two causal rows land within \eur{\nbElevenEstDiff} of each other and both sit slightly above
-the planted truth; both intervals cover it. On this seed the \textbf{classical estimator is the
-closer of the two} --- \eur{\nbElevenIvErr} against the posterior's \eur{\nbElevenBayesErr} --- and
-\cref{sec:iv:valid} has already explained why: the residual in the classical arm is ordinary
-sampling noise on one draw, while the posterior mean's extra drift is a modelling error of its own
-making. Say it plainly: \textbf{Bayes did not win the point estimate.} Nor did it win the width. The
-half-widths are \eur{\nbElevenIvHalf} (2SLS) and \eur{\nbElevenBayesHalf} (posterior) --- the same
-scale, and deliberately so, since the weakly-informative priors of \cref{eq:iv:priors} were chosen
-precisely so that the data and not the prior would set the width. The posterior bought no precision,
-and was never supposed to.
+The two causal rows land within \eur{\nbElevenEstDiff} of each other and both sit slightly above the
+planted truth; both intervals cover it. Their absolute errors are \eur{\nbElevenIvAbsErr} for 2SLS
+and \eur{\nbElevenBayesAbsErr} for the posterior (a difference of \eur{\nbElevenErrGap}). The
+notebook fixes, \emph{in advance}, a tolerance of \eur{\nbElevenTieTol} of daylight below which
+``closer'' is noise rather than a verdict, and this gap is well inside it. So the honest read-out is
+a \textbf{tie}: \nbElevenCloser{} is what the computed comparison returns, and neither arm is entitled
+to claim the point estimate. Say the consequence plainly, because it is the one that matters:
+\textbf{Bayes did not win the point estimate. And, once the binary-aware model replaced the
+default scale prior that had biased it, it no longer loses it either.} Under the joint Gaussian of
+\cref{eq:iv:joint} it did lose, by \eur{\nbElevenGaussErr} against the truth, and \cref{sec:iv:valid}
+traced that defeat to a mis-scaled default prior on the errors: a specification error, not the
+paradigm's.
+
+Nor did it win the width. The half-widths are \eur{\nbElevenIvHalf} (2SLS) and
+\eur{\nbElevenBayesHalf} (posterior): the same scale, and deliberately so, since the
+weakly-informative priors of \cref{eq:iv:priors,eq:iv:probit_priors} were chosen precisely so that
+the data and not the prior would set the width. The posterior bought no precision, and was never
+supposed to.
 
 This is the ordinary case in this book, and it has a name. With a well-specified likelihood and
 enough data the posterior concentrates where the maximum-likelihood estimate does, with the same
-sampling variance --- the Bernstein--von Mises phenomenon \citep{vandervaart1998, gelman2013}. It
+sampling variance: the Bernstein--von Mises phenomenon \citep{vandervaart1998, gelman2013}. It
 will appear again in \cref{sec:iv:real}, in a form so exact it can be read straight off a print-out.
 
 \subsection*{What the posterior did buy}
 
-One thing --- and the last column of \cref{tab:iv:compare} is it. $\Prob(\beta > c)$ exists in
+One thing, and the last column of \cref{tab:iv:compare} is it. $\Prob(\beta > c)$ exists in
 exactly one of the three rows. The classical entry reads \emph{not defined}, and that is a literal
 statement rather than a rhetorical concession. A confidence interval attaches no probability to a
 hypothesis about a fixed parameter.
 
-And --- this is the part practitioners get wrong --- \textbf{bootstrapping the Wald ratio would not
+Here is the part practitioners get wrong: \textbf{bootstrapping the Wald ratio would not
 fix it}. The share of bootstrap resamples landing above $c$ is a frequency over hypothetical
 \emph{datasets}; it is not a belief about $\beta$. Resampling harder does not convert a statement
 about a procedure into a statement about a parameter. The quantity simply does not exist in the
@@ -573,58 +824,95 @@ classical vocabulary. It exists in a posterior:
 and \cref{sec:iv:euro}'s bid-cap rule consumes nothing else. Second, $\rho$: an interval on the very
 bias that 2SLS silently projects away.
 
-\subsection*{The ledger}
+\subsection*{What it did not buy}
 
-Not a better point estimate; the classical one is nearer the truth. Not a tighter interval; the
-widths match by design, and the \emph{tightest} interval in the chapter belongs to the biased OLS
-row. Not protection from model error --- the Bayesian arm \emph{created} one, in the
-linear-probability first stage of \cref{fig:iv:ppc}. Not the weak-instrument diagnostic: the F is a
-classical object, and the posterior would have gone on producing a beautifully smooth, entirely
-fictitious credible band as F fell through 10. What it bought is the \emph{decision}: a probability
-statement about the effect, propagated coherently into euros, plus a read-out of the endogeneity
-that caused the problem in the first place.
+Not a better point estimate; it is a tie inside \eur{\nbElevenTieTol}, and a tie is not a win. Not a
+tighter interval; the widths match by design, and the \emph{tightest} interval in the chapter belongs
+to the biased OLS row. Not protection from model error: the Bayesian arm \emph{created} one, in
+its default priors (\cref{sec:iv:valid}), and the fair way to book that is both
+halves: the Bayesian route made a specification mistake the classical route could not have made (it
+has no priors to mis-scale) \emph{and} it supplied the instruments that caught it (a posterior
+predictive check flagged the support violation; a flat-prior refit and a scale-prior refit between
+them located the actual culprit) and priced it (a coverage study across \nbElevenNSeeds{} panels). The
+classical route could not have made the error; it could not have run the diagnostics either. Not the
+weak-instrument diagnostic: the F is a classical object, and the posterior would have gone on
+producing a beautifully smooth, entirely fictitious credible band as F fell through 10. What it
+bought is the \emph{decision}: a probability statement about the effect, propagated coherently into
+euros, plus a read-out of the endogeneity that caused the problem in the first place.
 
 That is the whole of the win. \Cref{sec:iv:real} will show that on thirteen million real rows it is
-even less than that --- and that it is still, just, enough.
+even less than that, and that it is still, just, enough.
 
 % =====================================================================================
 \section{The decision, in euros}
 \label{sec:iv:euro}
 
 The plan is to buy exposures at \eur{\nbElevenCost} each. The decision rule is a stated convention
-applied to the posterior of \cref{eq:iv:pgt}:
+applied to the posterior of \cref{eq:iv:pgt}. Let $v$ be the value of one unit of the outcome, so
+that $v\beta$ is what an exposure is worth in euros:
 %
 \begin{equation}
-  \text{bid up to } c \quad\text{while}\quad \Prob(\beta > c) \;\ge\; 0.9,
+  \text{bid up to } c \quad\text{while}\quad \Prob(v\beta > c) \;\ge\; 0.9,
   \qquad\Longleftrightarrow\qquad
-  c^{*} \;=\; q_{0.10}(\beta),
+  c^{*} \;=\; v\,q_{0.10}(\beta),
   \label{eq:iv:rule}
 \end{equation}
 %
-where $q_p(\beta)$ is the posterior $p$-quantile. The equivalence on the right is worth pausing on,
-because it makes the cap's status unambiguous: sweeping a hypothetical cost against a \emph{fixed}
-posterior just walks that posterior's quantile function, so the budget cap \textbf{is} a posterior
-quantile denominated in euros. It is a \textbf{90\,\% probability bar} --- a statement about
-$\beta$ --- and it is emphatically \emph{not} a 90\,\% confidence bar. No confidence interval in
-\cref{tab:iv:compare} can be read this way, and no bootstrap of them can be made to.
+with $q_p(\beta)$ the posterior $p$-quantile. Here $\beta$ is already denominated in euros per
+exposure (\cref{eq:iv:dgp} pays out in sales), so $v = 1$ and the rule reads
+$c^{*} = q_{0.10}(\beta)$. In \cref{sec:iv:real} it does not: there $\beta$ is a shift in visit
+probability, in percentage points, and becomes a price only after multiplying by the value of an
+incremental visit, $v = \eur{\nbElevenBValuePerVisit}$. Same rule, one unit conversion.
+
+The equivalence on the right of \cref{eq:iv:rule} is worth pausing on, because it makes the cap's
+status unambiguous: sweeping a hypothetical cost against a \emph{fixed} posterior just walks that
+posterior's quantile function, so the budget cap \textbf{is} a posterior quantile denominated in
+euros. It is a \textbf{90\,\% probability bar} (a statement about $\beta$), and it is
+emphatically \emph{not} a 90\,\% confidence bar. No confidence interval in \cref{tab:iv:compare} can
+be read this way, and no bootstrap of them can be made to.
 
 At \eur{\nbElevenCost} the posterior gives $\Prob(\text{pays}) = \nbElevenPPays$ and a net value of
 \eur{\nbElevenNet} per exposure. The probability is saturated rather than assumed: the entire
 90\,\% credible interval $[\eur{\nbElevenBayesLo}, \eur{\nbElevenBayesHi}]$ sits above the cost
 line. The cap of \cref{eq:iv:rule} lands at \eur{\nbElevenCap} per exposure, the coin-flip price at
 \eur{\nbElevenCoinflip}, so the current plan carries \eur{\nbElevenHeadroom} of genuine headroom
-(\cref{fig:iv:euro}). And the counterfactual mistake has a price: an OLS-calibrated cap would have
-sanctioned paying up to \eur{\nbElevenNaive} for something causally worth \eur{\nbElevenTrue}. At
-\nbElevenVolume{} exposures a quarter, that authorizes roughly \eur{\nbElevenOverpayM}\,M per
-quarter --- \eur{\nbElevenOverpayMLo}\,M to \eur{\nbElevenOverpayMHi}\,M across the IV interval ---
-for value that does not exist.
+(\cref{fig:iv:euro}).
+
+And the counterfactual mistake has a price. An OLS-calibrated cap would have sanctioned paying up to
+\eur{\nbElevenNaive} for an exposure the causal estimate prices at \eur{\nbElevenBayesMean}: an
+overpayment of \eur{\nbElevenOverpay} apiece, which at \nbElevenVolume{} exposures a quarter
+authorizes roughly \eur{\nbElevenOverpayM}\,M per quarter (\eur{\nbElevenOverpayMLo}\,M to
+\eur{\nbElevenOverpayMHi}\,M across the posterior's 90\,\% interval) for value that does not
+exist. That is the wedge a firm can actually avoid, because it is the only one it can compute: it is
+priced against the estimate, not against an answer key. Graded against the answer key this simulator
+does possess, the naive cap overpays by \eur{\nbElevenOverpayTrue} per exposure, or
+\eur{\nbElevenOverpayTrueM}\,M a quarter. The two numbers are different subtractions and the
+difference between them is the estimator's own remaining error; a deck that mixes them will not
+add up.
 
 \input{build/floats/nb11_euro}
+
+\subsection*{What more certainty would be worth}
+
+The remaining uncertainty in $\beta$ has a price of its own, the value of information (VOI): what
+the firm would pay to resolve $\beta$ completely before committing, over acting on the posterior
+mean today. It is the same quantity the geo-lift chapter uses, with $v\beta$ in place of the lift:
+%
+\begin{equation}
+  \text{VOI} \;=\; \E\big[\max(v\beta - c,\ 0)\big] \;-\; \max\big(\E[v\beta] - c,\ 0\big).
+  \label{eq:iv:voi}
+\end{equation}
+%
+At the planned \eur{\nbElevenCost} the VOI is essentially zero, \eur{\nbElevenVoi} per exposure. The
+whole posterior already clears the cost, so no experiment could change the buy. At the coin-flip
+price of \eur{\nbElevenCoinflip} it rises to \eur{\nbElevenVoiCoin}, because information is worth most
+exactly where the call is closest. The VOI is low here not because the effect is small but because
+the decision is not in doubt.
 
 \subsection*{Pricing the untestable assumption}
 
 \Cref{as:iv:excl} cannot be tested. It can, however, be \emph{priced}, and that is the difference
-between an assumption and a wish. Suppose the lottery had a direct effect $\delta$ on sales --- the
+between an assumption and a wish. Suppose the lottery had a direct effect $\delta$ on sales: the
 encouragement email carries a discount code, say, or shows the product. Then the honest reduced form
 is $\hat\delta_{\text{obs}} - \delta$, and the corrected estimate is
 %
@@ -635,7 +923,7 @@ is $\hat\delta_{\text{obs}} - \delta$, and the corrected estimate is
   \label{eq:iv:excl_stress}
 \end{equation}
 %
-The buy call survives until $\delta \approx \eur{\nbElevenBreakDelta}$ ---
+The buy call survives until $\delta \approx \eur{\nbElevenBreakDelta}$:
 \pc{\nbElevenBreakDeltaPct} of the entire \eur{\nbElevenReduced} reduced form would have to bypass
 exposure to overturn it (\cref{fig:iv:euro}, right). For a content-free serving lottery that is a
 large leak, and the decision is robust. For an encouragement email that doubles as an
@@ -652,7 +940,7 @@ hope to rescue a leaky one afterwards.
 Everything above rested on a strong first stage. \Cref{eq:iv:oneoverF} says what that buys; the
 honest way to show what its absence costs is to take it away. The encouragement coefficient of
 \cref{eq:iv:first} is turned down from \nbElevenWeakGammaTop{} to nearly nothing and the
-closed-form Wald ratio recomputed on \nbElevenWeakNDraws{} fresh datasets at each setting --- the
+closed-form Wald ratio recomputed on \nbElevenWeakNDraws{} fresh datasets at each setting: the
 failure being demonstrated belongs to the \emph{identification}, so no sampler is involved and the
 whole sweep costs seconds (\cref{tab:iv:weak}, \cref{fig:iv:weak}).
 
@@ -662,8 +950,8 @@ whole sweep costs seconds (\cref{tab:iv:weak}, \cref{fig:iv:weak}).
 The median holds up longer than the spread does, which is itself the trap: an analyst who looked
 only at the point estimate would see nothing alarming until well past the point of no return. At
 $F \approx \nbElevenWeakFWorst$ a single draw's 90\,\% range spans \eur{\nbElevenWeakLo} to
-\eur{\nbElevenWeakHi} --- far wider than the \eur{\nbElevenNaiveErr} of OLS bias the instrument was
-hired to remove --- and the median has drifted back up toward OLS. The mechanism is
+\eur{\nbElevenWeakHi} (far wider than the \eur{\nbElevenNaiveErr} of OLS bias the instrument was
+hired to remove), and the median has drifted back up toward OLS. The mechanism is
 \cref{eq:iv:oneoverF} read right to left: with a nearly irrelevant instrument the Wald denominator
 $\hat\pi$ is sampling noise around zero, so the ratio inherits OLS's bias \emph{and} an enormous
 variance \citep{bound1995, staiger1997}.
@@ -676,39 +964,49 @@ practitioner's toolkit and are named here rather than derived: on real, heterosk
 the Montiel Olea--Pflueger \emph{effective} F, which corrects the threshold for non-constant
 first-stage noise \citep{olea2013}; with multiple endogenous regressors the rank test of
 \citet{kleibergen2006} replaces the scalar F; and $F > 10$ should be read as necessary, not
-sufficient \citep{andrews2019}.
+sufficient \citep{andrews2019}. And when the instrument is genuinely weak, do not report the ratio
+at all: report an Anderson--Rubin confidence set instead (Appendix~13.A.13), which inverts a test on
+the reduced form, never divides by the first stage, and so stays valid where the Wald interval does
+not.
 
 \subsection*{The failure modes that no diagnostic will catch}
 
 \Cref{as:iv:excl} and \cref{as:iv:mono} are untestable, and calling them ``assumptions'' rather than
-``diagnostics'' is not modesty --- it is the accurate description. An instrument that leaks a direct
+``diagnostics'' is not modesty: it is the accurate description. An instrument that leaks a direct
 effect produces a biased estimate that no F, no posterior predictive check and no placebo can flag.
 \Cref{eq:iv:excl_stress} bounds the damage; institutional knowledge of how the instrument was
-generated is the only thing that discharges it.
+generated is the only thing that discharges it. Attrition is a second failure of the same kind. If
+who reports the outcome depends on the treatment, the observed sample is selected, and no F or
+posterior predictive check will flag it; Lee bounds put an assumption-light bracket around the effect
+in that case (Appendix~13.A.15). More broadly, the self-selection this chapter fights is only one of
+four faces of endogeneity, and Appendix~13.A.16 shows the other three (simultaneity, measurement
+error, and selection on the outcome) each biasing a plain regression in its own direction.
 
 And \cref{eq:iv:late} is a scope restriction, not a footnote. IV speaks for compliers. Always-takers
---- the loyalists who seek the ad out --- and never-takers are silent in the estimate. A number
+(the loyalists who seek the ad out) and never-takers are silent in the estimate. A number
 earned on the complier margin licenses \emph{a bid on incremental exposure}; it does not license a
 claim about what the campaign does to the customer base as a whole, and it does not transfer to a
-different instrument that moves a different set of people.
+different instrument that moves a different set of people. The compliers cannot be listed, but they
+can be profiled: Abadie's $\kappa$ (Appendix~13.A.14) recovers their average characteristics, which
+is how one reports who a given bid is actually priced for.
 
 % =====================================================================================
 \section{On real data}
 \label{sec:iv:real}
 
-Everything above was graded against a truth that was planted. The objection --- that recovering a
-number someone put there is not proof of anything --- deserves a real answer, and there is one.
+Everything above was graded against a planted truth. The objection (that recovering a number
+someone put there proves nothing) deserves a real answer, and there is one.
 
 Criteo's advertising incrementality tests publish \nbElevenBNFull{} real users
 \citep{diemert2018}. The dataset is a gift for IV, because the test infrastructure randomizes
 \textbf{eligibility}: a random 15\,\% of users are locked out of the campaign entirely, and the rest
-are eligible to be targeted. Eligibility is a textbook encouragement instrument for self-selected
-exposure --- what is randomized is the \emph{nudge}, not the ad. Of the eligible,
-\pc{\nbElevenBPExposedEligible} actually end up seeing an ad, chosen by the auction on signals the
-analyst cannot observe. Of the locked out, \pc{\nbElevenBPExposedLocked} do.
+are eligible to be targeted. Eligibility is a textbook encouragement instrument: what is
+randomized is the \emph{nudge}, not the ad. Of the eligible, \pc{\nbElevenBPExposedEligible} end up
+seeing an ad, chosen by the auction on signals the analyst cannot observe. Of the locked out,
+\pc{\nbElevenBPExposedLocked} do.
 
-That last number --- an exact zero, a fact of the serving infrastructure rather than a sample
-accident --- earns \cref{as:iv:mono} for free. \textbf{One-sided noncompliance}: a defier would be a
+That last number (an exact zero, a fact of the serving infrastructure rather than a sample
+accident) earns \cref{as:iv:mono} for free. \textbf{One-sided noncompliance}: a defier would be a
 user who gets exposed \emph{only because} they were locked out, which is not implausible but
 impossible. And it does more than that. Returning to \cref{eq:iv:itt}, the term
 $\E[(Y(1) - Y(0))X \mid Z{=}0]$ is exactly zero when locked-out users are never exposed, so the
@@ -723,7 +1021,7 @@ ratio collapses to
 \end{equation}
 %
 the conditioning on $Z{=}1$ dropping because every exposed user is an eligible one
-\citep{bloom1984}. The compliers here are \emph{literally} the exposed --- which is exactly the
+\citep{bloom1984}. The compliers here are \emph{literally} the exposed: exactly the
 population a bid cap is about.
 
 \subsection*{The referee: a design-based anchor, not a planted truth}
@@ -733,7 +1031,7 @@ Nothing was planted, so nothing can be marked against a truth. What replaces it 
 design-based, on all \nbElevenBNFull{} rows, where sampling noise is negligible at the precision
 that matters. It is not a truth; it is the number this same identification strategy converges to
 when one stops subsampling. On the full file the ITT is \nbElevenBAnchorItt{} pp and the first stage
-\nbElevenBAnchorFirst, giving a Wald LATE of \textbf{\nbElevenBAnchorWald{} pp} per exposure --- and
+\nbElevenBAnchorFirst, giving a Wald LATE of \textbf{\nbElevenBAnchorWald{} pp} per exposure, and
 a full-file naive as-treated gap of \nbElevenBAnchorNaive{} pp. Every estimate below is graded
 against it. Substituting a full-population design-based estimate for ground truth is the honest
 real-data move, and it is more than most applied projects ever get.
@@ -742,45 +1040,55 @@ real-data move, and it is more than most applied projects ever get.
 
 Here is what a simulator can never show (\cref{fig:iv:smd}). Twelve anonymized user features ship
 with the data. Across the \emph{randomized} eligibility flag their standardized mean differences are
-flat --- a maximum of \nbElevenBSmdZMax{} --- which is \cref{as:iv:exog}, audited rather than
+flat (a maximum of \nbElevenBSmdZMax{}), which is \cref{as:iv:exog}, audited rather than
 asserted. Across \emph{actual exposure} the same features are skewed by as much as
 \nbElevenBSmdDMax{} standard deviations. The exposed \emph{were different people before any ad
 ran}: the unobserved $U$ of \cref{eq:iv:dgp}, measured.
 
 \input{build/floats/nb11b_smd}
 
-And this is only $U$'s observable shadow. The auction also bid on signals that are not in the file
---- which is precisely the regime in which covariate adjustment surrenders and an instrument is
+And this is only $U$'s observable shadow. The auction also bid on signals that are not in the file.
+That is precisely the regime in which covariate adjustment surrenders and an instrument is
 required. No regression on those twelve features could have rescued the naive number.
 
 \subsection*{The classical rungs, on real rows}
 
 \input{build/tables/nb11b_rungs}
 
-\Cref{tab:iv:realrungs} runs \cref{eq:iv:three} on a \nbElevenBNSub-row working subsample. Four
-readings, each a different number a business could act on.
+\Cref{tab:iv:realrungs} runs \cref{eq:iv:three} on a \nbElevenBNSub-row working subsample, drawn as
+\nbElevenBNArm{} rows from \emph{each} randomized arm rather than at the file's 85/15 eligibility
+ratio. That is worth one sentence of disclosure, because it is a sampling choice and not a neutral
+one. The ITT, the first stage and their ratio all condition on the randomized flag, so re-weighting
+the arms cannot move them: they are invariant by design. The one estimator it does move is the naive
+as-treated gap, whose unexposed pool mixes locked-out users with eligible-but-unexposed ones, and
+whose composition therefore depends on the mix. The notebook prices that shift from the full-file
+anchor at \nbElevenBNaiveBalShift{} pp, against the gap's own standard error of
+\nbElevenBNaiveSe{} pp, which is where the \nbElevenBNaive{} pp subsample figure and the
+\nbElevenBAnchorNaive{} pp full-file figure mostly part company. Balancing buys precision per row on
+every estimator that matters, and pays for it in the one that does not. Four readings follow, each a
+different number a business could act on.
 
 \begin{enumerate}[leftmargin=*, itemsep=.35em]
   \item \textbf{The naive as-treated gap is the dashboard's number, and it is wrong by a third.}
         It comes to \nbElevenBNaive{} pp against the anchor's \nbElevenBAnchorWald{} pp, off by
-        \nbElevenBNaiveErr{} pp --- and its 90\,\% interval, at
+        \nbElevenBNaiveErr{} pp, and its 90\,\% interval, at
         $[\nbElevenBNaiveLo, \nbElevenBNaiveHi]$ pp, \emph{excludes} the anchor. It is also the
         tightest interval in the section (SE \nbElevenBNaiveSe{} pp): thirteen million more rows
         would only shrink it further around the same wrong number. \Cref{sec:iv:classical}'s lesson,
         reprinted on real data.
   \item \textbf{The ITT is honest and useless on its own.} At \nbElevenBReduced{} pp it is unbiased
-        for the \emph{intent} --- randomization guarantees it, and it lands within a hair of the
+        for the \emph{intent}: randomization guarantees it, and it lands within a hair of the
         full-file \nbElevenBAnchorItt{} pp. But it is the effect of \emph{eligibility}, averaged over
         the roughly 96\,\% of eligible users the auction never reached. As a price \emph{per
         exposure} it understates by the reciprocal of the compliance rate: a factor of
         $1/\hat\pi \approx \nbElevenBDilutionFactor$. Reporting the ITT as ``the ad's effect'' is the
         mirror-image error to reporting the naive gap. One is diluted, the other inflated. Only their
         ratio is denominated in the unit a bid is priced in.
-  \item \textbf{The Wald ratio undoes exactly that dilution --- and it is 2SLS.} It returns
+  \item \textbf{The Wald ratio undoes exactly that dilution, and it is 2SLS.} It returns
         \nbElevenBWald{} pp, \nbElevenBWaldErr{} pp from the anchor, which sits comfortably inside
         its interval. \Cref{prop:iv:wald} holds here too, and the notebook asserts it in code again.
         The wedge the instrument removed, on the full file: \nbElevenBAnchorWedge{} pp of the
-        \nbElevenBAnchorNaive{} pp dashboard number --- \pc{\nbElevenBAnchorWedgeShare} of it --- was
+        \nbElevenBAnchorNaive{} pp dashboard number (\pc{\nbElevenBAnchorWedgeShare} of it) was
         intent the exposed users already had. Quoted against the causal number instead of the
         dashboard's, the same wedge means the dashboard runs \pc{\nbElevenBAnchorInflation} too big.
         Two denominators, one wedge; name the one you are dividing by.
@@ -794,25 +1102,13 @@ readings, each a different number a business could act on.
 \end{enumerate}
 
 The interval for row (4) is the delta method, because the estimator is a ratio and both its parts
-are noisy:
-%
-\begin{equation}
-  \Var\big(\hat\beta\big) \;\approx\;
-    \frac{1}{\hat\pi^{2}}\Var\big(\hat\tau\big)
-  \;+\; \frac{\hat\beta^{2}}{\hat\pi^{2}}\Var\big(\hat\pi\big)
-  \;-\; \frac{2\hat\beta}{\hat\pi^{2}}\operatorname{Cov}\big(\hat\tau,\ \hat\pi\big),
-  \label{eq:iv:delta}
-\end{equation}
-%
-the three terms being the numerator's noise, the denominator's noise, and their correlation
-(positive: a slice that happens to draw high-intent users gets both more exposure \emph{and} more
-visits). Because the enormous F pins $\hat\pi$ down so precisely --- its relative noise is exactly
-$1/\sqrt{F}$ --- the last two terms nearly vanish, and the one-term shortcut
-$\text{SE} \approx \text{SE}(\hat\tau)/\hat\pi$ comes within \pc{\nbElevenBSeShortGap} of the full
-expression: \nbElevenBSeShort{} pp against \nbElevenBSeDelta{} pp. That approximation is
-\emph{audited}, not asserted, and it earns its keep in the fold check below. And 2SLS's own algebra
-returns \nbElevenBSeTwosls{} pp --- a ratio of \nbElevenBSeTwoslsRatio{} to the hand-propagated
-variance. On a saturated binary design they are the same object, computed two ways.
+are noisy; \cref{app:iv:forensic} gives the three-term variance. The enormous F pins the denominator
+$\hat\pi$ down (its relative noise is exactly $1/\sqrt{F}$), so the denominator and covariance
+terms nearly vanish and the one-term shortcut $\text{SE} \approx \text{SE}(\hat\tau)/\hat\pi$ comes
+within \pc{\nbElevenBSeShortGap} of the full expression: \nbElevenBSeShort{} pp against
+\nbElevenBSeDelta{} pp. The approximation is audited, not asserted. And 2SLS's own algebra returns
+\nbElevenBSeTwosls{} pp, a ratio of \nbElevenBSeTwoslsRatio{} to the hand-propagated variance. On
+a saturated binary design they are the same object computed two ways.
 
 \subsection*{Fresh samples, without a simulator}
 
@@ -822,7 +1118,7 @@ variance. On a saturated binary design they are the same object, computed two wa
 each, the fold Walds average \nbElevenBFoldMean{} pp with a standard deviation of
 \nbElevenBFoldSd{} pp around the \nbElevenBAnchorWald{} pp anchor, and their 90\,\% intervals cover
 it in \pc{\nbElevenBFoldCover} of folds (\cref{fig:iv:folds}). That spread is the honest price of
-subsampling a \pc{\nbElevenBPExposedEligible} exposure rate --- and the reason the anchor is
+subsampling a \pc{\nbElevenBPExposedEligible} exposure rate, and the reason the anchor is
 computed on the whole file rather than on a slice of it.
 
 \input{build/floats/nb11b_folds}
@@ -837,11 +1133,11 @@ Now the head-to-head, and it is the reason this chapter exists in the form it do
 sampler saw, so the comparison is apparatus against apparatus and not $n$ against $n$. Both are
 scored against the full-file anchor. Set expectations before reading it: at a hundred thousand rows
 the likelihood swamps any weakly-informative prior, and Bernstein--von Mises says the posterior
-should be \emph{approximately the sampling distribution of the classical estimator} --- same centre,
+should be \emph{approximately the sampling distribution of the classical estimator}: same centre,
 same width. If Bayes bought precision here, something would be wrong.
 
 It did not, and the agreement is closer than ``approximately'' suggests. The two causal rows land
-\nbElevenBAgreePp{} pp apart --- \nbElevenBAgreeSes{} classical standard errors --- and their
+\nbElevenBAgreePp{} pp apart (\nbElevenBAgreeSes{} classical standard errors), and their
 interval half-widths are \nbElevenBHalfClassical{} pp (delta method) and \nbElevenBHalfBayes{} pp
 (posterior), a ratio of \nbElevenBWidthRatio$\times$. \textbf{The posterior standard deviation and
 the delta-method standard error are estimating the same number, and they agree.} This is not a happy
@@ -851,36 +1147,83 @@ roughly twenty minutes rediscovering, by simulation, a division that took micros
 Two-stage least squares is \emph{nominally} the closer of the two to the anchor:
 \nbElevenBFitWaldErr{} pp against the posterior's \nbElevenBPostErr{} pp. That gap is
 \nbElevenBErrGapSes{} standard errors. \textbf{It is noise, not skill, and this chapter declines to
-call a winner on it.} The one row that is decisively wrong is the same one as ever --- the naive
+call a winner on it.} The one row that is decisively wrong is the same one as ever: the naive
 as-treated gap, \nbElevenBFitNaiveErr{} pp from the anchor, carrying the tightest interval in the
 table.
 
-(The contrast with \cref{sec:iv:compare} is instructive. On \nbElevenN{} simulated rows the
-classical arm was \emph{genuinely} the closer of the two, because the Gaussian first stage of
-\cref{fig:iv:ppc} was committing a real linear-probability modelling error the two \code{lstsq} calls
-could not make. That error has not gone away here. It has been \emph{drowned}: at Criteo's $n$, model
-error of that size is invisible next to nothing at all.)
+\subsection*{Why the ``better'' model would misprice the Criteo cap}
 
-\subsection*{The honest verdict --- this is where Bayes buys the least}
+The contrast with \cref{sec:iv:compare} is instructive, and it must be stated carefully, because the
+obvious inference from it is \emph{wrong} and this section is where the book measures that rather
+than asserting it.
 
-So say it plainly, in the words the notebook uses rather than in softer ones. \textbf{At this $n$,
-Bayes buys nothing on estimation.} Not accuracy: the errors are indistinguishable. Not precision: the
-credible interval \emph{is} the confidence interval, at \nbElevenBWidthRatio$\times$ its
-width. Not the instrument diagnostic: the F is a classical object, and the posterior would have gone
-on producing a beautifully smooth, entirely fictitious credible band as F fell through 10. Not
+On \nbElevenN{} simulated rows the classical arm was genuinely the closer of the two \emph{so long
+as the Bayesian arm was the joint Gaussian of \cref{eq:iv:joint}}. That model commits a real
+linear-probability modelling error that the two \code{lstsq} calls cannot make. Respecifying the
+first stage as a probit, in \cref{eq:iv:probit}, turned that comparison into a tie. The natural
+conclusion (\emph{exposure is binary, so the probit is the better-specified model, and it should
+help here too}) is exactly the conclusion a good student would draw, and it is false.
+\Cref{tab:iv:realprobit} refits that same probit on the same \nbElevenBNFit{} Criteo rows and grades
+it against the \nbElevenBNFull{}-row anchor.
+
+\input{build/tables/nb11b_probit}
+
+The shipped linear-probability posterior lands \nbElevenBLpmGap{} pp from the anchor and covers it.
+The probit lands \nbElevenBProbitGap{} pp away and \emph{misses}. It does so while reporting
+an interval \nbElevenBProbitWidthRatio$\times$ \emph{tighter} than the model it was supposed to
+repair. Worse, its estimate sits \nbElevenBProbitNaiveDist{} pp from the \emph{naive} as-treated
+gap, and its endogeneity parameter comes back at $\rho = \nbElevenBProbitRho$: no self-selection at
+all, in the one dataset whose self-selection \cref{sec:iv:real} has just photographed feature by
+feature. It is confidently, precisely wrong, and it has quietly reverted to the naive answer.
+
+\begin{intuition}{Why the ``better'' likelihood breaks, and the real reason the linear one works}
+The failure is not the sampler and it is not the prior. It is the \emph{outcome}. The model of
+\cref{eq:iv:probit} carries the confounding through the correlation between the first-stage latent
+and the \emph{outcome residual}. On a binary visit indicator that residual takes two values.
+A Gaussian copula has nothing to grip, so the likelihood's cheapest fit is $\beta = $ naive and
+$\rho = 0$, which is precisely what it returns. One-sided noncompliance compounds it: on this
+platform $\Prob(\text{exposed} \mid \text{locked out}) = 0$ \emph{exactly}, which no probit index can
+express, and the intercept slides off toward $-\infty$ rather than admit it.
+
+Which forces the honest explanation of why the \emph{linear} first stage is fine here. It is not
+that Criteo's $n$ is so large that the approximation error is \emph{drowned}.
+
+With $Z$, $X$ and $Y$ all binary and no covariates, the design \textbf{saturates} the data: there
+are exactly two randomized cells, and everything identified is identified by the two contrasts
+between them: the first stage and the reduced form of
+\crefrange{eq:iv:vocab_first}{eq:iv:vocab_reduced}. The Wald ratio is a pure moment estimator built
+from those two contrasts and \emph{no functional form at all}. Two-stage least squares uses only
+them. So does the joint-Gaussian posterior, whose mean structure is linear in binary regressors in
+both rows and therefore reads $\beta$ off the same two cell means.
+
+The probit's $\beta$ is \emph{not} a function of those two contrasts alone. It is identified partly
+through the normal-copula functional form, and here that extra content is \emph{false}. This is
+the general lesson, and it is worth more than the special case:
+\textbf{a richer likelihood is only better if its extra content is true, and where the design
+already saturates the data, extra content can only hurt.} ``The variable is binary, therefore use a
+probit'' is a reflex, not an argument.
+\end{intuition}
+
+\subsection*{On Criteo, the only thing the posterior adds is the decision}
+
+State the decision-relevant part first: at this $n$ the posterior adds nothing to the \emph{estimate},
+and that is the regime, not a failing. Not accuracy: the errors are indistinguishable. Not precision:
+the credible interval \emph{is} the confidence interval, at \nbElevenBWidthRatio$\times$ its width.
+Not the instrument diagnostic: the F is a classical object, and the posterior would have gone on
+producing a beautifully smooth, entirely fictitious credible band as F fell through 10. Not
 robustness: the linear-probability approximation is the \emph{Bayesian} arm's liability, not the
-classical one's. Anyone who says the Bayesian machinery \emph{rescued} this analysis is selling
-something.
+classical one's. The Bayesian machinery did not \emph{rescue} this analysis; nothing here needed
+rescuing.
 
 What it does buy is the same one thing, and it is not nothing: the decision. The
 $\Prob(v\beta > c)$ column of \cref{tab:iv:realcompare} exists in one arm and reads \emph{not
-defined} in the other, and \cref{eq:iv:pgt}'s bootstrap objection applies here in full --- a
+defined} in the other, and \cref{eq:iv:pgt}'s bootstrap objection applies here in full: a
 frequency over hypothetical datasets is not a belief about $\beta$.
 
 \begin{remark}[The lesson, stated so it survives being quoted]
 At Criteo scale the Bayesian layer is a \textbf{convenience, not a rescue}. It does not improve the
 number; it changes what one is licensed to \emph{say} about the number, and it propagates that
-licence coherently into euros. Where Bayes genuinely earns its compute is the opposite regime ---
+licence coherently into euros. Where Bayes genuinely earns its compute is the opposite regime:
 thin data, hierarchical structure, real prior information, a model that must be built rather than
 divided. Here the only honest reason to fit it is the decision rule of \cref{eq:iv:rule}, and
 \textbf{if the firm did not need $\Prob(\text{effect} > \text{cost})$, the classical baseline alone
@@ -889,22 +1232,29 @@ would have been a complete and defensible analysis.}
 
 \subsection*{The dollar decision, and the cap the dashboard would have set}
 
-At an assumed \eur{\nbElevenBValuePerVisit} per incremental visit, an exposure to the users this
-auction actually reaches is worth about \eur{\nbElevenBAnchorCap} (the anchor's
-\nbElevenBAnchorWald{} pp). At the planned \eur{\nbElevenBCost} per exposed user,
-$\Prob(\text{pays}) = \nbElevenBPPays$ and the net value is \eur{\nbElevenBNet}. The cap of
-\cref{eq:iv:rule} --- again, a \textbf{90\,\% probability bar}, a posterior quantile, and not a
-confidence bar --- lands at \eur{\nbElevenBCap} per exposed user, with a coin-flip price of
-\eur{\nbElevenBCoinflip} (\cref{fig:iv:realeuro}).
+Here $v = \eur{\nbElevenBValuePerVisit}$ per incremental visit, and \cref{eq:iv:rule} is applied with
+that multiplier in place: $\beta$ is a shift in visit probability, and $v\beta$ is a price. An
+exposure to the users this auction actually reaches is therefore worth about
+\eur{\nbElevenBAnchorCap} at the anchor's \nbElevenBAnchorWald{} pp. At the planned
+\eur{\nbElevenBCost} per exposed user, $\Prob(v\beta > c) = \nbElevenBPPays$ and the net value is
+\eur{\nbElevenBNet}. The cap of \cref{eq:iv:rule} (again, a \textbf{90\,\% probability bar}, a
+posterior quantile, and not a confidence bar) lands at \eur{\nbElevenBCap} per exposed user, with
+a coin-flip price of \eur{\nbElevenBCoinflip} (\cref{fig:iv:realeuro}).
 
 \input{build/floats/nb11b_euro}
 
-The attribution dashboard would have set that cap at \eur{\nbElevenBFullNaiveCap}. The difference,
-\eur{\nbElevenBPremium} per exposure, is a pure targeting premium paid for intent the firm already
-owned: at \nbElevenBExposuresQuarter{} exposures a quarter, roughly
-\eur{\nbElevenBPremiumQuarter} every quarter. And the untestable assumption is priced here too, by
+Two of those numbers are the memo. The attribution dashboard prices the same exposure at
+\eur{\nbElevenBFullNaiveCap}, against the anchor's causal \eur{\nbElevenBAnchorCap}: a targeting
+premium of \eur{\nbElevenBPremium} per exposure (\cref{fig:iv:anchor}), paid for intent the firm
+already owned, and at \nbElevenBExposuresQuarter{} exposures a quarter roughly
+\eur{\nbElevenBPremiumQuarter} every quarter. That subtraction is point estimate against point estimate: confounding, priced. The
+defensible \emph{cap} of \eur{\nbElevenBCap} sits lower still, and the extra gap is not more
+confounding: it is the haircut the 90\,\%-probability bar takes off the causal number, the difference
+between what an exposure is worth on average and what a firm should be willing to \emph{commit} to
+paying for it. Do not net the two against each other. And the untestable assumption is priced here
+too, by
 \cref{eq:iv:excl_stress}: the buy call survives an eligibility side-channel of up to
-$\delta^{*} = \nbElevenBDeltaStar$ pp --- \pc{\nbElevenBBreakDeltaPct} of the entire
+$\delta^{*} = \nbElevenBDeltaStar$ pp: \pc{\nbElevenBBreakDeltaPct} of the entire
 \nbElevenBReduced{} pp reduced form would have to bypass exposure to overturn it. The closed form
 and the grid scan agree in front of the reader (\nbElevenBDeltaStar{} pp against
 \nbElevenBBreakDelta{} pp), which is the only reason to print both.
@@ -913,7 +1263,7 @@ Three scope lines before any of this reaches a rate card. It is the ATT of the
 \pc{\nbElevenBPExposedEligible} of users the auction actually reaches: it prices \emph{these}
 exposures and does not license doubling reach, because the next users the auction would find are, by
 its own logic, worse prospects. The \eur{\nbElevenBValuePerVisit} visit value and the
-\eur{\nbElevenBConvMargin} margin per conversion are finance inputs, swept but assumed --- the
+\eur{\nbElevenBConvMargin} margin per conversion are finance inputs, swept but assumed: the
 secondary conversion rung puts an exposure at \eur{\nbElevenBConvValue} on the full-file anchor's
 \nbElevenBAnchorConvWald{} pp, and at a \pc{\nbElevenBBaseConv} base rate it is honestly noisy.
 And the estimate is a blend across several incrementality tests: fine for a benchmark cap, to be
@@ -921,7 +1271,7 @@ blurred into one campaign's plan with care.
 
 \begin{remark}[What the experiment bought]
 Notice what the randomized lockout bought. It made \cref{as:iv:exog} true by construction,
-\cref{as:iv:mono} true by construction, and \cref{as:iv:excl} defensible in a sentence --- a silent
+\cref{as:iv:mono} true by construction, and \cref{as:iv:excl} defensible in a sentence: a silent
 lockout does nothing to a user who never learns of it. Every hard problem in this chapter was solved
 \emph{in the design}, before any data was analysed. That is the deeper reason to run incrementality
 tests at all: not to produce a number, but to make the number identifiable \citep{lewis2015,
@@ -934,20 +1284,20 @@ gordon2019}.
 
 \begin{enumerate}[leftmargin=*, itemsep=.45em]
   \item \textbf{Endogeneity is a correlation with the \emph{full} error, and adjustment cannot
-        touch it.} \Cref{eq:iv:endog} is stated against $12U + \varepsilon$, not against
+        touch it.} \Cref{eq:iv:endog} is stated against $\kappa U + \varepsilon$, not against
         $\varepsilon$: the leak is the unobserved intent, and controlling for what was measured is
         powerless against a confounder that was not. An instrument does not adjust for $U$. It finds
         a slice of exposure that $U$ could not have caused.
 
   \item \textbf{IV identifies a LATE, and the instrument defines the population.} \Cref{eq:iv:late}
-        is the effect on \emph{compliers} --- \nbElevenFsShift{} points of these customers, the ones
+        is the effect on \emph{compliers}: \nbElevenFsShift{} points of these customers, the ones
         the encouragement moves. Always-takers and never-takers are absent from the estimate, not
         merely down-weighted. A different instrument therefore estimates a different quantity, and
         two valid instruments disagreeing is not a contradiction. Report the scope.
 
   \item \textbf{The first-stage F is a precondition, and \cref{eq:iv:oneoverF} tells you what it
         buys.} At $F = \nbElevenFStat$ the residual OLS-bias leakage is \eur{\nbElevenFLeak} per
-        exposure; on Criteo, at $F = \nbElevenBFStat$ --- \nbElevenBFOverBar$\times$ the bar --- it
+        exposure; on Criteo, at $F = \nbElevenBFStat$ (\nbElevenBFOverBar$\times$ the bar) it
         is \nbElevenBFLeak{} pp. In both cases the diagnostic \emph{certifies}. Below 10 it does the
         opposite: \cref{tab:iv:weak} shows a single draw's 90\,\% range spanning \eur{\nbElevenWeakLo}
         to \eur{\nbElevenWeakHi} at $F \approx \nbElevenWeakFWorst$, with the median drifting back
@@ -961,21 +1311,36 @@ gordon2019}.
   \item \textbf{Precision is not accuracy.} The tightest interval in this chapter belongs, in both
         the simulation and the real data, to the biased estimator: a standard error of
         \eur{\nbElevenNaiveSe} on a number \eur{\nbElevenNaiveErr} wrong, and \nbElevenBNaiveSe{} pp
-        on one \nbElevenBNaiveErr{} pp wrong --- around an anchor its own interval excludes. More
+        on one \nbElevenBNaiveErr{} pp wrong, around an anchor its own interval excludes. More
         data shrinks that interval around the same wrong number, forever.
 
   \item \textbf{Classical and Bayesian agree, and on Criteo they \emph{coincide}.} On
-        \nbElevenBNFit{} rows the posterior and 2SLS land \nbElevenBAgreePp{} pp apart ---
-        \nbElevenBAgreeSes{} standard errors --- with interval widths in a ratio of
+        \nbElevenBNFit{} rows the posterior and 2SLS land \nbElevenBAgreePp{} pp apart
+        (\nbElevenBAgreeSes{} standard errors), with interval widths in a ratio of
         \nbElevenBWidthRatio$\times$. That is Bernstein--von Mises in a print-out: the posterior
         \emph{is} the sampling distribution the delta method wrote in closed form. Which of the two
         sits nearer the anchor differs by \nbElevenBErrGapSes{} standard errors, and this chapter
         refuses to call a winner on that.
 
-  \item \textbf{This is the chapter where Bayes buys the least --- and the book says so.} It bought
-        no accuracy, no precision, no diagnostic, no robustness; it \emph{introduced} a
-        linear-probability modelling error the classical arm could not make. What it bought is
-        $\Prob(\beta > c)$, which the classical column prints as \emph{not defined} --- and
+  \item \textbf{Where Bayes lost, the culprit was a default \emph{specification}, not the paradigm,
+        and it was a \emph{prior}, not the likelihood.} As CausalPy ships it, the Bayesian arm carries
+        \eur{\nbElevenGaussSeedBias} of bias and \pc{\nbElevenGaussSeedCovPct} coverage of a
+        nominal-90\,\% interval (\cref{tab:iv:likelihoods}). The obvious suspect is the
+        linear-probability likelihood, and it is innocent: that likelihood's own maximiser is 2SLS,
+        exactly, so it contributes no bias to $\beta$. The mild prior on the endogeneity correlation
+        is innocent too (flatten it and the estimate does not move, \eur{\nbElevenGaussFlatMean} against
+        \eur{\nbElevenGaussMean}). The guilty component is the default prior on the error
+        \emph{scales}, calibrated for a unit-scale variable and left to meet sales in the tens; diffuse
+        it and the posterior mean collapses onto 2SLS (\cref{app:iv:forensic}). Respecifying the model
+        (the probit repair of \cref{eq:iv:probit}) brings the bias to \eur{\nbElevenSeedBias} and
+        coverage to \pc{\nbElevenSeedCovPct}. A mis-scaled default prior is a specification error in
+        exactly the sense a misspecified likelihood is: the analyst's mistake, not Bayes's, and the
+        Bayesian arm is also what caught and priced it.
+
+  \item \textbf{What the posterior adds here is the decision, and only the decision.} Corrected,
+        it bought no accuracy (a tie inside \eur{\nbElevenTieTol}), no precision, no diagnostic and
+        no robustness. What it bought is
+        $\Prob(\beta > c)$, which the classical column prints as \emph{not defined}, and
         bootstrapping the Wald would not fix that, because a frequency over datasets is not a belief
         about $\beta$. The euro cap of \cref{eq:iv:rule} is a \textbf{posterior quantile}, a 90\,\%
         \emph{probability} bar and never a confidence bar. \textbf{At Criteo scale the Bayesian layer
@@ -983,7 +1348,7 @@ gordon2019}.
         classical baseline alone would have been a complete and defensible analysis.}
 
   \item \textbf{The exclusion restriction is untestable, and that is why you price it.}
-        \Cref{eq:iv:excl_stress} bounds the leak that would flip the call --- \eur{\nbElevenBreakDelta}
+        \Cref{eq:iv:excl_stress} bounds the leak that would flip the call: \eur{\nbElevenBreakDelta}
         of a \eur{\nbElevenReduced} reduced form in the simulation, \nbElevenBDeltaStar{} pp of a
         \nbElevenBReduced{} pp one on Criteo. Defend it on design, not on data: a content-free
         serving lottery is an instrument, and an encouragement email that shows the product is not.
@@ -997,6 +1362,365 @@ gordon2019}.
   \nbElevenBNFull-row anchor with \code{cmp.data.criteo\_full\_anchor}. Both run in a fast teaching
   mode (\code{CMP\_FAST=1}, short chains) and a full mode (\code{CMP\_FAST=0}); every number in this
   chapter comes from the full run, emitted by \code{cmp.report} and injected here as a macro. The
-  Bayesian IV is CausalPy's joint-Gaussian instrumental-variable model, fitted with PyMC; the
-  classical arm is \code{cmp.classical.iv\_2sls}. \citet{angrist2009} remains the standard applied
-  reference for everything in this chapter, and \citet{imbens2014} the standard survey.}
+  Bayesian arm of \crefrange{sec:iv:bayes}{sec:iv:euro} is fitted twice: first as CausalPy's
+  joint-Gaussian instrumental-variable model (\cref{eq:iv:joint}), then as the binary-treatment
+  probit of \cref{eq:iv:probit} (\code{cmp.estimators.iv\_binary\_treatment}), which is the posterior
+  the chapter reports and spends. \Cref{sec:iv:real}'s posterior is the joint Gaussian, where at
+  Criteo's $n$ the difference is immaterial. The classical arm is \code{cmp.classical.iv\_2sls}.
+  \citet{angrist2009} remains the standard applied reference for everything in this chapter, and
+  \citet{imbens2014} the standard survey.}
+
+% =====================================================================================
+\clearpage
+\section*{Appendix 13.A\quad Formal machinery}
+\label{app:iv:forensic}
+\addcontentsline{toc}{section}{Appendix 13.A\quad Formal machinery}
+
+The body states each idea in plain language, gives the euro result, and points here. The first seven
+subsections are the formal reference (the estimand, the two estimators, the weak-instrument
+diagnostic, the LATE theorem, the two likelihoods, and the large-sample theorem that ties the
+posterior to the classical answer), each with the displayed formula the body omits and a worked
+example where one is natural. The next group (13.A.8 to 13.A.12) is the forensic promised in
+\cref{sec:iv:valid}: \emph{which} component of the default Bayesian model biased it, established by
+refitting each alternative in turn. The last four (13.A.13 to 13.A.16) are worked examples of the
+Session-5 ideas the body names but does not need: weak-instrument-robust inference (Anderson--Rubin),
+profiling the compliers (Abadie's $\kappa$), attrition (Lee bounds), and the four faces of
+endogeneity.
+
+\subsection*{13.A.1\quad The just-identified estimand and the Wald estimator}
+
+With a single binary instrument $Z$, a single binary endogenous treatment $X$ and no controls, the
+model is \emph{just-identified}: one instrument for one endogenous regressor. The estimand is the
+complier LATE of \cref{eq:iv:late}, and the estimator is the Wald ratio of \cref{eq:iv:wald}: the
+reduced form divided by the first stage. Under \crefrange{as:iv:rel}{as:iv:mono} that ratio equals
+the average effect among compliers: the reduced form is $\Prob(\text{complier})\cdot\beta_{\text{LATE}}$
+and the first stage is $\Prob(\text{complier})$, so their quotient is $\beta_{\text{LATE}}$.
+
+Because the estimator is a ratio of two noisy quantities, its variance is the delta method:
+%
+\begin{equation}
+  \Var\big(\hat\beta\big) \;\approx\;
+    \frac{1}{\hat\pi^{2}}\Var\big(\hat\tau\big)
+  \;+\; \frac{\hat\beta^{2}}{\hat\pi^{2}}\Var\big(\hat\pi\big)
+  \;-\; \frac{2\hat\beta}{\hat\pi^{2}}\operatorname{Cov}\big(\hat\tau,\ \hat\pi\big),
+  \label{eq:iv:delta}
+\end{equation}
+%
+the three terms being the numerator's noise, the denominator's noise, and their correlation. When
+the first stage is strong the denominator's relative noise is $1/\sqrt F$, the last two terms nearly
+vanish, and the one-term shortcut $\text{SE} \approx \text{SE}(\hat\tau)/\hat\pi$ is exact enough to
+use, as \cref{sec:iv:real} audits on the Criteo folds, where it agrees with the full expression to
+\pc{\nbElevenBSeShortGap}.
+
+\subsection*{13.A.2\quad Two-stage least squares and the control-function form}
+
+Two-stage least squares fits the first stage $X = b_0 + \pi Z$, keeps the fitted $\hat X$, and
+regresses $Y$ on $\hat X$. An algebraically identical route is the \textbf{control function}: fit the
+same first stage, keep its residual $\hat v = X - \hat X$, and regress the outcome on the
+\emph{actual} treatment with that residual added as a control,
+%
+\begin{equation}
+  Y \;=\; \beta_0 \;+\; \beta X \;+\; \phi\,\hat v \;+\; \text{noise}.
+  \label{eq:iv:cf}
+\end{equation}
+%
+The residual $\hat v$ carries the part of exposure that intent drove; conditioning on it purges the
+endogeneity, and the coefficient $\beta$ in \cref{eq:iv:cf} equals the 2SLS coefficient exactly. With
+one binary instrument and one binary treatment both also equal the Wald ratio (\cref{prop:iv:wald}).
+
+The recipe has one trap, in the standard error rather than the coefficient. The correct residual is
+formed against the real regressor, $e = y - Xb$; the hand-rolled second stage forms it against the
+fitted one, and the two differ by the first-stage prediction error:
+%
+\begin{equation}
+  \underbrace{y - \hat X b}_{\text{naive residual}}
+  \;=\; \underbrace{(y - Xb)}_{e,\ \text{correct}}
+      \;+\; \underbrace{(X - \hat X)\,b}_{\text{first-stage prediction error}} .
+  \label{eq:iv:resid}
+\end{equation}
+%
+The fitted regressor $\hat X$ is the projection of $X$ onto the instrument space, so the IV residual
+$e$ is orthogonal to $\hat X$ by the normal equations but \emph{not} to $X$ itself. Squaring
+\cref{eq:iv:resid} term by term therefore leaves \emph{three} pieces, not two, with a surviving cross
+term:
+%
+\begin{equation}
+  \text{SSR}_{\text{naive}} \;=\; \text{SSR}_{\text{correct}}
+    \;+\; b^{2}\!\sum_i (X_i - \hat X_i)^{2}
+    \;+\; 2\,b\!\sum_i e_i X_i .
+  \label{eq:iv:ssr}
+\end{equation}
+%
+The middle piece is a sum of squares and never negative. The last is the cross term, up to scale the
+sample covariance between the IV residual and exposure. In this chapter's positively-confounded
+market $\operatorname{Cov}(X, U) > 0$, so with $b > 0$ the cross term is positive too, both extra
+pieces push the same way, and the hand-rolled interval comes out too \emph{wide}: the
+\nbElevenSeHandRatio$\times$ inflation of \cref{sec:iv:classical}, \eur{\nbElevenSeHand} against the
+correct \eur{\nbElevenSeCorrect}. The sign is not a law: once controls, several instruments or
+negative endogeneity enter, the cross term can flip.
+
+\subsection*{13.A.3\quad The first-stage F and the weak-instrument bound}
+
+For a single instrument the first-stage F is the ordinary F-statistic of the first-stage regression,
+\cref{eq:iv:F}, with $R^2$ the share of exposure variance the instrument explains. The $F > 10$
+convention \citep{staiger1997, stock2005} is not superstition. A standard approximation prices the
+residual 2SLS bias, relative to the OLS bias it was hired to remove, at $1/F$ (\cref{eq:iv:oneoverF}),
+so $F = 10$ means at most a tenth of the OLS bias leaks back in. The bound is cashable in euros: here
+OLS is off by \eur{\nbElevenNaiveErr}, and at $F = \nbElevenFStat$ the residual leakage is
+\eur{\nbElevenFLeak} per exposure. That is negligible, which is why the small residual bias
+\cref{sec:iv:valid} finds cannot be blamed on the instrument. Three refinements belong in a
+practitioner's toolkit: the Montiel Olea--Pflueger effective F under heteroskedasticity
+\citep{olea2013}, the \citet{kleibergen2006} rank test for several endogenous regressors, and the
+reading of $F > 10$ as necessary, not sufficient \citep{andrews2019}.
+
+\subsection*{13.A.4\quad The LATE theorem and monotonicity}
+
+Decompose the reduced form over the four types. Randomization (\cref{as:iv:exog}) makes the
+encouraged and un-encouraged groups comparable; exclusion (\cref{as:iv:excl}) silences always- and
+never-takers, for whom $X(1) = X(0)$; monotonicity (\cref{as:iv:mono}) deletes the defier term. What
+survives is \cref{eq:iv:itt}: the reduced form is $\Prob(\text{complier})\cdot\beta_{\text{LATE}}$,
+and dividing by the first stage (itself the complier share) returns the LATE.
+
+Monotonicity is the one assumption of the four with no observable footprint, so it is worth seeing
+why the simulator satisfies it. Each customer draws \emph{one} latent willingness
+$V_i \sim U(0,1)$ and takes the ad whenever her propensity clears it:
+%
+\begin{equation}
+  X_i(z) \;=\; \mathbf 1\Big\{\, V_i \;<\; \sigma\big(\alpha_0 + \gamma z + \lambda U_i\big) \,\Big\}.
+  \label{eq:iv:vocab_latent}
+\end{equation}
+%
+The same $V_i$ is compared against \emph{both} propensities. A positive $\gamma$ can only raise the
+propensity from $z=0$ to $z=1$, so a customer who took the ad unencouraged still takes it encouraged:
+no defiers, by construction (\cref{fig:iv:monotone}). This is a statement about the \emph{joint} law
+of $\big(X(0), X(1)\big)$, not either marginal alone. Draw the two potential treatments as
+\emph{independent} coin flips at the same two marginal probabilities and defiers reappear in numbers,
+with the first stage (a difference of marginals) entirely unchanged. The same observable data,
+two different worlds; monotonicity is the choice between them, and no dataset can make it, because
+each customer reveals only one of her two potential treatments.
+
+\subsection*{13.A.5\quad The joint-Gaussian likelihood and its MLE}
+
+The library model of \cref{eq:iv:joint} fits the first stage and the outcome equation jointly, with
+correlated errors. It factors into a marginal model for $X$ and a control-function regression of $Y$
+on $X$ and the first-stage residual: exactly \cref{eq:iv:cf}. For a just-identified linear IV the
+maximiser of that likelihood \emph{is} two-stage least squares: the maximum-likelihood $\beta$ and
+the 2SLS $\beta$ are the same number to machine precision, on binary $X$ and all. The notebook
+asserts this rather than asking for faith. It forms the control-function estimate of
+\cref{eq:iv:cf} and checks $|\hat\beta_{\text{CF}} - \hat\beta_{\text{2SLS}}| < 10^{-8}$ on the
+chapter's data; across \nbElevenCfSeeds{} fresh panels the largest gap is \nbElevenCfMaxdiff.
+Whatever the linear-probability row does to the \emph{support} of $X$, it contributes zero bias to
+$\beta$. This is the fact the forensic subsections below turn on.
+
+\subsection*{13.A.6\quad The probit first stage}
+
+The binary-aware repair of \cref{eq:iv:probit,eq:iv:probit_out} replaces the Gaussian first-stage row
+with a latent index crossing a threshold, keeping the outcome equation and letting the two errors
+correlate. The likelihood factors honestly, a continuous outcome times a binary first stage:
+%
+\begin{equation}
+  f(y, t) \;=\;
+  \underbrace{\mathcal N\big(e;\ 0,\ \sigma^{2}\big)}_{\text{outcome equation}} \;\times\;
+  \underbrace{\Prob(T = t \mid e)}_{\text{first stage, conditioned on } e},
+  \qquad e = y - \beta_0 - \beta t,
+  \label{eq:iv:probit_fact}
+\end{equation}
+%
+and conditioning the index error on the outcome error carries the confounding through in one joint
+model, with no plug-in residual:
+%
+\begin{equation}
+  \Prob(T = 1 \mid e) \;=\;
+  \Phi\!\left( \frac{\alpha_0 + \alpha_1 Z + \rho\,e/\sigma}{\sqrt{1 - \rho^{2}}} \right).
+  \label{eq:iv:probit_phi}
+\end{equation}
+%
+Set $\rho = 0$ and \cref{eq:iv:probit_phi} collapses to an ordinary probit first stage fitted in
+isolation, the estimator that ignores the endogeneity; the $\rho\,e/\sigma$ term is the correction.
+Unlike \cref{eq:iv:joint}, this likelihood cannot predict an exposure of $1.4$, because a Bernoulli
+cannot.
+
+\subsection*{13.A.7\quad Bernstein--von Mises}
+
+With a well-specified likelihood and enough data, the posterior stops depending on the prior and
+concentrates on the maximum-likelihood estimate, with the same sampling variance. Formally, the
+posterior for $\beta$ is asymptotically normal around the MLE $\hat\beta$, with the inverse Fisher
+information as variance:
+%
+\begin{equation}
+  p(\beta \mid \text{data}) \;\xrightarrow{\;d\;}\;
+  \mathcal N\!\big(\hat\beta,\ I(\beta)^{-1}/n\big),
+  \label{eq:iv:bvm}
+\end{equation}
+%
+so the posterior standard deviation and the classical standard error estimate the same quantity
+\citep{vandervaart1998, gelman2013}. This is why, on \cref{sec:iv:real}'s hundred thousand Criteo
+rows, the posterior and the delta method agree to \nbElevenBAgreePp{} pp with interval widths in a
+ratio of \nbElevenBWidthRatio$\times$: the theorem showing up in a print-out.
+
+\subsection*{13.A.8\quad The forensic: the identification is clean}
+
+\input{build/floats/nb11_forensic_ablation}
+
+The rest of this appendix establishes \emph{which} component of the default Bayesian model biased it,
+by refitting each alternative in turn (\cref{fig:iv:ablation}). The order is a process of
+elimination: first the identification, then the likelihood, then each prior. The Wald ratio \emph{is}
+the IV identification with nothing else attached: two least-squares slopes and a division, no prior,
+no likelihood, no sampler. Re-run it on fresh draws at growing $n$ and whatever bias it does
+\emph{not} show cannot belong to the identification.
+
+\input{build/tables/nb11_waldn}
+
+It shows none (\cref{tab:iv:waldn}). The closed-form Wald stays pinned on the planted truth at
+every sample size (a bias of \eur{\nbElevenWaldBiasBig} at $n = 10{,}000$) while its spread
+shrinks like $1/\sqrt{n}$. \Cref{eq:iv:oneoverF} has already priced the pure IV leakage at
+\eur{\nbElevenFLeak}, an order of magnitude smaller than anything in \cref{tab:iv:likelihoods}. The
+identification is clean. So the Gaussian fit's bias belongs to the Bayesian apparatus, and the
+apparatus has two parts, the \emph{likelihood} and the \emph{prior}. It is worth being careful
+about which, because the obvious answer is wrong and the book's own thesis rides on getting it right.
+
+\subsection*{13.A.9\quad Suspect one: the likelihood, and it is innocent}
+
+\textbf{It is not the likelihood.} The joint-Gaussian model of \cref{eq:iv:joint} factors into a
+model for $X$ and a control-function regression of $Y$ on $X$ and the first-stage residual. For
+a just-identified linear IV, the maximiser of that likelihood \emph{is} two-stage least squares,
+exactly. Not approximately: the maximum-likelihood $\beta$ and the 2SLS $\beta$ are the same number,
+to machine precision, on binary $X$ and all. Whatever the linear-probability model does to the
+\emph{support} of $X$ (and \cref{fig:iv:ppc} shows it does something real), it contributes
+\emph{zero} bias to $\beta$. A likelihood whose own MLE is the unbiased classical estimator cannot be
+the source of a bias in the posterior mean.
+
+\subsection*{13.A.10\quad Suspect two: the prior on the endogeneity, and it is innocent}
+
+\textbf{Nor is it the prior on the endogeneity.} The tempting second guess is the mild shrinkage the
+covariance prior puts on the treatment--outcome correlation $\rho$. The notebook tests it directly,
+by flattening that prior completely (a uniform law on $\rho$) and refitting everything else
+unchanged. The posterior mean moves from \eur{\nbElevenGaussMean} to \eur{\nbElevenGaussFlatMean}.
+That is to say, it does not move, and the coverage stays at \pc{\nbElevenGaussFlatCov}. At this
+sample size the correlation prior is doing nothing, exactly as the spine of this book would predict.
+
+\subsection*{13.A.11\quad Suspect three: the prior on the error scales, and it is guilty}
+
+\textbf{What is left is the prior on the error \emph{scales}}: the one nuisance an analyst never
+thinks about. The default prior on the two residual standard deviations is calibrated for a variable
+on the unit scale, which is right for the 0/1 treatment and badly wrong for sales measured in the
+tens; it pulls the outcome-error scale toward a value the data would never choose, and through the
+joint model that mis-scaling tilts $\beta$ upward. Diffuse that one prior, holding everything else
+fixed, and the posterior mean falls from \eur{\nbElevenGaussMean} to
+\eur{\nbElevenGaussScalediffuseMean}, collapsing onto the 2SLS answer of \eur{\nbElevenIvEst}
+(\cref{fig:iv:ablation}). That is the whole of it: not the likelihood, not the correlation prior, but
+a default scale prior meeting data it was never calibrated for.
+
+\begin{intuition}{This is the spine, not a counterexample to it}
+The book's claim is that in these problems the prior does almost nothing and the likelihood is the
+whole ballgame, and here is a chapter where the prior visibly bit. The two are reconciled by being
+precise about what ``the prior mattering'' means. This is not a prior encoding a defensible belief and
+that belief moving the answer; it is a \emph{default} prior, left unexamined, that is simply
+\emph{mis-scaled} for the data it met. That is a specification error, and it sits in exactly the same
+category as a misspecified likelihood: the analyst's mistake, not the paradigm's. The lesson of the
+chapter is unchanged and, if anything, sharpened: \textbf{a Bayesian model is a likelihood
+\emph{and} a set of priors, and either one, left on its defaults, can quietly bias a decision.} The
+posterior predictive check of \cref{fig:iv:ppc} remains a genuine diagnostic of the support violation;
+it simply is not the diagnosis of \emph{this} bias. Convicting the wrong component (blaming the
+vivid likelihood violation for a bias that the quiet, mis-scaled error prior actually caused) is
+the exact error the whole book warns against.
+\end{intuition}
+
+\subsection*{13.A.12\quad What survives the repair: finite-sample, or the wrong link?}
+
+A small upward bias does survive, and it is reported rather than laundered. It has two possible
+homes. If it is \emph{finite-sample}, it must shrink as $n$ grows. If it is the price of
+approximating the simulator's \emph{logistic} assignment (\cref{eq:iv:first}) with a probit link, it
+is structural and would not shrink at all. The test is obvious, and the notebook runs it: refit
+\cref{eq:iv:probit} on \nbElevenProbitBignSeeds{} fresh panels at $n = \nbElevenProbitBignN$. The
+bias falls from \eur{\nbElevenSeedBias} to \eur{\nbElevenProbitBiasBign}, with a standard error on
+that mean of \eur{\nbElevenProbitBiasBignSe}. It shrinks, though not sharply, so the leftover is
+mostly finite-sample, and a small residual link-approximation component cannot be excluded on that
+many panels. At $n = \nbElevenN$, a little finite-sample bias is the price of admission; the decision
+in \cref{sec:iv:euro} never turns on the last euro, which is exactly why it survives it.
+
+\subsection*{13.A.13\quad Weak-instrument-robust inference: the Anderson--Rubin set}
+
+The Wald interval divides by the first stage, so it inherits that denominator's noise and stops
+being trustworthy just when the instrument is weak. The Anderson--Rubin (AR) confidence set avoids
+the division \citep{anderson1949}. Fix a candidate effect $b_0$, form the adjusted outcome
+$Y - b_0 X$, and test whether the instrument still predicts it:
+%
+\begin{equation}
+  \text{AR}(b_0): \quad \text{regress } (Y - b_0 X) \text{ on } Z, \text{ and test } H_0:\ \pi_Z = 0 .
+  \label{eq:iv:ar}
+\end{equation}
+%
+At the true $b_0$ the adjusted outcome is $\beta_0 + \kappa U + \varepsilon$, which contains no $Z$
+because the instrument is exogenous, so the coefficient is zero in expectation. The AR set is every
+$b_0$ the test does not reject. \Cref{fig:iv:ar} plots the statistic across $b_0$ and shades the
+90\,\% set, $[\eur{\nbElevenArLo}, \eur{\nbElevenArHi}]$. Here it nearly matches the Wald interval
+$[\eur{\nbElevenIvLo}, \eur{\nbElevenIvHi}]$, because the first stage is strong. The point is the
+regime where they differ: when the first stage is weak the Wald interval is unreliable and the AR
+set is still exact, because it never divides by a near-zero first stage.
+
+\input{build/floats/nb11_ar}
+
+\subsection*{13.A.14\quad Abadie's $\kappa$: profiling the invisible compliers}
+
+The LATE speaks for compliers, and \cref{sec:iv:vocab} showed that no row of data is labelled a
+complier. Abadie's $\kappa$ recovers complier averages all the same \citep{abadie2003kappa}. With a
+randomized instrument and $\Prob(Z{=}1) = p_z$,
+%
+\begin{equation}
+  \kappa_i \;=\; 1 \;-\; \frac{X_i(1 - Z_i)}{1 - p_z} \;-\; \frac{(1 - X_i)\,Z_i}{p_z},
+  \qquad
+  \E[\,g \mid \text{complier}\,] \;=\; \frac{\E[\kappa\, g]}{\E[\kappa]},
+  \label{eq:iv:kappa}
+\end{equation}
+%
+for any characteristic $g$. The weights average to the complier share, $\E[\kappa] =
+\pc{\nbElevenAbadieShare}$, which is the first stage again. \Cref{fig:iv:abadie} profiles the
+compliers by their latent intent $U$. The $\kappa$-weighted mean, \nbElevenAbUKappa, lands on the
+answer-key complier mean, \nbElevenAbUTrue, while the raw sample average, \nbElevenAbUAll, hides it.
+The simulator lets us check $\kappa$ against the truth. On real data $\kappa$ is the only way to
+describe who the estimate speaks for, because the compliers can never be listed.
+
+\input{build/floats/nb11_abadie}
+
+\subsection*{13.A.15\quad Attrition, and a nod to Lee bounds}
+
+Every estimate above assumed the outcome is observed for everyone. Attrition breaks that. If who
+reports depends on the treatment, the observed sample is selected, and a randomized instrument does
+not repair it by itself. Lee bounds put an assumption-light bracket around the effect
+\citep{lee2009}. Suppose the encouragement raises the reporting rate, so selection is monotone in
+$Z$. Trim the over-retained arm by the excess-reporting fraction $q = (s_1 - s_0)/s_1$, from the top
+for one bound and from the bottom for the other. What remains brackets the effect among the
+always-reporters, the users who report whatever the encouragement. \Cref{fig:iv:lee} runs this on an
+attrition overlay, not the main model. The encouraged report at \pc{\nbElevenLeeSone} against
+\pc{\nbElevenLeeSzero}, and reporting also rises with sales, so the observed sample is selected on
+the outcome. Trimming \pc{\nbElevenLeeTrim} brackets the effect between \eur{\nbElevenLeeLo} and
+\eur{\nbElevenLeeHi} on randomization and monotone selection alone. The naive difference on
+reporters, \eur{\nbElevenLeeNaive}, is biased by the selection, against the \eur{\nbElevenLeeItt}
+full-sample intent-to-treat effect. The bounds are wide, and they are honest.
+
+\input{build/floats/nb11_lee}
+
+\subsection*{13.A.16\quad The four faces of endogeneity}
+
+Endogeneity is any correlation between the treatment and the error. It arrives in four ways, and
+this chapter treats one of them. \Cref{fig:iv:faces} shows all four, each a small world where a
+plain OLS slope misses the truth:
+%
+\begin{description}[leftmargin=*, style=nextline]
+  \item[Omitted variable, or selection.] This chapter's case: a hidden $U$ drives both treatment and
+    outcome, so OLS credits the ad with the buyer's own intent. It reads \eur{\nbElevenFaceOvb}
+    against a true 15.
+  \item[Simultaneity, or reverse causation.] Price and quantity clear together, so each moves the
+    other. OLS reads \nbElevenFaceSim{} against a true demand slope of $-1.5$. This is
+    \cref{ch:pe}'s running example, and its cure is the same instrument.
+  \item[Measurement error.] A noisily measured regressor attenuates the slope toward zero. OLS reads
+    \nbElevenFaceMe{} against a true 2.
+  \item[Selection on the outcome.] Conditioning on a collider of treatment and outcome bends the
+    slope. OLS reads \nbElevenFaceSel{} against a true 1.
+\end{description}
+%
+An instrument is the cure whenever a clean source of variation, one that moves the treatment but
+nothing else, can be found or designed.
+
+\input{build/floats/nb11_faces}

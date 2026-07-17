@@ -50,6 +50,32 @@
 \usepackage{caption}
 \captionsetup{font=small, labelfont=bf, width=.92\linewidth}
 \usepackage{float}
+
+% ---------------------------------------------------------------- float placement
+% Every generated float is emitted [tb] (see cmp.report.table and book/build.py): top or bottom
+% of a page, never "here". A float placed "here" lands wherever the paragraph happened to break,
+% which strands it in mid-page with white space above and below; anchored to a top or bottom
+% slot, the text closes over it and the page reads as one block.
+%
+% That only works if a slot is actually available, and LaTeX's defaults make sure it is not:
+% \topfraction 0.7 means a float taller than 70 % of the text block can NEVER be a top float and
+% is silently deferred to the end of the chapter — which is how a table ends up four pages from
+% the paragraph that discusses it. These fractions buy the slots back.
+\setcounter{topnumber}{2}              % up to 2 floats at the top of a page
+\setcounter{bottomnumber}{1}           % and 1 at the bottom
+\setcounter{totalnumber}{3}            % 3 floats on a page at most
+\renewcommand{\topfraction}{0.9}       % a top float may take 90 % of the block (was 0.7)
+\renewcommand{\bottomfraction}{0.5}    % a bottom float, half of it (was 0.3)
+\renewcommand{\textfraction}{0.08}     % a page needs only 8 % text to not be a float page
+\renewcommand{\floatpagefraction}{0.7} % a float page must be 70 % full, so it is not half-empty
+\setlength{\floatsep}{14pt plus 3pt minus 2pt}       % between two floats
+\setlength{\textfloatsep}{18pt plus 4pt minus 3pt}   % between a float and the text
+\setlength{\intextsep}{14pt plus 3pt minus 2pt}
+% Let a page end where its content ends, rather than stretching glue to force-justify the bottom.
+% With many [tb] floats, \flushbottom (the book-class default) opens random gaps above/below floats
+% and between paragraphs to make every page exactly full; \raggedbottom closes over the float and
+% lets the leftover space fall at the very bottom of the page, where it reads as a natural page end.
+\raggedbottom
 \usepackage[table]{xcolor}
 \usepackage{enumitem}
 
@@ -58,6 +84,45 @@
 \definecolor{SchemeBlue}{HTML}{2C7FB8}   % the model / our estimate  (matches cmp.plots)
 \definecolor{SchemeOrange}{HTML}{D95F0E} % the naive baseline / the cost line
 \definecolor{SchemeGrey}{HTML}{999999}
+\definecolor{DagRed}{HTML}{C0392B}       % DAG schematics: backdoor / confounding edge (slide convention)
+\definecolor{DagGreen}{HTML}{2E7D32}     % DAG schematics: exogenous instrument
+
+% ---------------------------------------------------------------- DAG schematics (TikZ)
+% Hand-authored causal graphs (Ch. 9 identification, Ch. 13). Loaded after xcolor so the
+% [table] option above wins; tikz would otherwise load xcolor optionless and clash.
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, calc}
+\tikzset{
+  dagnode/.style={draw=SchemeDark, rounded corners=2pt, inner sep=4pt, font=\small},
+  daglat/.style={dagnode, dashed},                                   % unobserved
+  dagcause/.style={-{Stealth}, SchemeDark, thick},                   % causal edge
+  dagconf/.style={-{Stealth}, DagRed, dashed, thick},                % backdoor / confounding
+  daginst/.style={-{Stealth}, DagGreen, thick},                      % instrument
+  daglabel/.style={font=\scriptsize, text=SchemeGrey}
+}
+
+% ---------------------------------------------------------------- code listings
+% Runnable model code (e.g. the PyMC snippet in Ch. 9) is set in a tinted, framed panel so it reads
+% as code at a glance and is visually distinct from the blue/grey teaching boxes. A plain verbatim
+% block does neither and, worse, runs long lines straight into the margin: breaklines keeps every
+% line inside the text block, folding an over-long one with a hooked arrow rather than clipping it.
+\usepackage{listings}
+\definecolor{codebg}{HTML}{F3F5F7}       % very light cool-grey panel (distinct from the boxes)
+\definecolor{codecomment}{HTML}{7A8791}  % comments, muted grey
+\lstdefinestyle{cmppy}{
+  language=Python,
+  basicstyle=\footnotesize\ttfamily,
+  backgroundcolor=\color{codebg},
+  frame=single, framesep=6pt, rulecolor=\color{SchemeGrey!45},
+  xleftmargin=10pt, xrightmargin=4pt,
+  breaklines=true, breakatwhitespace=true, breakindent=14pt,
+  postbreak=\mbox{\textcolor{SchemeGrey}{$\hookrightarrow$}\space},
+  columns=fullflexible, keepspaces=true, showstringspaces=false,
+  keywordstyle=\color{SchemeDark}\bfseries,
+  commentstyle=\color{codecomment}\itshape,
+  stringstyle=\color{SchemeBlue},
+  aboveskip=12pt, belowskip=8pt}
+\lstnewenvironment{pycode}{\lstset{style=cmppy}}{}
 
 % ---------------------------------------------------------------- links, refs, bibliography
 \usepackage[colorlinks=true, linkcolor=SchemeDark, citecolor=SchemeDark,
@@ -83,6 +148,7 @@
 \newcommand{\E}{\operatorname{\mathbb{E}}}
 \newcommand{\Var}{\operatorname{Var}}
 \newcommand{\sd}{\operatorname{sd}}
+\newcommand{\se}{\operatorname{se}}
 \newcommand{\simplex}{\Delta^{J-1}}
 \newcommand{\Yobs}{Y}
 \newcommand{\code}[1]{\texttt{#1}}
@@ -97,6 +163,34 @@
   \textcolor{SchemeGrey}{\rule{\linewidth}{0.4pt}}\par\smallskip
   \textbf{The runnable notebook.} #1\par
   \endgroup\medskip}
+
+% ---------------------------------------------------------------- teaching boxes
+% The book is read by MBAs who meet this material once. Two devices carry that weight, and both
+% are deliberately spare — a box that is used for everything stops being read.
+%
+%   \begin{intuition}{The barometer}  ...  \end{intuition}
+%       WHY a formula is true, in words, before or after the algebra. Never a summary of the
+%       surrounding prose; if the box could be deleted without loss, delete it.
+%   \begin{recap}  ...  \end{recap}
+%       What has been established so far and what it buys, at a section boundary. The reader who
+%       lost the thread rejoins here.
+\usepackage[breakable, skins]{tcolorbox}
+
+\newtcolorbox{intuition}[1]{%
+  breakable, enhanced, sharp corners,
+  colback=SchemeBlue!4, colframe=SchemeBlue, boxrule=0pt,
+  leftrule=2pt, toprule=0pt, bottomrule=0pt, rightrule=0pt,
+  left=8pt, right=8pt, top=6pt, bottom=6pt,
+  fonttitle=\bfseries\small, coltitle=SchemeDark,
+  title={Intuition · #1}, attach title to upper=\par\smallskip}
+
+\newtcolorbox{recap}{%
+  breakable, enhanced, sharp corners,
+  colback=SchemeGrey!8, colframe=SchemeGrey, boxrule=0pt,
+  leftrule=2pt, toprule=0pt, bottomrule=0pt, rightrule=0pt,
+  left=8pt, right=8pt, top=6pt, bottom=6pt,
+  fonttitle=\bfseries\small, coltitle=SchemeDark,
+  title={Where we are}, attach title to upper=\par\smallskip}
 
 % ---------------------------------------------------------------- generated inputs
 % build/macros.tex   : one \newcommand per number the notebooks emitted (cmp.report.value)

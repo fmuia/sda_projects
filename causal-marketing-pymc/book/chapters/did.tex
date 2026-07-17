@@ -53,6 +53,14 @@ book the tide as app effect and recommend the contract on evidence that contains
 shortcut is not a straw man: it is what a spreadsheet produces by default, and
 \cref{fig:did:panel} shows exactly the wave it would be mistaking for a treatment.
 
+The cost of that mistake is not abstract. At \eur{\nbEightAppCost} per store per week across
+\nbEightNChain{} stores and \nbEightWeeksYear{} weeks, the contract the naive read would recommend
+commits \eur{\nbEightContractAnnualM}\,m a year --- against an evidence base that is, on that read,
+a seasonal wave. The same arithmetic runs in the other direction: if the app does work and the
+chain declines it out of caution, the forgone lift is of the same order (\cref{sec:did:euro} puts
+it at \eur{\nbEightAnnualMeanM}\,m a year net of the cost). Both errors are eight-figure errors, and
+the only thing standing between them is whether the tide is netted out correctly.
+
 The second thing to notice is that the pilot stores are not the control stores. Chains do not pick
 pilot sites by coin flip; they pick the flagship, the tech-friendly manager, the store whose
 district director volunteered. So the pilot stores may sell more --- or less --- than the controls
@@ -131,8 +139,9 @@ $\alpha_s$ that does not move with $t$, this makes \textbf{parallel trends hold 
 construction} --- absent the app, treated and control means move in lockstep. A chapter whose
 central diagnostic is a test \emph{for} parallel trends must first be run in a world where they
 genuinely hold, so that a flat pre-trend can be recognised as a true negative rather than hoped to
-be one. \Cref{sec:did:wrong} then breaks the assumption on purpose and watches the same diagnostic
-fire.
+be one. \Cref{sec:did:wrong} then breaks each of the chapter's assumptions on purpose --- parallel
+trends first, by giving the pilot stores a trend of their own; then no-anticipation; then the
+estimator itself, under staggered adoption --- and watches the same diagnostic fire, or fail to.
 
 \emph{The store baseline is large.} Its standard deviation, \eur{\nbEightAlphaSd}, is nearly twice
 the weekly idiosyncratic noise, \eur{\nbEightNoiseSd}. This is realistic --- stores differ far more
@@ -167,7 +176,7 @@ effect on the treated} --- the effect in the stores that actually got the app, a
 %
 The final \textbf{T} is not a technicality and \cref{sec:did:euro} will spend real money on it.
 \Cref{eq:did:estimand} is the effect \emph{on the pilot stores}. It is not the effect the other
-\nbEightNChain{} stores would experience, and since pilot sites are chosen rather than randomised,
+\nbEightNOther{} stores of the chain would experience, and since pilot sites are chosen rather than randomised,
 there is no reason for the two to coincide. Everything in this chapter estimates
 \cref{eq:did:estimand}; nothing in this chapter estimates the chain-wide effect, and
 \cref{sec:did:euro} treats that gap as the decision's dominant uncertainty rather than hiding it.
@@ -605,9 +614,14 @@ coverage. The within-store posterior returns \eur{\nbEightFeAtt}, 90\,\% interva
 $[\eur{\nbEightFeLo},\ \eur{\nbEightFeHi}]$, half-width \eur{\nbEightFeHalf}: about
 \nbEightFeTighter$\times$ tighter than the pooled model's ($\hat R = \nbEightFeRhat$, minimum ESS
 \nbEightFeEss, \nbEightFeDiv{} divergences). Re-run on the same \nbEightSeedN{} panels, it covers on
-\nbEightFeCov{} of them, and its half-width is now \nbEightFeHwOverScatter$\times$ the seed-to-seed
-scatter of \eur{\nbEightFeSeedSd} --- against the calibrated benchmark of
-\nbEightCalibratedRatio$\times$. \textbf{A tighter interval is progress only if coverage survives};
+\nbEightFeCov{} of them, its seed-to-seed scatter is \eur{\nbEightFeSeedSd}, and its half-width is
+therefore \nbEightFeHwOverScatter$\times$ that scatter --- against the calibrated benchmark of
+\nbEightCalibratedRatio$\times$, and against the pooled model's \nbEightPooledOverScatter$\times$.
+The two ratios are like for like: each divides a headline 90\,\% half-width by the sampling
+standard deviation of its own estimator across the same \nbEightSeedN{} panels. (The refits'
+\emph{mean} half-width, \eur{\nbEightFeSeedHalf}, sits just below the headline panel's, so the
+comparison is not an artefact of the one panel that was drawn.)
+\textbf{A tighter interval is progress only if coverage survives};
 here it does, and the width that was removed was redundancy, not protection.
 
 Note what has just happened. Three independent witnesses --- the permutation null's spread
@@ -666,9 +680,11 @@ about \nbSevenUnderprice, and its nominal 90\,\% interval covered the truth on
 \pc{\nbSevenTotalCov} of fresh panels. The posterior was \textbf{far too narrow}.
 
 In this chapter, a Bayesian $2 \times 2$ applied a pooled likelihood to a contrast that had already
-differenced the store baselines away. It over-priced the uncertainty by roughly
-\nbEightPooledOverScatter$\times$ the true sampling scatter, and its nominal 90\,\% interval covered
-on \nbEightSeedCov{} of \nbEightSeedN{} panels. The posterior was \textbf{far too wide}.
+differenced the store baselines away. Its interval came out \nbEightBayesOverCluster$\times$ wider
+than the clustered classical one --- interval against interval, the like-for-like comparison ---
+and \nbEightPooledOverScatter$\times$ the true sampling scatter where a calibrated interval belongs
+at \nbEightCalibratedRatio$\times$; it covered on \nbEightSeedCov{} of \nbEightSeedN{} panels. The
+posterior was \textbf{far too wide}.
 
 Same paradigm. Same weak priors. Same converged chains. Opposite errors. If Bayesian inference were
 inherently overconfident, \cref{ch:did} could not have happened; if it were inherently conservative,
@@ -747,37 +763,91 @@ cleanly.
 
 \input{build/tables/nb08_stress}
 
-Read \emph{across} a row: at full transfer the call barely moves as the cost climbs --- even at
-\eur{\nbEightCostHigh} per store-week, $\Prob(\text{pays}) = \nbEightPFullCostHigh$. Read \emph{down} a column:
-the call collapses. At 50\,\% transfer, the \eur{\nbEightCostMid} cell is a coin flip
-($\nbEightPHalfCostMid$) and \eur{\nbEightCostHigh} is a flat no ($\nbEightPHalfCostHigh$). \textbf{The rollout
-decision turns on the transfer assumption, not on the vendor's price} --- and the transfer
-assumption is the one thing the analysis cannot see.
+The first thing the table says is that \emph{at the price actually on the table nothing collapses}.
+Read down the \eur{\nbEightAppCost} column: the call survives every transfer assumption in it, and
+even a world in which the other \nbEightNOther{} stores realise only half the pilot lift still
+returns $\Prob(\text{pays}) = \nbEightPHalfAppCost$. The vendor's quote is not close to the
+boundary, and no reading of the table makes it close.
+
+What the table does say is that the \emph{two axes interact}, and neither alone decides. At full
+transfer the cost may climb a long way before the call moves --- at \eur{\nbEightCostHigh} per
+store-week it is still $\Prob(\text{pays}) = \nbEightPFullCostHigh$. But the room to move shrinks
+with the transfer share: at half transfer, \eur{\nbEightCostMid} is already a coin flip
+($\nbEightPHalfCostMid$) and \eur{\nbEightCostHigh} is a flat no ($\nbEightPHalfCostHigh$).
+\textbf{The transfer share does not decide the rollout; it decides how much the chain can afford to
+pay for it} --- and the transfer share is the one quantity the pilot contains no information about.
 
 The honest deliverable is therefore not the base case's \eur{\nbEightAnnualMeanM}\,m. It is the
-break-even band: the rollout clears its cost at 90\,\% posterior confidence up to
-\eur{\nbEightCapFull} per store-week if the chain responds like the pilot, up to
-\eur{\nbEightCapThreeQuarter} at three-quarters transfer, and only up to \eur{\nbEightCapHalf} if
-half the lift transfers. Hold the vendor's quote against that band. If it lands inside it, the cheap
-de-risking move is a second pilot wave in deliberately \emph{non}-pilot-like stores, which measures
-the transfer share directly instead of assuming it.
+break-even band: the running cost the rollout still clears at 90\,\% posterior confidence, quoted at
+each transfer assumption. Priced off the pooled posterior of \cref{sec:did:bayes} it runs from
+\eur{\nbEightCapFull} per store-week at full transfer, to \eur{\nbEightCapThreeQuarter} at
+three-quarters, to \eur{\nbEightCapHalf} at half. Hold the vendor's quote against that band --- with
+the correction the next subsection prices. If the quote lands inside it, the cheap de-risking move
+is a second pilot wave in deliberately \emph{non}-pilot-like stores, which measures the transfer
+share directly instead of assuming it.
 
 \subsection*{A note on which posterior priced this}
 
-The conservatism was deliberate, and it is quantifiable. Priced off the pooled posterior, the
-running cost the app clears with 95\,\% posterior probability is \eur{\nbEightBreakEven}. Priced off
-the calibrated within-store posterior of \cref{eq:did:deltamodel}, it is \eur{\nbEightBreakEvenFe}
---- the same point estimate, a far sharper bound, because the analysis earned its precision. At a
-running cost near the effect itself (\eur{\nbEightCostNearAtt}), the two posteriors part company
-entirely: $\Prob(\text{ATT} > \eur{\nbEightCostNearAtt})$ is \nbEightPPooledNearAtt{} on the pooled
-model and
-\nbEightPFeNearAtt{} on the calibrated one. \textbf{Far from the decision boundary a conservative
-interval costs nothing; near it, a conservative interval is a decision.} That is the practical
+That band was priced off the posterior this chapter has just spent a section condemning, and the
+conservatism has a price of its own. \Cref{sec:did:valid} found the pooled interval
+\nbEightBayesOverCluster$\times$ wider than the clustered classical one; a ceiling read off its 10th
+percentile inherits the whole of that excess width. Priced off the \emph{calibrated} within-store
+posterior of \cref{eq:did:deltamodel} --- same point estimate, honest width, coverage verified over
+\nbEightSeedN{} panels --- the band runs from \eur{\nbEightCapFullFe} at full transfer to
+\eur{\nbEightCapThreeQuarterFe} at three-quarters and \eur{\nbEightCapHalfFe} at half.
+
+The gap is the cost of the conservatism, and it is a decision, not a rounding. A quote landing
+between \eur{\nbEightCapFull} and \eur{\nbEightCapFullFe} per store-week is a \textsc{no-go} on the
+pooled band and a \textsc{roll out} on the calibrated one, on identical data: what changed between
+those two verdicts is not the world but the residual the model was willing to charge the effect for.
+The same fork appears in the break-even cost --- \eur{\nbEightBreakEven} pooled against
+\eur{\nbEightBreakEvenFe} calibrated --- and in the probabilities near the effect itself: at
+\eur{\nbEightCostNearAtt}, $\Prob(\text{ATT} > \eur{\nbEightCostNearAtt})$ is \nbEightPPooledNearAtt{}
+on the pooled model and \nbEightPFeNearAtt{} on the calibrated one. \textbf{Far from the decision
+boundary a conservative interval costs nothing; near it, a conservative interval is a decision.}
+Quote the calibrated band, and keep the pooled one only as the stress case. That is the practical
 reason \cref{sec:did:valid}'s calibration work is not an academic exercise.
 
 % =====================================================================================
 \section{What can go wrong}
 \label{sec:did:wrong}
+
+\subsection*{Parallel trends}
+
+\Cref{as:did:pt}, broken on purpose --- and broken in the way a real chain would break it. The pilot
+sites were the flagships, and flagships were already pulling away from the rest of the estate before
+anyone wrote an app. The simulator plants exactly that: the same \nbEightNStores{} stores, the same
+launch, the same true \eur{\nbEightTrueEffect}, plus a linear trend of \eur{\nbEightPtSlope} per week
+carried by the pilot stores alone. Nothing else moves. Levels are still free (DiD never cared about
+them); what is now false is that the two groups would have \emph{changed} alike.
+
+\input{build/floats/nb08_pretrend}
+
+The event study --- \cref{eq:did:eventstudy}, the same estimator with the same $k = -1$ reference
+week and the same store-clustered errors as \cref{fig:did:eventstudy} --- catches it, and catches it
+in the one way that cannot be mistaken for noise: the leads do not scatter, they \emph{slope}.
+\Cref{fig:did:pretrend} fits \eur{\nbEightPtSlopeHat} per week through them against a planted
+\eur{\nbEightPtSlope}, and \nbEightPtLeadsOut{} of the \nbEightPtNLeads{} free leads exclude zero
+where roughly one would by chance. A flat pre-period is a scatter about zero; a violated one has a
+direction.
+
+The damage is arithmetic. The pre-window and the post-window are \nbEightLaunch{} weeks apart in
+mean event time, so \nbEightLaunch{} weeks of divergence at \eur{\nbEightPtSlope} per week are booked
+as app effect: the naive $2 \times 2$ reports \eur{\nbEightPtDid} against the true
+\eur{\nbEightTrueEffect}, an \emph{upward} bias of \eur{\nbEightPtBiasAbs}. At the vendor's
+\eur{\nbEightAppCost} the sign of the decision survives, which is precisely what makes the violation
+dangerous: it does not announce itself by producing an absurd number.
+
+The repair is to widen the model rather than the interval. Letting the two groups carry
+\emph{different} linear trends --- a single group-by-week regressor added to
+\cref{eq:did:eventstudy}, identified off the \nbEightEsNPre{} pre-launch weeks --- recovers
+\eur{\nbEightPtFixed}. But the repair should be read for what it costs as well as what it buys. It
+does not restore \cref{as:did:pt}; it \emph{replaces} it with a strictly stronger and equally
+untestable one --- parallel trends conditional on a linear differential trend --- and a pre-trend
+that is not linear will not be removed by a linear correction \citep{roth2022}. The
+honest posture is the one \cref{sec:did:ident}'s remark already argued for: the leads are evidence,
+not proof, and a design that needs a trend correction to work is a design whose control group was
+chosen badly.
 
 \subsection*{Anticipation}
 
@@ -789,21 +859,31 @@ holding back purchases until the app's perks arrive --- so that the lift effecti
 
 \input{build/floats/nb08_anticipation}
 
-The event study catches it (\cref{fig:did:anticipation}). The $k = -2$ and $k = -1$ leads jump to
-\eur{\nbEightAntLeadMinusTwo} and \eur{\nbEightAntLeadMinusOne}, far outside their bands, and
-because centred leads must average zero the contamination drags the \emph{other} leads negative too:
-the tell is a broken, tilted pre-period, not merely two high dots. \nbEightAntLeadsOut{} of
-\nbEightEsNPre{} pre-launch leads now exclude zero, against roughly one expected by chance. The
-naive $2 \times 2$ reports \eur{\nbEightAntDid} against a true \eur{\nbEightTrueEffect} --- a
-\emph{downward} bias of \eur{\nbEightAntBiasAbs}, which is about
-$\nbEightAntWeeks/\nbEightLaunch$ of the effect: exactly the share of the pre-period the
-contamination ate.
+\Cref{fig:did:anticipation} catches it, and the panel is deliberately drawn a different way from
+\cref{fig:did:eventstudy,fig:did:pretrend}. It plots the raw per-week treated-minus-control gap,
+centred on the pre-period mean, with \textbf{no reference category at all} --- every one of the
+\nbEightAntNPre{} pre-launch weeks is free to move. That choice is the point. Under anticipation the
+week $k = -1$ is itself contaminated, so normalising on it would bury part of the violation inside
+the normalisation and quietly rescale the rest; a diagnostic for a broken baseline must not be
+anchored to the broken baseline. The price of the choice is that the dots no longer average to the
+regression's $\beta_k$ --- they average to zero by construction --- and their bands are
+cross-sectional rather than clustered, so they are wider than \cref{fig:did:eventstudy}'s.
 
-The flat-leads check is therefore no formality: it just caught a violation that quietly removed a
+The weeks $k = -2$ and $k = -1$ jump to \eur{\nbEightAntLeadMinusTwo} and
+\eur{\nbEightAntLeadMinusOne}, far outside their bands, and because centred gaps must average zero
+the contamination drags the \emph{other} pre-launch weeks negative too: the tell is a broken, tilted
+pre-period, not merely two high dots. \nbEightAntLeadsOut{} of \nbEightAntNPre{} pre-launch weeks now
+exclude zero, against roughly one expected by chance. The naive $2 \times 2$ reports
+\eur{\nbEightAntDid} against a true \eur{\nbEightTrueEffect} --- a \emph{downward} bias of
+\eur{\nbEightAntBiasAbs}, which is about $\nbEightAntWeeks/\nbEightLaunch$ of the effect: exactly the
+share of the pre-period the contamination ate.
+
+The pre-period check is therefore no formality: it just caught a violation that quietly removed a
 sixth of the measured effect. The remedies are cheap once the violation is \emph{seen}: drop the
 anticipation window from the pre-period (which restores \eur{\nbEightAntFixed}), or date the
-treatment at \emph{announcement} rather than at launch. What the leads still cannot do is certify
-\cref{as:did:pt}; a time-varying, group-specific shock arriving exactly at $t_0$ remains invisible.
+treatment at \emph{announcement} rather than at launch. What the pre-period still cannot do is
+certify \cref{as:did:pt}; a time-varying, group-specific shock arriving exactly at $t_0$ --- unlike
+the sloping trend above, which the leads did catch --- remains invisible.
 
 \subsection*{The two-way fixed-effects trap}
 
@@ -820,10 +900,15 @@ regression becomes static two-way fixed effects,
 and \cref{eq:did:twfe} is a trap. \Citet{goodmanbacon2021} proved that
 $\hat\beta^{\text{TWFE}}$ is a variance-weighted average of \emph{every} pairwise $2 \times 2$ DiD
 the panel contains --- early-versus-late, treated-versus-never-treated, and, fatally,
-\emph{late-versus-early}: comparisons that use \textbf{already-treated} cohorts as controls. When
-effects grow with time since adoption, those forbidden comparisons receive \textbf{negative
-weights}, and the estimate can land far from every true effect in the panel even though every one of
-them is positive \citep{dechaisemartin2020, sunabraham2021}.
+\emph{late-versus-early}: comparisons that use \textbf{already-treated} cohorts as controls. The
+Bacon weights themselves are variance shares and are non-negative; the damage arrives through what
+those forbidden comparisons \emph{estimate}. When effects grow with time since adoption, a
+comparison that uses an already-treated cohort as its control subtracts that cohort's still-growing
+lift, and the estimate can land far from every true effect in the panel even though every one of them
+is positive. Stated on the underlying cells rather than on the $2 \times 2$s,
+\citet{dechaisemartin2020} show the same thing as a sign: TWFE assigns \textbf{negative implicit
+weights} to some cohort-week effects, and here it assigns them to the largest ones
+\citep{sunabraham2021}.
 
 The notebook plants exactly that world: \nbEightStagNStores{} stores in two cohorts adopting at
 weeks \nbEightStagCohortA{} and \nbEightStagCohortB, with a true effect that starts at
@@ -831,19 +916,43 @@ weeks \nbEightStagCohortA{} and \nbEightStagCohortB, with a true effect that sta
 \Cref{tab:did:staggered} reports what happens.
 
 \input{build/tables/nb08_staggered}
+\input{build/tables/nb08_bacon}
 
 A single post dummy returns \eur{\nbEightTwfeNaive} against a true average post-adoption effect of
 \eur{\nbEightTwfeTrue} --- \eur{\nbEightTwfeBiasAbs} low, and, worse than merely biased, it lands
-\emph{below every single true post-adoption effect in the panel}. The mechanism is worth spelling
-out. Cohort A adopts at week \nbEightStagCohortA{} and its effect keeps growing. When cohort B
-adopts at week \nbEightStagCohortB, part of \cref{eq:did:twfe}'s estimate compares B against
-already-treated A --- a ``control'' whose revenue is still rising with A's growing effect. B's lift
-is measured against that rising counterfactual and shrunk, while the growing tail of A's effect
-looks like a calendar trend that the week effects $\lambda_t$ partially absorb.
+\emph{below every single true post-adoption effect in the panel}, which start at
+\eur{\nbEightStagBase} and rise from there. The mechanism is worth spelling out. Cohort A adopts at
+week \nbEightStagCohortA{} and its effect keeps growing. When cohort B adopts at week
+\nbEightStagCohortB, part of \cref{eq:did:twfe}'s estimate compares B against already-treated A ---
+a ``control'' whose revenue is still rising with A's growing effect. B's lift is measured against
+that rising counterfactual and shrunk, while the growing tail of A's effect looks like a calendar
+trend that the week effects $\lambda_t$ partially absorb.
+
+\Cref{tab:did:bacon} takes the coefficient apart rather than asserting the mechanism. With two
+adoption dates and no never-treated stores, \cref{eq:did:twfe} has exactly two $2 \times 2$
+comparisons to average, so the decomposition can be enumerated in full --- and the certificate that
+it \emph{is} full is an identity: the weighted contributions reproduce the TWFE coefficient exactly,
+\eur{\nbEightBaconSum} against \eur{\nbEightTwfeNaive}, to numerical precision. Read the two rows.
+The clean comparison --- cohort A against not-yet-treated B --- returns \eur{\nbEightBaconDidClean}
+and carries weight \nbEightBaconWClean; the forbidden one --- cohort B against already-treated A ---
+returns \eur{\nbEightBaconDidForbidden} and carries weight \nbEightBaconWForbidden.
+
+Two things follow, and the second is the one the folklore garbles. First, \textbf{both weights are
+positive}, and the larger of the two sits on the forbidden comparison: what drags the coefficient
+down is not a negative weight on that row but its \emph{estimate}, which measures B against a
+control whose own effect is still climbing. Second, the negativity is real but it lives one level
+down, on the cells rather than on the $2 \times 2$s: the implicit weight \cref{eq:did:twfe} places on
+each treated cohort-week is negative for \nbEightBaconNegCells{} of the \nbEightBaconTreatedCells{}
+treated cells, and they are precisely the cells carrying the panel's largest true effects. That is
+\citeauthor{dechaisemartin2020}'s sign, computed rather than quoted, and it is why the coefficient
+lands below every effect it is supposed to be averaging.
 
 \textbf{Nothing in the TWFE output announces any of this.} The regression converges, the
-coefficient has a standard error, the $R^2$ is respectable. That is why the fix is a discipline
-rather than a diagnostic.
+coefficient has a standard error --- \eur{\nbEightTwfeSe}, from the store bootstrap of
+\cref{tab:did:staggered}, comfortably tight enough to be reported with confidence --- and the $R^2$
+is respectable. The bias is \eur{\nbEightTwfeBiasAbs}, or \nbEightTwfeBiasInSe{} bootstrap standard
+errors: it is arithmetic, not sampling noise, and no amount of extra data would shrink it. That is
+why the fix is a discipline rather than a diagnostic.
 
 \subsection*{Callaway--Sant'Anna: never use the already-treated as controls}
 
@@ -871,19 +980,32 @@ cells (\cref{fig:did:staggered}), and its
 cohort-time effects track the growing truth rather than averaging it into a single misleading
 scalar.
 
+That \eur{\nbEightCsErrAbs} deserves a standard error rather than applause, and
+\cref{tab:did:staggered} carries one: a cluster bootstrap over the stores, resampling
+\emph{stores} rather than store-weeks, which is \citeauthor{callaway2021}'s own inference in its
+simplest honest form. It puts the Callaway--Sant'Anna estimate at
+\eur{\nbEightCsAtt} $\pm$ \eur{\nbEightCsSe}, a 90\,\% interval of
+$[\eur{\nbEightCsLo},\ \eur{\nbEightCsHi}]$ that contains the truth --- so the miss is one panel's
+noise, as it should be. The naive TWFE coefficient's bootstrap standard error is
+\eur{\nbEightTwfeSe}, which is the whole point: its error is not a wide interval but a wrong centre,
+and the interval is narrow enough to state the wrong centre with conviction.
+
 \input{build/floats/nb08_cohorts}
 
 One \textbf{design lesson} falls straight out of \cref{eq:did:cs}, and it is the most actionable
 sentence in this chapter. The control set $\mathcal C(t)$ is \emph{empty} once every store has
 adopted: after the last cohort switches on, there are no clean controls left and
 $\widehat{\text{ATT}}(g,t)$ simply does not exist. \textbf{A real rollout must keep a never-treated
-holdout} --- and it must keep it to the very end. \Cref{tab:did:staggered} prices the half-measure:
-adding a never-treated cohort improves naive TWFE from \eur{\nbEightTwfeNaive} to
-\eur{\nbEightTwfeHoldout}, but it does \emph{not} fix it, because the forbidden
-early-versus-late comparisons are still inside the average. A holdout is necessary and not
-sufficient; the holdout buys the \emph{ability} to estimate, and \cref{eq:did:cs} is what turns that
-ability into a number. An all-at-once rollout destroys both, permanently, for the price of a few
-weeks' delay it was trying to save.
+holdout} --- and it must keep it to the very end. \Cref{tab:did:staggered} prices the half-measure,
+and prices it as a controlled contrast: the holdout panel is the \emph{same} \nbEightStagNStores{}
+stores, drawn from the same seed in the same order, with \nbEightStagNeverTreated{} never-treated
+stores appended, so the only thing that differs between the two TWFE rows is the presence of the
+holdout. Adding it improves naive TWFE from \eur{\nbEightTwfeNaive} to \eur{\nbEightTwfeHoldout}
+($\pm$ \eur{\nbEightTwfeHoldoutSe}), but it does \emph{not} fix it, because the forbidden
+late-versus-early comparisons --- cohort B measured against already-treated A --- are still inside
+the average. A holdout is necessary and not sufficient; the holdout buys the \emph{ability} to
+estimate, and \cref{eq:did:cs} is what turns that ability into a number. An all-at-once rollout
+destroys both, permanently, for the price of a few weeks' delay it was trying to save.
 
 \subsection*{Spillover, and the limits}
 
@@ -915,6 +1037,14 @@ the conclusions with the event study and the transfer band rather than with a si
         (\cref{fig:did:eventstudy}). Report that as a non-rejection, not as a proof, and remember
         \citeauthor{roth2022}'s warning that pre-testing itself distorts what follows.
 
+  \item \textbf{A violated pre-trend slopes; it does not scatter.} Give the pilot stores a trend of
+        their own --- \eur{\nbEightPtSlope} a week, the flagship story --- and the leads pick it up
+        at \eur{\nbEightPtSlopeHat} a week, with \nbEightPtLeadsOut{} of \nbEightPtNLeads{} excluding
+        zero (\cref{fig:did:pretrend}), while the naive $2 \times 2$ books \nbEightLaunch{} weeks of
+        pre-existing divergence as effect and reports \eur{\nbEightPtDid} against a true
+        \eur{\nbEightTrueEffect}. Group-specific linear trends recover \eur{\nbEightPtFixed}, but
+        they buy it by \emph{swapping} \cref{as:did:pt} for a stronger, equally untestable one.
+
   \item \textbf{The iid standard error is not conservative. It is wrong in an unpredictable
         direction.} On the DiD interaction, clustering \emph{shrank} the standard error by
         \nbEightSeShrinkDid$\times$ --- the store baseline cancels from the contrast but not from
@@ -941,30 +1071,41 @@ the conclusions with the event study and the transfer band rather than with a si
         A posterior inherits every modelling sin, silently, with converged chains and a clean PPC.
 
   \item \textbf{Misspecification goes both ways --- which proves it is specification, not
-        paradigm.} \Refgeo{}'s Bayesian interval was about \nbSevenUnderprice$\times$ too
-        \emph{narrow}; this chapter's was \nbEightPooledOverScatter$\times$ too \emph{wide}. Same
-        paradigm, same weak priors, opposite errors. The prior did almost nothing in either chapter;
+        paradigm.} \Refgeo{}'s Bayesian interval was too \emph{narrow} --- it under-priced the
+        standard deviation of a twenty-week sum by \nbSevenUnderprice$\times$; this chapter's was
+        \nbEightBayesOverCluster$\times$ too \emph{wide}, interval against the clustered classical
+        interval. Same paradigm, same weak priors, opposite errors. The prior did almost nothing in either chapter;
         the likelihood was the whole ballgame in both. The repair is to fix the likelihood
         (\cref{eq:did:deltamodel}) or to rescale the posterior \citep{mueller2013} --- not to lose
         faith in Bayes. And the classical toolkit won both times because it \emph{committed to
         less}: it measures the error structure instead of assuming one.
 
-  \item \textbf{Never evaluate a staggered rollout with a single post dummy.} With growing effects,
-        two-way fixed effects lands at \eur{\nbEightTwfeNaive} against a true
-        \eur{\nbEightTwfeTrue} --- below every true effect in the panel --- because already-treated
-        cohorts get used as controls and pick up negative weights \citep{goodmanbacon2021}.
+  \item \textbf{Never evaluate a staggered rollout with a single post dummy --- and get the reason
+        right.} With growing effects, two-way fixed effects lands at \eur{\nbEightTwfeNaive} against
+        a true \eur{\nbEightTwfeTrue}, below every true effect in the panel. The
+        \citeauthor{goodmanbacon2021} weights on the two $2 \times 2$s are both \emph{positive}
+        (\nbEightBaconWClean{} and \nbEightBaconWForbidden, \cref{tab:did:bacon}); the damage rides
+        in through the forbidden comparison's \emph{estimate} ---
+        \eur{\nbEightBaconDidForbidden} against \eur{\nbEightBaconDidClean} --- which measures a late
+        cohort against an already-treated one. The negative weights are \citeauthor{dechaisemartin2020}'s,
+        and they sit on the \emph{cells}: \nbEightBaconNegCells{} of \nbEightBaconTreatedCells{}
+        cohort-weeks, the largest effects in the panel \citep{goodmanbacon2021, dechaisemartin2020}.
         \Citeauthor{callaway2021}'s discipline (\cref{eq:did:cs}: only not-yet-treated controls)
-        recovers \eur{\nbEightCsAtt} (\cref{tab:did:staggered}). And \textbf{keep a never-treated
-        holdout to the very end}: without one, $\mathcal C(t)$ empties and the later waves become
-        unmeasurable.
+        recovers \eur{\nbEightCsAtt} $\pm$ \eur{\nbEightCsSe} (\cref{tab:did:staggered}). And
+        \textbf{keep a never-treated holdout to the very end}: without one, $\mathcal C(t)$ empties
+        and the later waves become unmeasurable.
 
   \item \textbf{Significant is not the same as scalable.} The effect is real
         ($p \le \nbEightPermP$) and worth \eur{\nbEightAnnualMeanM}\,m a year \emph{if the chain
         responds like the pilot}. The estimand is the ATT --- the effect \emph{on the pilot stores}
-        --- and \cref{tab:did:stress} shows the call collapsing down the transfer column while
-        barely moving across the cost row. The deliverable is the break-even band
-        (\eur{\nbEightCapHalf}--\eur{\nbEightCapFull} per store-week), not the base-case annual
-        figure, and the cheap next move is a second wave in deliberately non-pilot-like stores.
+        --- and \cref{tab:did:stress} shows the two axes interacting: at the vendor's
+        \eur{\nbEightAppCost} the call survives even half transfer ($\nbEightPHalfAppCost$), but the
+        transfer share sets how much the chain can afford to pay. The deliverable is the break-even
+        band from the \emph{calibrated} posterior
+        (\eur{\nbEightCapHalfFe}--\eur{\nbEightCapFullFe} per store-week; the condemned pooled model
+        would have quoted \eur{\nbEightCapHalf}--\eur{\nbEightCapFull} and rejected quotes it should
+        accept), not the base-case annual figure --- and the cheap next move is a second wave in
+        deliberately non-pilot-like stores.
 \end{enumerate}
 
 \notebooknote{%

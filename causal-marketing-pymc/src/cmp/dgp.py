@@ -70,12 +70,15 @@ def uplift_customers(
         T = rng.integers(0, 2, n).astype(float)
     elif regime == "observational":
         lin = 1.8 * (engage - 0.4) + 1.2 * ((150 - recency) / 150) + 0.15 * (frequency - 5)
-        if a_t != 0 or b_y != 0:
-            U = rng.normal(size=n)
-            propensity = _sigmoid(lin + a_t * U)
-        else:
-            U = np.zeros(n)
-            propensity = _sigmoid(lin)
+        # ALWAYS draw the latent, then scale it by the coefficient. The old code drew U only when
+        # a coefficient was non-zero — and that draw CONSUMES RNG STATE. So the strength-0 world was
+        # not the strength-0 *version* of the same world; it was a completely different dataset,
+        # drawn from a different point in the stream. Every "confounding sweep" that starts at zero
+        # was therefore comparing across two unrelated panels, and its first point was not the
+        # control it was presented as. Scaling a always-drawn U leaves the stream aligned, so
+        # strength 0 is genuinely the same customers with the confounding switched off.
+        U = rng.normal(size=n)
+        propensity = _sigmoid(lin + a_t * U)
         T = (rng.uniform(size=n) < propensity).astype(float)
     else:
         raise ValueError("regime must be 'randomized' or 'observational'")
@@ -185,6 +188,13 @@ def price_panel(n_regions: int = 12, n_weeks: int = 80, confounder_strength: flo
         season = 0.3 * np.sin(2 * np.pi * np.arange(n_weeks) / 26)
         trend = 0.01 * np.arange(n_weeks)
         competitor_price = rng.normal(20, 2, n_weeks)
+        # NOTE (2026-07-15): this shares the conditional-draw RNG quirk that `uplift_customers` has —
+        # at strength 0 the shock is not drawn, so the strength-0 panel is not the strength-0 version
+        # of the strength-positive one. Unlike the uplift case, it is HARMLESS here and deliberately
+        # left alone: nb03 calls this at exactly two fixed strengths (0.0 for the main analysis, 1.2
+        # for a standalone simultaneity demonstration) and never sweeps continuously from zero, so no
+        # comparison depends on the two panels being aligned. Making them align would perturb every
+        # number in Chapter 5 for no benefit. See book/LIST_TO_FIX.md.
         demand_shock = rng.normal(0, 1, n_weeks) if confounder_strength > 0 else np.zeros(n_weeks)
         # Price responds to the (partly unobserved) demand shock: managers cut price
         # WHEN demand is soft (negative shock -> lower price). So price rises with the

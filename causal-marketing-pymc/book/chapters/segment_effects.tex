@@ -15,15 +15,17 @@
 \emph{An email campaign is sent to a randomized half of a \nbTwoN-customer base at a contact
 cost of \eur{\nbTwoCost} a head. Pooled over everyone it lifts spend by \eur{\nbTwoCpEst}, which
 clears the cost comfortably, and the pooled recommendation is therefore to mail the entire base.
-That recommendation is wrong for every customer in it. The effect is genuinely different across
+The number behind that recommendation is wrong for every customer in it, and the recommendation
+itself is wrong for \pc{\nbTwoShareLow} of them. The effect is genuinely different across
 tiers --- \eur{\nbTwoTrueLow} for low-value customers and \eur{\nbTwoTrueHigh} for high-value ones
 by construction --- so the pooled estimate misses the low tier by \eur{\nbTwoCpMissLow} and mails
 \pc{\nbTwoShareLow} of the base at a loss, while reporting the tightest interval on the page. The
 repair is not a bigger model but an older idea: shrink each segment's own estimate toward the grand
-mean by a weight the data choose. Pointed at \nbTwoNNoise{} segments manufactured from coin flips,
-that weight collapses to $\lambda = \nbTwoNoiseLam$ and every sham ``responsive segment'' is
-annihilated; pointed at the two real tiers it returns $\lambda = \nbTwoRealLam$ and leaves them
-alone. And the Bayesian machinery this book is nominally selling buys, on this problem,
+mean by a weight the data choose. Pointed at \nbTwoNNoise{} disjoint segments manufactured from coin
+flips --- a design in which the estimator is free to find heterogeneity and finds none --- the
+weight it learns is $\lambda = \nbTwoNoiseLam$, and the sham ``responsive segments'' are pulled back
+onto the grand mean; pointed at the two real tiers it returns $\lambda = \nbTwoRealLam$ and leaves
+them alone. And the Bayesian machinery this book is nominally selling buys, on this problem,
 \emph{nothing} on location --- the classical and Bayesian estimates agree to \eur{\nbTwoMaxPairGap}
 --- and nothing on width. What it buys is \cref{sec:seg:euro}'s send rule, and
 \cref{sec:seg:compare} says so plainly.}
@@ -75,7 +77,9 @@ A method that claims to find heterogeneity must first be shown not to invent it,
 demonstration requires a world whose heterogeneity is known. The simulator draws
 $i = 1, \dots, \nbTwoN$ customers. Each carries a value tier $v_i \in \{0, 1\}$ (\emph{high-value}
 $= 1$; \nbTwoNHigh{} of the base, against \nbTwoNLow{} low-value), a continuous engagement score
-$g_i \sim U(0,1)$, and a background \emph{trend} covariate $t_i$ that also drives spend. The email
+$g_i \sim \mathrm{Beta}(2,2)$ --- supported on $[0,1]$, mean $\tfrac12$, and concentrated mid-scale
+rather than spread flat across the range --- and a background \emph{trend} covariate $t_i$ that also
+drives spend. The email
 $e_i \in \{0,1\}$ is assigned by a fair coin, independently of everything else.
 
 The planted per-customer treatment effect is linear in the two moderators and in nothing else:
@@ -209,9 +213,11 @@ $\sigma_\tau$ that the data estimate rather than the analyst assert. This is the
 licenses one segment to borrow strength from another, and it is the only assumption in this chapter
 that \emph{buys} something rather than merely permitting it. It is also the one most often smuggled
 in: pooling across segments that are not exchangeable (a test market and a control market; a
-product line being discontinued) imports bias under the banner of borrowing strength. It is tested
-directly in \cref{sec:seg:classical}, where the estimated $\sigma_\tau$ is shown to go to zero on
-segments that are noise and to \eur{\nbTwoRealSigma} on segments that are real.
+product line being discontinued) imports bias under the banner of borrowing strength. What
+\cref{sec:seg:classical} measures is the \emph{spread} the assumption posits: $\hat\sigma_\tau$
+goes to zero on segments that are noise and to \eur{\nbTwoRealSigma} on the two real value tiers.
+That is a test of whether there is anything to borrow, not a test of exchangeability itself, which
+with two segments cannot be tested at all --- \cref{sec:seg:classical} says why.
 \end{assumption}
 
 % =====================================================================================
@@ -364,21 +370,44 @@ notebook checks it by pointing the identical estimator at two kinds of segment
 
 First, at \nbTwoNNoise{} \textbf{pure-noise segments}: the same customers, the same randomized
 email, the same spend --- but labels assigned by a coin flip, so that the true effect is
-\emph{identical} in every one of them and $\sigma_\tau$ is exactly zero by construction. No-pooling
-hands back \nbTwoNNoise{} different numbers spread over
+\emph{identical} in every one of them and $\sigma_\tau$ is exactly zero by construction. The design
+of that demonstration carries it, and it is worth stating. The coin-flip labels \emph{partition} the
+base into \nbTwoNNoise{} disjoint cells, so the \nbTwoNNoise{} estimates are independent of one
+another and, under the null, the observed scatter $\widehat{\Var}(\hat\tau)$ has expectation
+$\overline{\hat{\mathrm{se}}^2}$ exactly. The between-segment variance in \cref{eq:seg:shrink} can
+therefore land on \emph{either} side of zero: the estimator is free to report heterogeneity, and a
+$\lambda$ near zero is a finding rather than an artefact of the arithmetic. (Overlapping
+half-samples of one fixed pool would not do. They scatter around that pool's own estimate with half
+the sampling variance, which drives $\widehat{\Var}(\hat\tau) - \overline{\hat{\mathrm{se}}^2}$
+negative by construction and forces $\lambda = 0$ whatever the data say. A demonstration that cannot
+fail demonstrates nothing.)
+
+No pooling hands back \nbTwoNNoise{} different numbers spread over
 \eur{\nbTwoNoiseRawLo}--\eur{\nbTwoNoiseRawHi} --- it can do nothing else; it will always hand back
 as many numbers as there are labels, and some of them will look impressive. \Cref{eq:seg:shrink}
-recovers $\hat\sigma_\tau = \eur{\nbTwoNoiseSigma}$, sets $\lambda = \nbTwoNoiseLam$, and collapses
-the entire range onto the grand mean \eur{\nbTwoNoiseGrand}. \textbf{Partial pooling discovers that
-there is no heterogeneity to find} --- which is a conclusion no-pooling is structurally incapable of
-reaching, and it is the single most useful thing this estimator does.
+recovers $\hat\sigma_\tau = \eur{\nbTwoNoiseSigma}$, sets $\lambda = \nbTwoNoiseLam$, and pulls that
+range back to \eur{\nbTwoNoiseShrunkLo}--\eur{\nbTwoNoiseShrunkHi}, onto the grand mean
+\eur{\nbTwoNoiseGrand}. One partition is one draw of the coin, so the notebook repeats it:
+across \nbTwoNoiseReps{} fresh partitions the estimated between-segment spread is exactly zero on
+\pc{\nbTwoNoiseZeroPct} of them, the median learned weight is $\lambda = \nbTwoNoiseLamMed$, and even
+its ninetieth percentile is \nbTwoNoiseLamHi. \textbf{Partial pooling discovers that there is no
+heterogeneity to find} --- which is a conclusion no pooling is structurally incapable of reaching,
+and it is the single most useful thing this estimator does.
 
 Second, at the \textbf{two real value tiers}, whose effects genuinely differ by €9. Here
 \cref{eq:seg:shrink} recovers $\hat\sigma_\tau = \eur{\nbTwoRealSigma}$, sets
-$\lambda = \nbTwoRealLam$, and leaves the estimates essentially untouched. \Cref{as:seg:exch} is
-therefore not a wish but a measured quantity, and it is measured in the right direction both times.
-Shrinkage is not a haircut applied to everything. It is a signal-to-noise ratio, and on fat,
-truly-different segments it declines to shrink.
+$\lambda = \nbTwoRealLam$, and leaves the estimates essentially untouched. Shrinkage is not a
+haircut applied to everything. It is a signal-to-noise ratio, and on fat, truly-different segments
+it declines to shrink.
+
+That second read-out must be taken for what it is. With $k = 2$ segments the between-segment
+variance in \cref{eq:seg:shrink} has a single degree of freedom --- $\hat\sigma_\tau$ is little more
+than the distance between the two tier estimates, rescaled --- and Stein-type shrinkage is
+guaranteed to dominate no pooling only for $k \ge 3$. A large $\hat\sigma_\tau$ therefore says that
+the two tiers \emph{differ}; it does not, and cannot, establish that their effects are exchangeable
+draws from a common $\mathcal N(\bar\tau, \sigma_\tau^2)$, which is what \cref{as:seg:exch} asserts.
+Read the two-tier $\lambda$ as the estimator's mechanics on display. The place it operates as
+designed is the \nbTwoSweepCells-cell sweep below, and the \nbTwoNNoise{} disjoint noise cells above.
 
 \input{build/floats/nb02_shrink}
 
@@ -419,7 +448,7 @@ $\hat\sigma^2_\tau$ swamps $\hat{\mathrm{se}}_s^2$ and there is little for shrin
 \textbf{Partial pooling is not a free precision win, and any book that sells it as one is selling
 something.} It is an adaptive guard whose value scales with how noisy the segments are relative to
 how different they truly are --- which is precisely why the same estimator, pointed at the coin-flip
-labels, drove $\lambda$ to \nbTwoNoiseLam{} and annihilated every sham discovery. It earns its keep
+cells, drove $\lambda$ to \nbTwoNoiseLam{} and pulled every sham discovery back onto the grand mean. It earns its keep
 where the segments are thin and the effects are close. It earns very little here, and the chapter
 says so.
 
@@ -509,9 +538,14 @@ outcome's shape has no business issuing counterfactuals about it.
 segment posteriors sit close to \eur{\nbTwoTrueLow} and \eur{\nbTwoTrueHigh} and barely overlap:
 \eur{\nbTwoCateLow} (90\,\% HDI $[\eur{\nbTwoCateLowLo}, \eur{\nbTwoCateLowHi}]$) and
 \eur{\nbTwoCateHigh} ($[\eur{\nbTwoCateHighLo}, \eur{\nbTwoCateHighHi}]$), against a pooled ATE of
-\eur{\nbTwoAte}. The continuous profile recovers the planted engagement slope --- $\beta_4$ has
-posterior mean \eur{\nbTwoBeg} against a planted \eur{\nbTwoBegTrue}, with a 90\,\% credible interval
-of $[\eur{\nbTwoBegLo}, \eur{\nbTwoBegHi}]$, which \nbTwoBegCovers{} the truth on this draw. And the
+\eur{\nbTwoAte}. The continuous profile finds the planted engagement slope, and runs steep on this
+draw: $\beta_4$ has posterior mean \eur{\nbTwoBeg} against a planted \eur{\nbTwoBegTrue}, with a
+90\,\% credible interval of $[\eur{\nbTwoBegLo}, \eur{\nbTwoBegHi}]$, which \nbTwoBegCovers{} the
+truth --- but only just, the planted value clearing the interval's lower edge by cents. The fitted
+moderation line therefore sits \emph{above} the truth at high engagement, which is precisely where
+\cref{sec:seg:euro}'s per-customer rule mails, and $\beta_4$ is the denominator of the break-even
+engagement that rule turns on. It is one reason the cutoff of \cref{eq:seg:gstar} must be confirmed
+on a holdout rather than hard-coded. And the
 per-customer fit hugs the 45-degree line, at an RMSE of \eur{\nbTwoRmseInd} on effects spanning
 \eur{\nbTwoTauMin}--\eur{\nbTwoTauMax}: recovery at the individual level, not merely on segment
 averages, which is the harder test and the one that licenses \cref{sec:seg:euro}'s per-customer send
@@ -561,8 +595,21 @@ real data is a learner that commits to no functional form at all: a BART T-learn
 \citep{chipman2010, kunzel2019}, which fits the two spend surfaces --- emailed and not --- with
 sums of regression trees and differences them. Near mean engagement it returns \eur{\nbTwoBartLow}
 for the low tier and \eur{\nbTwoBartHigh} for the high tier, against the structural model's
-\eur{\nbTwoCateLow} and \eur{\nbTwoCateHigh}. A nonparametric learner lands on the same segment
-effects: the structure is not doing the work, the data are.
+\eur{\nbTwoCateLow} and \eur{\nbTwoCateHigh}. A learner with no functional form lands on the same
+magnitudes and the same ordering of the tiers: \cref{as:seg:form} is not manufacturing the
+heterogeneity, the data are.
+
+It is worth being exact about what that check can and cannot settle, because the low tier is the
+segment the chapter's decision hangs on and the two answers do not fall on the same side of the
+line. The structural model puts it at \eur{\nbTwoCateLow}, below the \eur{\nbTwoCost} contact cost;
+the nonparametric arm puts it at \eur{\nbTwoBartLow}, above it. The gap is small in euros and larger
+than the margin the call turns on, and it points the wrong way. A learner that assumes nothing pays
+for that freedom in variance --- BART's tree ensembles are not even seed-stable at this sample size
+--- so the cross-check is the right instrument for the question it was asked (is the linear
+moderation form inventing the segment effects?) and the wrong instrument for the question it is
+nearest to (does the low tier clear its cost?). It validates the model. It does not decide the
+campaign; \cref{tab:seg:decide} does, from the posterior, and \cref{sec:seg:wrong} sizes the test
+that would settle it.
 
 % =====================================================================================
 \section{Point estimate versus posterior}
@@ -613,9 +660,12 @@ The list is longer than the brochure admits, and each item is measured rather th
         $\Prob(\beta_3 > 0) = \nbTwoPGap$ and ``the confidence interval excludes zero'' are two ways
         of reporting the same overwhelming evidence, in two vocabularies, and the honest analyst
         reports whichever the reader understands.
-  \item \textbf{Not the pooling win.} \Cref{tab:seg:sweep} already settled this: at this chapter's
-        segment sizes the learned $\lambda$ is \nbTwoRealLam, so borrowing strength is worth almost
-        nothing. Partial pooling is a \emph{conditional} win, and this chapter is not the condition.
+  \item \textbf{Not the pooling win.} At this chapter's segment sizes the learned $\lambda$ is
+        \nbTwoRealLam{} (\cref{fig:seg:shrink}), so borrowing strength is worth almost nothing, and
+        \cref{tab:seg:sweep} shows where that changes: only as the cells thin does $\lambda$ fall,
+        from \nbTwoSweepFatLam{} at \nbTwoSweepFatRows{} rows per cell to \nbTwoSweepThinLam{} at
+        \nbTwoSweepThinRows. Partial pooling is a \emph{conditional} win, and this chapter is not
+        the condition.
 \end{enumerate}
 
 Where the Bayesian model does pull ahead of the classical arms, it does so on \textbf{coherence},
@@ -714,16 +764,25 @@ decision per tier), individual (a decision per customer on $\hat\tau(x)$), and o
 rule that knows every true effect). The gaps between the rungs are, literally, the euros that finer
 targeting is worth (\cref{tab:seg:policy}).
 
+Two rules are in play, and they answer two different questions. \Cref{eq:seg:rule} governs
+\cref{tab:seg:decide}: it asks what the firm is confident enough to act on \emph{now}, and it is
+deliberately conservative about the mass below the cost line. The ladder that follows, and the cost
+sweep after it, score the risk-neutral posterior-\emph{mean} rule --- send wherever the expected
+effect beats the cost --- because the question there is what finer targeting is \emph{worth}, and
+expected profit is maximised by the expected effect. On this data the two rules issue the same
+verdicts, tier by tier; in general they need not, and the difference is exactly the price of
+caution.
+
 \input{build/tables/nb02_policy}
 
-The headline --- \eur{\nbTwoValueTargeting} for individual targeting over pooling on this
-\nbTwoN-customer sample, about \eur{\nbTwoValuePerHundredk} per 100{,}000 customers --- is itself an
-estimate, and the same discipline demanded of every coefficient is demanded of it. Recomputing the
-whole policy ladder \emph{per posterior draw} (each draw implies its own $\hat\tau(x)$, hence its own
-send rules, hence its own realised profit) gives a 94\,\% HDI of
-$[\eur{\nbTwoValueLo}, \eur{\nbTwoValueHi}]$ and $\Prob(\text{value} > 0) = \nbTwoValuePGtZero$. The
-value of targeting is sign-certain, which is the claim a CMO needs, and it is bounded, which is the
-claim a CFO needs.
+The plug-in ladder puts individual targeting \eur{\nbTwoValuePlugin} ahead of pooling on this
+\nbTwoN-customer sample. That figure is itself an estimate, and the same discipline demanded of every
+coefficient is demanded of it: recomputing the whole ladder \emph{per posterior draw} (each draw
+implies its own $\hat\tau(x)$, hence its own send rules, hence its own realised profit) puts the
+value at \eur{\nbTwoValueTargeting}, with a 94\,\% HDI of
+$[\eur{\nbTwoValueLo}, \eur{\nbTwoValueHi}]$ and $\Prob(\text{value} > 0) = \nbTwoValuePGtZero$ ---
+about \eur{\nbTwoValuePerHundredk} per 100{,}000 customers. The value of targeting is sign-certain,
+which is the claim a CMO needs, and it is bounded, which is the claim a CFO needs.
 
 \subsection*{Where the pooled policy snaps}
 
@@ -754,9 +813,12 @@ the analyst then writes a confident slide about ``segment 13''.
 
 The notebook stages the trap on its own data (\cref{fig:seg:fishing}): the real outcome, the real
 randomized email, and \nbTwoNFish{} coin-flip ``segments'' with zero true moderation by construction.
-Each individual 95\,\% test is honest. The batch is not: \nbTwoNFish{} independent nulls at the
-5\,\% level yield about \nbTwoFishExpected{} false discovery on average, and this run produces
-\nbTwoFishHits. A responsive segment, manufactured from a coin flip.
+Each individual 95\,\% test is honest. The batch is not: \nbTwoNFish{} true nulls tested at the
+5\,\% level yield about \nbTwoFishExpected{} false discovery in expectation, and this run produces
+\nbTwoFishHits. A responsive segment, manufactured from a coin flip. (The \nbTwoNFish{} splits are
+drawn on the same \nbTwoN{} rows, so the tests are cross-correlated rather than independent; the
+expected count survives by linearity, but read \nbTwoFishHits{} as the mechanism on display, not as
+\nbTwoNFish{} independent draws.)
 
 \input{build/floats/nb02_fishing}
 
@@ -765,9 +827,10 @@ campaign runs --- which is what this chapter's own analysis did, with two modera
 business reasons, and that design choice protects more than any model can. \emph{Report posterior
 probabilities} rather than one-shot significance stars. Control the false discovery rate if a scan
 is genuinely unavoidable \citep{benjamini1995}. And --- the defence this chapter can now point at
-rather than promise --- \emph{shrink}. Pointed at these very labels, \cref{eq:seg:shrink} returns
-$\lambda = \nbTwoNoiseLam$ and collapses all \nbTwoNNoise{} sham segments onto the grand mean
-(\cref{fig:seg:shrink}). Fishing dies when noisy estimates are not allowed to stand alone.
+rather than promise --- \emph{shrink}. Pointed at coin-flip labels of exactly this kind,
+\cref{eq:seg:shrink} returns $\lambda = \nbTwoNoiseLam$ and pulls all \nbTwoNNoise{} sham segments
+back onto the grand mean (\cref{fig:seg:shrink}). Fishing dies when noisy estimates are not allowed
+to stand alone.
 
 \subsection*{Interactions whisper; averages shout}
 
@@ -792,11 +855,14 @@ gelmanhill2007}, and its operational content is blunt: \textbf{an A/B test sized
 average is roughly sixteen times too small to measure who it works on.}
 
 The gap is detected easily here only because the planted gap is huge. Resolving the \emph{borderline}
-call --- the low tier's effect against the \eur{\nbTwoCost} cost --- is the hard problem, and
-\cref{eq:seg:rule}'s \textsc{test further} verdict must not end as a shrug. If the truth sits at
-today's posterior mean, the sample that would place 95\,\% of the low-value posterior on one side of
-the cost line is \nbTwoNFollowup{} customers. ``Run a bigger test'' now has a number attached, and
-the closer the effect sits to the cost, the more brutally that number grows.
+call --- the low tier's effect against the \eur{\nbTwoCost} cost --- is the hard problem, and it is
+the call \cref{eq:seg:rule} actually had to make. It returned \nbTwoActionLow{} for the low tier at
+$\Prob(\tau_{\mathrm{low}} > c) = \nbTwoPLowGtCost$: on the skip side of the line, but not by much,
+and a rule that lands this close to its own threshold is a request for more data rather than a
+verdict to be filed. The request must carry a number. If the truth sits at today's posterior mean,
+the sample that would place 95\,\% of the low-value posterior on one side of the cost line is
+\nbTwoNFollowup{} customers. ``Run a bigger test'' now has a number attached, and the closer the
+effect sits to the cost, the more brutally that number grows.
 
 \subsection*{The functional form, which no graph test can check}
 
@@ -829,10 +895,28 @@ Three things happen (\cref{fig:seg:misspec}), and the pattern is the lesson.
         algebra.}
 \end{enumerate}
 
-The tools for the algebra are the ones \cref{sec:seg:valid} ran: the posterior predictive check,
-multi-seed recovery where a simulator exists, and --- on real data, where it does not --- a
-flexible model-free cross-check. Run all three, or accept that the functional form is an untested
-assumption on which every individual-level number depends.
+\subsection*{What would have caught it, without a simulator}
+
+The misspecified model was convicted above by grading it against the planted truth, which is a
+luxury of the simulator and nothing else. The instrument that survives on real data is
+cross-validation: leave-one-out predictive accuracy, estimated by Pareto-smoothed importance
+sampling \citep[PSIS-LOO;][]{vehtari2017}, scores each model on the customers it did not see. A model that drops the
+\code{email:engagement} term must mis-predict precisely those customers whose engagement sits far
+from the average, and LOO prices that miss out of sample. It does so decisively here: LOO prefers
+\nbTwoLooWinner{} by an expected log predictive density gap of $\Delta\mathrm{elpd} =
+\nbTwoLooDelta \pm \nbTwoLooDse$, or \nbTwoLooRatio$\times$ its own standard error --- the only check
+in this section that needs neither a simulator nor a planted truth.
+
+One caveat keeps the chapter's spine intact. LOO ranks \emph{predictive} fit, not identification. A
+model can win the predictive contest while adjusting for the wrong variables and be causally
+worthless --- that is \cref{ch:ctrl}'s entire subject --- so LOO settles a specification question only
+between models that share the same identification argument, as the two specs here do. Within that
+fence it is the sharpest tool available on real data; outside it, it is a trap.
+
+The tools for the algebra are therefore the ones \cref{sec:seg:valid} ran: the posterior predictive
+check, multi-seed recovery where a simulator exists, and --- on real data, where it does not ---
+predictive model comparison and a flexible model-free cross-check. Run all of them, or accept that
+the functional form is an untested assumption on which every individual-level number depends.
 
 \subsection*{The limits}
 
@@ -866,19 +950,21 @@ segment effect in the chapter, and no amount of pooling, shrinking or sampling w
         century ago. The two classical arms are its two limits.
 
   \item \textbf{The shrinkage is adaptive, and that is what makes it a discovery procedure.}
-        Pointed at \nbTwoNNoise{} coin-flip segments, it recovers
-        $\hat\sigma_\tau = \eur{\nbTwoNoiseSigma}$, sets $\lambda = \nbTwoNoiseLam$, and collapses
-        every sham ``responsive segment'' onto the grand mean: \emph{partial pooling discovers that
-        there is no heterogeneity to find}. No-pooling cannot ever reach that conclusion --- it will
-        hand back as many numbers as there are labels, and some will look significant
-        (\cref{fig:seg:fishing}). Pointed at the two real tiers, the same estimator returns
-        $\lambda = \nbTwoRealLam$ and declines to shrink.
+        Pointed at \nbTwoNNoise{} disjoint coin-flip segments --- a partition, so that the estimator
+        is free to report heterogeneity and the demonstration could have failed --- it recovers
+        $\hat\sigma_\tau = \eur{\nbTwoNoiseSigma}$, sets $\lambda = \nbTwoNoiseLam$, and pulls every
+        sham ``responsive segment'' back onto the grand mean; across \nbTwoNoiseReps{} fresh
+        partitions $\hat\sigma_\tau$ is exactly zero on \pc{\nbTwoNoiseZeroPct} of them. \emph{Partial
+        pooling discovers that there is no heterogeneity to find}. No pooling cannot ever reach that
+        conclusion --- it will hand back as many numbers as there are labels, and some will look
+        significant (\cref{fig:seg:fishing}). Pointed at the two real tiers, the same estimator
+        returns $\lambda = \nbTwoRealLam$ and declines to shrink.
 
   \item \textbf{And it is worth little here --- say so.} At this chapter's segment sizes the learned
-        $\lambda$ is near 1, and shrinkage beats plain no pooling by \eur{\nbTwoSweepThinSh} against
-        \eur{\nbTwoSweepThinNp} even at the thinnest cells. Partial pooling is a \emph{conditional}
-        win: its value scales with how noisy the segments are relative to how different they truly
-        are. A book that sells it as a free precision win is selling something.
+        $\lambda$ is near 1, and even at the thinnest cells of \cref{tab:seg:sweep} shrinkage only
+        improves the RMSE from \eur{\nbTwoSweepThinNp} to \eur{\nbTwoSweepThinSh}. Partial pooling is
+        a \emph{conditional} win: its value scales with how noisy the segments are relative to how
+        different they truly are. A book that sells it as a free precision win is selling something.
 
   \item \textbf{On this problem the Bayesian layer bought nothing on the number.} Classical and
         Bayesian agree rung for rung, to \eur{\nbTwoMaxPairGap} on a
@@ -905,7 +991,8 @@ segment effect in the chapter, and no amount of pooling, shrinking or sampling w
         segment answers nearly intact, and destroys every individual-level deliverable in the
         chapter --- the per-customer RMSE, the moderation profile, and the break-even rule, which it
         cannot even express. The functional form is an assumption, and it needs a PPC, a multi-seed
-        recovery check and a model-free cross-check, not a graph.
+        recovery check, a predictive comparison (PSIS-LOO prefers \nbTwoLooWinner{} by
+        \nbTwoLooRatio$\times$ its standard error) and a model-free cross-check --- not a graph.
 
   \item \textbf{Budget for the interaction, not for the average.} The gap's standard error is
         \nbTwoGapSdRatio$\times$ the ATE's on this very posterior, and an interaction half the size

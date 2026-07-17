@@ -1,0 +1,332 @@
+<!-- ================================================================================
+     NEW SLIDES for apps/geo_lift_slides.html (splice via the template, geo_slides_src.html)
+     Act VI additions (after "Two posteriors compared (live)"), then two new acts.
+     Tokens ("nb07."/"nb07b." in double braces) and FIG markers are resolved by
+     apps/build_geo_slides.py. Math is raw LaTeX for MathJax.
+     ================================================================================ -->
+
+<!-- ======================= VI+ · CALIBRATION ON FRESH WORLDS ======================= -->
+<section class="slide" data-t="Calibration on 24 fresh worlds" data-sec="Act VI — Honest uncertainty">
+  <div class="kicker">Act VI · Honest uncertainty — calibration</div>
+  <h2>Grade the interval, not the fit</h2>
+  <div class="sub">One panel is one draw of the world. So simulate {{nb07.n_panels}} fresh panels, refit everything, and count how often each nominal 90% interval contains the planted truth.</div>
+  <div class="sbody"><div class="cols c32">
+    <div>
+      <div class="fig"><div class="fh"><span class="badge">FROM THE BOOK</span> {{nb07.n_panels}} fresh panels, one bar each: green covers the truth, orange misses</div>
+        <img class="bookfig" style="width:100%" src="<!--FIG:nb07_coverage-->" alt="Coverage study across 24 fresh simulated panels: each vertical bar is one panel's nominal 90% interval on the 20-week total, coloured green where it contains the planted truth and orange where it misses; the iid intervals miss half the time.">
+      </div>
+    </div>
+    <div>
+      <ul>
+        <li>iid posterior, interval on the <strong>total</strong>: covers <span class="num">{{nb07.total_cov}}%</span> of the time.</li>
+        <li>Design-based randomization interval, same panels: <span class="num">{{nb07.ri_cov}}%</span>.</li>
+        <li>AR(1) repair (next slides): <span class="num">{{nb07.total_cov_arone}}%</span>.</li>
+        <li>The iid fit's <em>per-week</em> bands: <span class="num">{{nb07.week_cov}}%</span>, essentially nominal.</li>
+      </ul>
+      <p>Honest about a week, dishonest about a sum of twenty. The failure is confined to the <strong>sum</strong>: exactly the estimand the business buys.</p>
+      <div class="callout watch"><div class="ct">Read the ruler's own error bar</div>
+      {{nb07.n_panels}} panels carry binomial Monte-Carlo error of ±{{nb07.cov_se_arone}}–{{nb07.cov_se_iid}}pp per rate. So the robust reading is the split, not the digits: <span class="num">{{nb07.total_cov}}</span> is a broken instrument by any reckoning; <span class="num">{{nb07.ri_cov}}</span>, <span class="num">{{nb07.total_cov_arone}}</span> and 90 are indistinguishable at this resolution.</div>
+    </div>
+  </div></div>
+</section>
+
+<!-- ======================= VI+ · FOUR CLAIMANTS TO ONE SD ======================= -->
+<section class="slide" data-t="How wide should the total be?" data-sec="Act VI — Honest uncertainty">
+  <div class="kicker">Act VI · Honest uncertainty — pricing the width</div>
+  <h2>Four claimants to one standard deviation</h2>
+  <div class="sub">The decision needs one number: how far can the 20-week total plausibly fall from the estimate? Four quantities claim to price it.</div>
+  <div class="sbody"><div class="cols">
+    <div>
+      <table class="mini">
+        <thead><tr><th>Claimant</th><th>sd of the total (€k)</th></tr></thead>
+        <tbody>
+          <tr class="hi"><td>iid posterior</td><td>{{nb07.iid_sd}}</td></tr>
+          <tr><td>AR(1) posterior</td><td>{{nb07.bayes_sd}}</td></tr>
+          <tr><td>Placebo distribution (design-based)</td><td>{{nb07.placebo_sd}}</td></tr>
+          <tr><td>Fresh-panel truth (only a simulator has this)</td><td>{{nb07.seed_sd}}</td></tr>
+        </tbody>
+      </table>
+      <p>The iid posterior is the outlier: it underprices the fresh-panel spread by <span class="num">{{nb07.underprice}}×</span>. A standard deviation two-and-a-bit times too small is precisely a band that is right half the time.</p>
+    </div>
+    <div>
+      <p>The placebo scale is instructive the other way. At €{{nb07.placebo_sd}}k it also sits <em>below</em> the €{{nb07.seed_sd}}k yardstick, yet its interval covers at {{nb07.ri_cov}}%: it inverts placebo <em>quantiles</em>, so it needs roughly the right shape, not exactly the right scale.</p>
+      <div class="callout key"><div class="ct">The asymmetry that decides everything</div>
+      Being roughly right about the <strong>spread</strong> costs efficiency. Being wrong about the <strong>structure</strong> of the errors costs validity. The iid likelihood commits to a false structure, so its interval is both too narrow and too rarely right.</div>
+    </div>
+  </div></div>
+</section>
+
+<!-- ======================= VI+ · HOW A SUM GROWS ======================= -->
+<section class="slide" data-t="n, n², n³ — how a sum grows" data-sec="Act VI — Honest uncertainty">
+  <div class="kicker">Act VI · Honest uncertainty — the mechanism</div>
+  <h2>n, n², n³: what an error's shape does to a sum</h2>
+  <div class="sbody"><div class="cols c23">
+    <div>
+      <div class="eqbox"><div class="eq">
+        \[ e_t = \omega + \varepsilon_t, \qquad \mathrm{Var}\!\Big(\sum_{t=1}^{n} e_t\Big) = n^2\,\sigma_\omega^2 + n\,\sigma_\varepsilon^2 \]
+        <span class="lbl">one persistent offset ω per world, held for the whole window, on top of fresh weekly noise; the offset term compounds as n², not n</span>
+      </div></div>
+      <ul>
+        <li><strong>Independent errors</strong>: the sum's variance grows as \(n\). That is the iid bet.</li>
+        <li><strong>Constant offset</strong>: \(n^2\). Its autocorrelation is <em>flat</em>: a level shift is equally present at every lag, exactly the ACF the placebo worlds measured.</li>
+        <li><strong>Near-integrated random walk</strong>: \(n^3\). The truth here sits between \(n^2\) and \(n^3\).</li>
+      </ul>
+      <p>AR(1) matches none of these shapes: its ACF decays geometrically, the decay the data refused. What it prices is the <strong>sum</strong>: ρ is pulled up until the summed variance comes out right at this window length.</p>
+      <div class="callout watch"><div class="ct">When the shortcut stops working</div>
+      AR(1) lands the total's scale at \(n = {{nb07.n_post}}\) weeks. Much longer windows force the honest route: a random-walk or local-level state-space component that matches the shape itself, not just this one sum.</div>
+    </div>
+    <div>
+      <div class="fig"><div class="fh"><span class="badge">FROM THE BOOK</span> the same error, three growth laws for the sum</div>
+        <img class="bookfig" style="width:100%" src="<!--FIG:nb07_growth-->" alt="How the variance of a summed total grows with the window length under three error structures: independent errors grow as n, a persistent offset as n squared, and a near-integrated random walk as n cubed; the iid line is the lowest by far.">
+      </div>
+    </div>
+  </div></div>
+</section>
+
+<!-- ======================= VI+ · THE REPAIR MOVES THE ESTIMATE ======================= -->
+<section class="slide" data-t="The repair moves the estimate too" data-sec="Act VI — Honest uncertainty">
+  <div class="kicker">Act VI · Honest uncertainty — repair</div>
+  <h2>The repair moves the estimate too, and lands it beside the classical number</h2>
+  <div class="sub">An AR(1) likelihood is a generalised-least-squares re-weighting of the pre-period: change which weeks the fit trusts, and you change the weights, the counterfactual, the centre.</div>
+  <div class="sbody"><div class="cols c32">
+    <div>
+      <div class="fig"><div class="fh"><span class="badge">FROM THE BOOK</span> two blends, one total</div>
+        <img class="bookfig" style="width:100%" src="<!--FIG:nb07_weightprofiles-->" alt="Two donor-weight profiles side by side: the classical fit concentrates its weight on a few tall bars, about 3.3 effective donors, while the AR(1) posterior spreads the same reconstruction over many short bars, about 23.4 effective donors; their totals nevertheless coincide.">
+      </div>
+    </div>
+    <div>
+      <table class="mini">
+        <thead><tr><th>Arm</th><th>Total</th><th>Effective donors</th></tr></thead>
+        <tbody>
+          <tr><td>Bayes, iid</td><td>€{{nb07.iid_total}}k</td><td>–</td></tr>
+          <tr class="hi"><td>Bayes, AR(1)</td><td>€{{nb07.bayes_total}}k</td><td>{{nb07.bayes_eff_donors}}</td></tr>
+          <tr><td>Classical SLSQP</td><td>€{{nb07.cl_total}}k</td><td>{{nb07.cl_eff_donors}}</td></tr>
+        </tbody>
+      </table>
+      <p>The shift from €{{nb07.iid_total}}k to €{{nb07.bayes_total}}k is more than one iid posterior sd. Where it lands is the point: <em>beside</em> the classical €{{nb07.cl_total}}k, not on top of it, via a completely different weight profile ({{nb07.cl_eff_donors}} vs {{nb07.bayes_eff_donors}} effective donors).</p>
+      <div class="callout key"><div class="ct">Corroboration, not recovery</div>
+      The repair never recovers the classical <em>weights</em>. Two estimators that disagree on which markets to trust, yet agree on the total, are harder to dismiss than either alone.</div>
+    </div>
+  </div></div>
+</section>
+
+<!-- ======================= VII · POLL · THE NAIVE ESTIMATORS ======================= -->
+<section class="slide" data-t="Poll — the naive estimators" data-sec="Act VII — What can go wrong">
+  <div class="kicker">Act VII · What can go wrong</div>
+  <h2>Same panel, four estimators</h2>
+  <div class="sbody" style="max-width:920px">
+    <div class="poll" id="pollNaive" data-correct="0">
+      <div class="ph">✋ Poll</div>
+      <div class="pq">We run four estimators on the very same panel (true lift: €{{nb07.true_avg}}k/week). Which one lands <em>furthest</em> from the truth?</div>
+      <div class="opts">
+        <button class="opt" data-i="0"><span class="let">A</span> Before/after on the treated metro</button>
+        <button class="opt" data-i="1"><span class="let">B</span> Treated minus the average control</button>
+        <button class="opt" data-i="2"><span class="let">C</span> Difference-in-differences vs the average control</button>
+        <button class="opt" data-i="3"><span class="let">D</span> Treated minus the reweighted (synthetic) control</button>
+      </div>
+      <button class="reveal-btn">Reveal</button>
+      <div class="answer"><b>A.</b> Before/after returns €{{nb07.naive_ba}}k/week, roughly <em>half</em> the truth. On this panel the shared trend moved <em>against</em> the campaign, so the naive number understates it. That is the deeper lesson: the trend bias has no fixed sign, and an analyst who "knows" which way it errs is guessing. The reweighted control lands near the truth; the next slide ranks all four.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= VII · FOUR ESTIMATES, ONE PANEL ======================= -->
+<section class="slide" data-t="Four estimates, one panel" data-sec="Act VII — What can go wrong">
+  <div class="kicker">Act VII · What can go wrong — the shortcuts</div>
+  <h2>Four estimates, one panel, one truth</h2>
+  <div class="sbody"><div class="cols c32">
+    <div>
+      <div class="fig"><div class="fh"><span class="badge">FROM THE BOOK</span> four estimators against the planted €{{nb07.true_avg}}k/week</div>
+        <img class="bookfig" style="width:100%" src="<!--FIG:nb07_naivebars-->" alt="Bar chart of four estimates of the weekly lift on the same panel against the planted truth of 14.2 thousand euros per week: before/after undershoots at 7.2, treated-minus-average-control overshoots at 19.3, difference-in-differences lands at 10.3, and the reweighted synthetic control lands closest at 13.1.">
+      </div>
+    </div>
+    <div>
+      <ul>
+        <li><strong>Before/after</strong>: €{{nb07.naive_ba}}k. Books whatever the shared factors did, and here they moved <em>against</em> the campaign. Bias has no fixed sign.</li>
+        <li><strong>vs average control</strong>: €{{nb07.naive_avgctrl}}k. Differences nothing out; carries the raw level gap between a large metro and an average one.</li>
+        <li><strong>DiD</strong>: €{{nb07.naive_did}}k. Much better, but the average control has the wrong factor loadings, so a residual bias survives.</li>
+        <li><strong>Reweighted control</strong>: €{{nb07.naive_sc}}k. Lands near the truth of €{{nb07.true_avg}}k.</li>
+      </ul>
+      <div class="callout key"><div class="ct">The one-line takeaway</div>
+      Same data, four answers. The estimator <strong>is</strong> the identification strategy: each formula is a different assumption about the missing Y(0), and only the assumption you can defend earns the number.</div>
+    </div>
+  </div></div>
+</section>
+
+<!-- ======================= VII · ANTICIPATION ======================= -->
+<section class="slide" data-t="Anticipation: move the launch" data-sec="Act VII — What can go wrong">
+  <div class="kicker">Act VII · What can go wrong — anticipation</div>
+  <h2>Falsify it: back-date the launch</h2>
+  <div class="sub">If markets react before week {{nb07.launch_week}} (pre-launch PR, trade loading, leaked plans), the launch date is contaminated. The test: refit with a fake launch where nothing happened.</div>
+  <div class="sbody"><div class="cols c32">
+    <div>
+      <div class="fig"><div class="fh"><span class="badge">FROM THE BOOK</span> placebo-in-time: a launch that did not happen</div>
+        <img class="bookfig" style="width:100%" src="<!--FIG:nb07_placebotime-->" alt="Weekly gap between treated and synthetic with the launch back-dated to week 30: through the fake post-window the gap stays inside the pre-fit RMSE band and averages essentially zero; the gap only lifts after the true launch at week 40.">
+      </div>
+    </div>
+    <div>
+      <p>Refit with the launch moved back to week <span class="num">{{nb07.placebo_time_week}}</span>, inside the true pre-period, where by construction nothing happened.</p>
+      <p>Result: <span class="num">€{{nb07.placebo_time_gap}}k</span>/week, comfortably inside the fitter's own pre-fit noise of <span class="num">€{{nb07.cl_pre_rmse}}k</span>. The method does not invent lift where there is none.</p>
+      <p class="q-biz">A gap that appears only when the money does is the signature you are paying for. Run this test before any geo readout leaves the analytics team.</p>
+    </div>
+  </div></div>
+</section>
+
+<!-- ======================= VII · SPILLOVER ======================= -->
+<section class="slide" data-t="Spillover: the violation no placebo can see" data-sec="Act VII — What can go wrong">
+  <div class="kicker">Act VII · What can go wrong — spillover</div>
+  <h2>The violation no placebo can see</h2>
+  <div class="sub">If the campaign leaks into neighbouring donor markets, every placebo refit is contaminated in exactly the same way. Nothing looks unusual. Only a simulator can plant the violation and watch.</div>
+  <div class="sbody"><div class="cols">
+    <div>
+      <div class="eqbox"><div class="eq">
+        \[ \text{bias} \;\approx\; -\,\varphi \sum_{j \in \text{nbrs}} w_j \,\times\, \tau \]
+        <span class="lbl">leaked lift raises the contaminated donors, so the synthetic rises and the measured gap shrinks by roughly the spilled weight</span>
+      </div></div>
+      <p>Planted in the simulator: the formula predicts a bias of <span class="num">{{nb07.sp_predicted}}</span> €k; the refit measures <span class="num">{{nb07.sp_measured}}</span> €k. The mechanism is understood, not just observed.</p>
+      <div class="callout key"><div class="ct">Fix by design, not statistics</div>
+      Spillover <strong>attenuates</strong>: it understates a real campaign, never inflates it. That is conservative for a GO, though it can turn a true GO into a NO-GO. Since no placebo can flag it, drop adjacent and media-overlapping markets from the donor pool <em>before</em> fitting anything. A smaller clean pool beats a larger contaminated one.</div>
+    </div>
+    <div>
+      <div class="fig"><div class="fh"><span class="badge">FROM THE BOOK</span> attenuation as the leak φ grows</div>
+        <img class="bookfig" style="width:100%" src="<!--FIG:nb07_spillover_curve-->" alt="Measured campaign estimate as a function of the spillover fraction: the estimate declines steadily as more of the lift leaks into neighbouring donors, tracking the predicted attenuation line; spillover shrinks the estimate rather than inflating it.">
+      </div>
+    </div>
+  </div></div>
+</section>
+
+<!-- ======================= VIII · THE REFEREE ======================= -->
+<section class="slide" data-t="A real advertiser, a randomized referee" data-sec="Act VIII — Real data: the exam">
+  <div class="kicker">Act VIII · Real data — the referee</div>
+  <h2>A real advertiser, and a referee money can't argue with</h2>
+  <div class="sub">Everything so far was graded against a planted truth. The objection writes itself. So: a real ${{nb07b.spend}}k campaign, {{nb07b.n_treated}} US geos treated of {{nb07b.n_geos}}, randomized in {{nb07b.n_pairs}} size-matched pairs (Google's public geo-experiment panel).</div>
+  <div class="sbody"><div class="cols c32">
+    <div>
+      <div class="fig"><div class="fh"><span class="badge">FROM THE BOOK</span> the {{nb07b.n_pairs}} matched-pair differences; the anchor is their plain average</div>
+        <img class="bookfig" style="width:100%" src="<!--FIG:nb07b_pairs-->" alt="Left: the fifty matched-pair treated-minus-control differences in dollars per geo per day, ranked by geo size, with the randomized anchor as their average. Right: the standard error of the window total with and without the pairing, 99 thousand dollars unpaired versus 42 thousand paired.">
+      </div>
+    </div>
+    <div>
+      <p>Randomization licenses an estimator that fits <strong>no model at all</strong>: each pair's treated-minus-control change through launch, averaged. Unbiased by construction: the closest thing to truth real data ever hands anyone.</p>
+      <ul>
+        <li>Anchor: <span class="num">${{nb07b.did_total}}k</span> incremental sales, iROAS <span class="num">{{nb07b.did_iroas}}</span>.</li>
+        <li>Pairing is variance reduction: it differences geo size out within each pair, cutting the SE <span class="num">{{nb07b.pairing_gain}}×</span>, from ${{nb07b.unpaired_se}}k to ${{nb07b.did_se}}k.</li>
+      </ul>
+      <div class="callout watch"><div class="ct">Unbiasedness is not precision</div>
+      Even paired, the anchor's interval spans nearly half the effect in each direction. That width is the entire commercial reason to fit a model on top of a perfectly good experiment.</div>
+    </div>
+  </div></div>
+</section>
+
+<!-- ======================= VIII · THE EXAM ======================= -->
+<section class="slide" data-t="The exam: does the method land inside?" data-sec="Act VIII — Real data: the exam">
+  <div class="kicker">Act VIII · Real data — the exam</div>
+  <h2>The only exam real data can set</h2>
+  <div class="sub">Apply the synthetic control of Act II, unchanged, to the treated cell. Then ask whether it lands inside the randomized referee's interval.</div>
+  <div class="sbody"><div class="cols c32">
+    <div>
+      <div class="fig"><div class="fh"><span class="badge">FROM THE BOOK</span> the shipped posterior, with the randomized anchor inside its 90% band</div>
+        <img class="bookfig" style="width:100%" src="<!--FIG:nb07b_posterior-->" alt="Posterior distribution of the campaign's dollar total from the AR(1) fit, with the 90 percent credible interval marked and the randomized matched-pairs anchor falling inside it, close to the posterior mean.">
+      </div>
+    </div>
+    <div>
+      <ul>
+        <li>Classical synthetic control: <span class="num">${{nb07b.sc_total}}k</span>.</li>
+        <li>Shipped AR(1) posterior: <span class="num">${{nb07b.ar_total}}k</span>; the ${{nb07b.did_total}}k anchor sits squarely inside its 90% band.</li>
+      </ul>
+      <p>The sampler is audited, not waved through: <span class="num">{{nb07b.divergences}}</span> divergence on the iid fit, <span class="num">{{nb07b.ar_divergences}}</span> on the AR(1). Divergences here live at the simplex corners; the question they raise is whether that geometry moved the answer.</p>
+      <div class="callout key"><div class="ct">The cross-check a divergence count obliges</div>
+      The same objective has a deterministic, divergence-free solution: the SLSQP fit. It lands a small fraction of the interval width away, bounding what the geometry could possibly have moved. An answer, not a reassurance.</div>
+    </div>
+  </div></div>
+</section>
+
+<!-- ======================= VIII · THE GATE ======================= -->
+<section class="slide" data-t="The gate refuses the largest market" data-sec="Act VIII — Real data: the exam">
+  <div class="kicker">Act VIII · Real data — the gate</div>
+  <h2>The method refuses the number an unscrupulous deck would quote</h2>
+  <div class="sub">Pretend the country's largest geo had been the treated market. It is bigger than every control geo, so it lies outside its own donor hull: simplex weights can average, never extrapolate.</div>
+  <div class="sbody"><div class="cols c32">
+    <div>
+      <div class="fig"><div class="fh"><span class="badge">FROM THE BOOK</span> geo 1 outside its donor hull: the fit fails loudly</div>
+        <img class="bookfig" style="width:100%" src="<!--FIG:nb07b_hull_fail-->" alt="The best achievable synthetic for the largest geo piles all its weight on the single largest donor and still runs below the target series; the pre-fit RMSE of 868 dollars per geo per day fails the 665 dollar gate.">
+      </div>
+    </div>
+    <div>
+      <ul>
+        <li>The simplex does its honest best, all weight on the single largest donor, and still runs below the target.</li>
+        <li>Pre-fit RMSE: <span class="num">${{nb07b.hull_pre_rmse}}</span>/geo/day against a gate of <span class="num">${{nb07b.hull_gate_ref}}</span>. The gate <strong>fails loudly</strong>.</li>
+        <li>The estimate this fit <em>would</em> have shipped implies an iROAS of <span class="num">{{nb07b.hull_iroas}}</span>, against the experiment's <span class="num">{{nb07b.did_iroas}}</span>.</li>
+      </ul>
+      <div class="callout key"><div class="ct">Self-diagnosis beats the estimate</div>
+      The method's own diagnostic, not hindsight, is what keeps the inflated number out of the memo. A pre-fit gate you commit to before looking at the post-period is the cheapest audit you will ever run.</div>
+    </div>
+  </div></div>
+</section>
+
+<!-- ======================= VIII · THE OFF-SWITCH ======================= -->
+<section class="slide" data-t="The off-switch" data-sec="Act VIII — Real data: the exam">
+  <div class="kicker">Act VIII · Real data — falsification</div>
+  <h2>The spend stops. The effect must collapse.</h2>
+  <div class="sbody">
+    <div class="fig"><div class="fh"><span class="badge">FROM THE BOOK</span> daily lift through pre-period, paid window, and cooldown</div>
+      <img class="bookfig" style="width:100%" src="<!--FIG:nb07b_gap-->" alt="Estimated daily lift per geo over the full horizon: flat before launch, a sustained plus 107 dollars per geo per day through the paid window, then a collapse to minus 3 dollars per geo per day in the cooldown after the spend stops.">
+      <div class="cap">Flat before launch · <b>{{nb07b.post_gap}} $/geo/day</b> through the paid window · <b>{{nb07b.cool_gap}} $/geo/day</b> in the cooldown.</div>
+    </div>
+    <div class="cols">
+      <p>An effect that persisted after the money stopped would smell of a confound, not a campaign. This one switches off on cue: the falsification no simulator provides for free.</p>
+      <p class="q-biz">One picture, two deliverables: it <strong>certifies the attribution</strong>, and it tells the media planner there is <strong>no carryover annuity</strong> to book. The revenue stops when the spend does.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= VIII · DOLLARS: THE MARGIN TRAP ======================= -->
+<section class="slide" data-t="Dollars: the same margin trap" data-sec="Act VIII — Real data: the exam">
+  <div class="kicker">Act VIII · Real data — the dollar decision</div>
+  <h2>The same margin trap, now in dollars</h2>
+  <div class="sub">An iROAS of three is not a threefold return. Ad spend buys revenue; the firm keeps only the margin on it.</div>
+  <div class="sbody"><div class="cols c23">
+    <div>
+      <div class="eqbox"><div class="eq">
+        \[ \text{iROAS} \times \text{margin} > 1 \;\;\Longleftrightarrow\;\; \text{iROAS} > \frac{1}{\text{margin}} \]
+        <span class="lbl">at the assumed {{nb07b.margin}}% gross margin the bar is not 1.0 but {{nb07b.break_even_iroas}}, and the posterior sits almost exactly on top of it</span>
+      </div></div>
+      <ul>
+        <li>Break-even margin: <span class="num">{{nb07b.break_even_margin}}%</span>. 90% confidence of profitability only above <span class="num">{{nb07b.margin_ninety}}%</span>.</li>
+        <li>P(profitable) at {{nb07b.margin}}%: <span class="num">{{nb07b.p_profit_ar}}</span> → <span class="tag test">{{nb07b.decision}}</span></li>
+      </ul>
+      <div class="callout watch"><div class="ct">The lift is beyond doubt. The call is not.</div>
+      Profitability turns entirely on a finance input the model cannot see: the gross margin. Get that number from the CFO before the meeting, because the whole verdict pivots inside a three-point margin window.</div>
+    </div>
+    <div>
+      <div class="fig"><div class="fh"><span class="badge">FROM THE BOOK</span> P(profitable) as a function of the assumed margin</div>
+        <img class="bookfig" style="width:100%" src="<!--FIG:nb07b_margincurve-->" alt="Probability that the campaign is profitable as a function of the assumed gross margin: the curve crosses one half near the break-even margin of 33.5 percent and reaches 90 percent confidence only above a 36 percent margin; at the assumed 35 percent it reads 0.81.">
+      </div>
+    </div>
+  </div></div>
+</section>
+
+<!-- ======================= VIII · WHY THE LABELS DIFFER ======================= -->
+<section class="slide" data-t="Why the labels differ" data-sec="Act VIII — Real data: the exam">
+  <div class="kicker">Act VIII · Real data — the comparison that closes the loop</div>
+  <h2>Same method, same trap, different labels. The difference is precision.</h2>
+  <div class="sbody">
+    <div class="cols">
+      <div>
+        <div class="card"><b>Simulated campaign: one treated metro</b>
+          <div class="small">P(profit &gt; cost) = <span class="num">{{nb07.p_go}}</span> → <span class="tag nogo">{{nb07.decision}}</span><br>
+          iROAS <span class="num">{{nb07.iroas}}</span> against a break-even of {{nb07.breakeven_iroas}}.<br>
+          One market carries the whole estimand: posterior sd €{{nb07.bayes_sd}}k on a €{{nb07.bayes_total}}k total, a large share of the number the board signs.</div></div>
+      </div>
+      <div>
+        <div class="card"><b>Real campaign: a {{nb07b.n_treated}}-geo cell</b>
+          <div class="small">P(profitable) = <span class="num">{{nb07b.p_profit_ar}}</span> → <span class="tag test">{{nb07b.decision}}</span><br>
+          iROAS <span class="num">{{nb07b.did_iroas}}</span> against a break-even of {{nb07b.break_even_iroas}}.<br>
+          Averaging over {{nb07b.n_treated}} treated geos shrinks the cell's posterior sd to ${{nb07b.ar_sd}}k on a ${{nb07b.ar_total}}k total, a sliver of the estimand.</div></div>
+      </div>
+    </div>
+    <p>Same method. Same margin trap. An iROAS near three in both. The labels differ because of <strong>precision, not economics</strong>: aggregation across markets is what lifts a coin flip toward an almost-confident buy.</p>
+    <div class="callout key"><div class="ct">The practical case for multi-market tests</div>
+    A real geo test splits many markets into arms instead of lighting up a single one, because the precision it buys is the difference between {{nb07.p_go}} and {{nb07b.p_profit_ar}} on an otherwise identical decision.</div>
+  </div>
+</section>
