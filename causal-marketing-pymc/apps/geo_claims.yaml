@@ -1,0 +1,611 @@
+# Claims registry for apps/geo_lift_slides.html — read by apps/verify_geo_deck.py.
+#
+# Every number the deck states maps to: the slide(s) that state it (anchored by the
+# section's data-t, never by position), the exact rendered string, an expression
+# recomputed from the baked DATA bundle, and/or the shard token it must equal.
+# No new number enters the deck without an entry here.
+#
+# Two sources of truth, deliberately both checked where possible:
+#   expr  -> the DATA bundle baked into the deck (what the live charts show)
+#   shard -> book/build/results/nb07*.json (what the prose was token-substituted from)
+# The posterior-draw arrays in DATA are a 1,200-draw subsample of the notebook run,
+# so expr tolerances on posterior summaries are wider than shard tolerances.
+#
+# defect: <note> marks a number the remediation plan has already convicted; the
+# harness reports it as WARN until the fixing phase lands, then the entry is updated.
+
+# ---- Act I -------------------------------------------------------------------------
+- id: price_and_margin
+  slides: ["The boardroom question", "Poll: the margin"]
+  texts: ["€75k", "35%"]
+
+- id: panel_shape
+  slides: ["The data (live)"]
+  texts: ["€75k", "35%"]
+
+- id: weeks_indexing
+  slides: ["The data (live)"]
+  text: 't=1,\dots,60'
+  defect: "phase1-2.5 off-by-one: data are 0-indexed, t=0,...,59 with T_0=40"
+
+- id: planted_lift_rule
+  slides: ["The data-generating model"]
+  text: "12%"
+  expr: "sum(treated[40:] - y0_true[40:]) / 20 / (mean(y0_true[40:]) * 0.12)"
+  value: 1.0
+  tol: 0.01
+
+# ---- Act II ------------------------------------------------------------------------
+- id: pre_rmse
+  slides: ["Fit the blend (live)"]
+  text: "3.23"
+  expr: "rmse(treated[:40], synth_cl[:40])"
+  value: 3.23
+  tol: 0.01
+  shard: nb07.cl_pre_rmse
+
+- id: classical_total
+  slides: ["Fit the blend (live)", "Significance, the usual way", "What the statistics says",
+           "What you say to the board (classical)", "Why the two paradigms agree", "What the simulation proved", "The deliverable", "Close"]
+  text: "€260k"
+  expr: "sum(treated[40:] - synth_cl[40:])"
+  value: 260.3
+  tol: 0.15
+  shard: nb07.cl_total
+  tol_shard: 0.5
+
+- id: truth_per_week
+  slides: ["Every shortcut is an assumption", "What the simulation proved"]
+  text: "€14.2k"
+  expr: "sum(treated[40:] - y0_true[40:]) / 20"
+  value: 14.21
+  tol: 0.02
+
+- id: truth_total
+  slides: ["What the statistics says", "Why the two paradigms agree", "What the simulation proved"]
+  text: "€284k"
+  expr: "sum(treated[40:] - y0_true[40:])"
+  value: 284.2
+  tol: 0.1
+  shard: nb07.true_total
+  tol_shard: 0.5
+
+- id: naive_ba_weekly
+  slides: []           # JS-injected via the N map (slides 13/37); N-map check covers the text
+  expr: "mean(treated[40:]) - mean(treated[:40])"
+  value: 7.21
+  tol: 0.02
+  shard: nb07.naive_ba
+  tol_shard: 0.05
+
+- id: naive_sc_weekly
+  slides: []
+  expr: "sum(treated[40:] - synth_cl[40:]) / 20"
+  value: 13.05          # DATA gives 13.01, the notebook's own run 13.10; both round to the shown 13.1
+  tol: 0.06
+  shard: nb07.naive_sc
+  tol_shard: 0.06
+
+- id: gate_rule
+  slides: ["Identification: what must hold"]
+  texts: ["3.2", "4.4"]
+  expr: "sum(treated[40:] - synth_cl[40:]) / 20 / 3"
+  value: 4.34
+  tol: 0.1
+  shard: nb07.gate_ref
+  tol_shard: 0.1
+
+- id: loo_range
+  slides: ["Identification: what must hold"]
+  text: "€239–276k"
+  shard: nb07.loo_lo
+  shard_text: "239"
+
+- id: loo_range_hi
+  slides: []
+  shard: nb07.loo_hi
+  shard_text: "276"
+
+- id: simplex_integrity
+  slides: []
+  expr: "abs(sum(w_cl_all) - 1) + abs(min(w_cl_all))"
+  value: 0.0
+  tol: 1.0e-9
+
+- id: headline_weights
+  slides: []
+  expr: "sum(abs(sort(w_cl_all)[::-1][:3] - np.array([0.404, 0.321, 0.168])))"
+  value: 0.0
+  tol: 0.002
+
+- id: neff_classical
+  slides: ["The Bayesian synthetic control"]
+  text: "3.3"
+  expr: "1 / sum(w_cl_all**2)"
+  value: 3.33
+  tol: 0.01
+  shard: nb07.cl_eff_donors
+  tol_shard: 0.05
+
+- id: neff_bayes
+  slides: ["The Bayesian synthetic control"]
+  text: "23.4"
+  expr: "1 / sum(w_ar1_all**2)"
+  value: 23.45
+  tol: 0.05
+  shard: nb07.bayes_eff_donors
+  tol_shard: 0.1
+
+- id: ols_pathology
+  slides: []           # drawn live in the "What the constraint buys" chart from DATA
+  expr: "float((ols_w_all < 0).sum())"
+  value: 12
+  tol: 0
+  shard: nb07.unc_n_negative
+  tol_shard: 0
+
+- id: ols_min_weight
+  slides: []
+  expr: "min(ols_w_all)"
+  value: -0.79
+  tol: 0.01
+
+- id: ols_sumabs
+  slides: []
+  expr: "sum(abs(ols_w_all))"
+  value: 8.86
+  tol: 0.01
+
+- id: hull_oos_ratio
+  slides: ["What the constraint buys (live)"]
+  text: "1.6"
+  shard: nb07.hull_oos_ratio
+  shard_text: "1.6"
+
+# ---- Act III -----------------------------------------------------------------------
+- id: permutation_p
+  slides: ["Poll: is it real?", "Placebo-in-space (live)", "What the statistics says",
+           "The classical verdict", "What you say to the board (classical)", "The deliverable", "Close"]
+  text: "0.033"
+  expr: "(1 + sum(abs(placebo_tot) >= sum(treated[40:] - synth_cl[40:]))) / (len(placebo_tot) + 1)"
+  value: 0.0333
+  tol: 0.001
+  shard: nb07.p_gap
+  tol_shard: 0.001
+
+- id: placebo_count
+  slides: ["Poll: is it real?"]
+  texts: ["29 more times", "rank 1 of 30"]
+  expr: "float(len(placebo_tot))"
+  value: 29
+  tol: 0
+
+- id: luckiest_fake
+  slides: []           # JS-injected into the placebo chart annotations
+  expr: "max(abs(placebo_tot))"
+  value: 108.5
+  tol: 0.1
+
+- id: placebo_spread
+  slides: ["Interval by test inversion (live)"]
+  text: "±€50k"
+  expr: "std(placebo_tot)"
+  value: 50
+  tol: 0.5
+  shard: nb07.placebo_sd
+
+- id: placebo_trimming_invariance
+  slides: ["Placebo-in-space (live)"]
+  texts: ["2×, 5×, 20×", "p = 0.033 every time"]
+  shard: nb07.p_filter_two
+  value: 0.0333
+  tol: 0.001
+
+- id: inversion_quantiles
+  slides: ["Interval by test inversion (live)"]
+  texts: ['q_{0.05}=-75', 'q_{0.95}=+65']
+  expr: "pctl(placebo_tot, 5)"
+  value: -75
+  tol: 1.0
+
+- id: interval_sales
+  slides: ["Interval by test inversion (live)", "What the statistics says",
+           "What you say to the board (classical)", "What the simulation proved", "The deliverable", "Close"]
+  text: "[€195k, €335k]"
+  expr: "sum(treated[40:] - synth_cl[40:]) - pctl(placebo_tot, 95)"
+  value: 195
+  tol: 1.0
+  shard: nb07.ri_lo
+  tol_shard: 1.0
+
+- id: interval_sales_hi
+  slides: []
+  expr: "sum(treated[40:] - synth_cl[40:]) - pctl(placebo_tot, 5)"
+  value: 335
+  tol: 1.0
+  shard: nb07.ri_hi
+  tol_shard: 1.0
+
+- id: placebo_time_fake_effect
+  slides: ["Falsification 1: placebo-in-time"]
+  text: "€1.7k"
+  shard: nb07.placebo_time_gap
+  shard_text: "1.7"
+
+- id: spillover_monotone
+  slides: ["Falsification 2: spillover (SUTVA)"]
+  texts: ["€260k", "€236k"]
+  expr: "float(all(diff(sp_total) < 0))"
+  value: 1
+  tol: 0
+
+- id: spillover_contaminated_total
+  slides: []
+  expr: "sp_total[3]"
+  value: 236
+  tol: 0.1
+  shard: nb07.sp_contaminated
+
+- id: truth_gap_above_estimate
+  slides: ["What the statistics says"]
+  text: "€24k above"
+  expr: "sum(treated[40:] - y0_true[40:]) - sum(treated[40:] - synth_cl[40:])"
+  value: 24
+  tol: 0.3
+
+# ---- Act IV ------------------------------------------------------------------------
+- id: breakeven_lift
+  slides: ["The margin trap (live)", "The classical verdict", "Three worlds, one classical report"]
+  text: "214"
+  expr: "75 / 0.35"
+  value: 214.3
+  tol: 0.1
+  shard: nb07.breakeven_lift
+  tol_shard: 0.5
+
+- id: breakeven_iroas
+  slides: ["The margin trap (live)", "Poll: the margin", "What you say to the board (classical)",
+           "On real data: the referee", "The deliverable", "Close"]
+  text: "2.86"
+  expr: "1 / 0.35"
+  value: 2.857
+  tol: 0.005
+  shard: nb07.breakeven_iroas
+  tol_shard: 0.01
+
+- id: iroas_point
+  slides: ["Poll: the margin", "What you say to the board (classical)", "The deliverable", "Close"]
+  text: "3.47"
+  expr: "sum(treated[40:] - synth_cl[40:]) / 75"
+  value: 3.47
+  tol: 0.005
+  shard: nb07.iroas
+  tol_shard: 0.005
+
+- id: expected_net_classical
+  slides: ["Poll: the margin", "The classical verdict", "The deliverable", "Close"]
+  text: "€16k"
+  expr: "0.35 * sum(treated[40:] - synth_cl[40:]) - 75"
+  value: 16.1
+  tol: 0.1
+  shard: nb07.cl_net
+  tol_shard: 0.2
+
+- id: gross_profit_classical
+  slides: ["The decision space (live)", "What you say to the board (classical)", "The deliverable"]
+  text: "€91k"
+  expr: "0.35 * sum(treated[40:] - synth_cl[40:])"
+  value: 91.1
+  tol: 0.1
+  shard: nb07.cl_profit
+  tol_shard: 0.2
+
+- id: revenue_margin_to_spare
+  slides: ["The margin trap (live)", "The classical verdict"]
+  text: "€46k"
+  expr: "sum(treated[40:] - synth_cl[40:]) - 75 / 0.35"
+  value: 46
+  tol: 0.2
+
+- id: profit_interval
+  slides: ["The classical verdict"]    # slides 27/29 state it inside LaTeX / as prose
+  text: "[€68k, €117k]"
+  expr: "0.35 * (sum(treated[40:] - synth_cl[40:]) - pctl(placebo_tot, 95))"
+  value: 68.25
+  tol: 0.5
+  shard: nb07.cl_profit_lo
+  tol_shard: 0.5
+
+- id: profit_interval_hi
+  slides: []
+  expr: "0.35 * (sum(treated[40:] - synth_cl[40:]) - pctl(placebo_tot, 5))"
+  value: 117.25
+  tol: 0.5
+  shard: nb07.cl_profit_hi
+  tol_shard: 0.5
+
+- id: margin_bars_other_industries
+  slides: ["The margin trap (live)"]
+  texts: ["1.1", "5.0"]
+  expr: "1 / 0.9"
+  value: 1.11
+  tol: 0.005
+
+- id: three_worlds_probs
+  slides: ["Three worlds, one classical report"]
+  texts: ["0.88", "0.72", "0.73"]
+  expr: "tri_P[0] + tri_P[1] + tri_P[2]"
+  value: 2.33
+  tol: 0.001
+
+# ---- Act V -------------------------------------------------------------------------
+- id: weekly_rate_for_primer
+  slides: ["Bayes in one slide (live)"]
+  text: "€13.0k/week"
+  expr: "sum(treated[40:] - synth_cl[40:]) / 20"
+  value: 13.0
+  tol: 0.05
+
+- id: bayes_total_ar1
+  slides: ["Why the two paradigms agree"]
+  text: "€262k"
+  expr: "mean(tot_ar1)"
+  value: 262
+  tol: 4.0            # DATA holds a 1,200-draw subsample; shard is the full run
+  shard: nb07.bayes_total
+  tol_shard: 0.5
+
+- id: bayes_arm_labelled_ar1
+  slides: ["Why the two paradigms agree"]
+  text: "Bayesian posterior mean"
+  defect: "phase1-2.3: row must say 'Bayesian posterior mean (AR(1))'; slide 32 shows the iid code"
+
+- id: p_go
+  slides: ["P(profit > cost), live", "Poll: buy more evidence?", "On real data: the referee",
+           "The deliverable", "Close"]
+  text: "0.78"
+  expr: "mean(0.35 * tot_ar1 > 75)"
+  value: 0.78
+  tol: 0.025
+  shard: nb07.p_go
+  tol_shard: 0.005
+
+- id: expected_profit_bayes
+  slides: ["P(profit > cost), live"]
+  text: "€92k"
+  expr: "mean(0.35 * tot_ar1)"
+  value: 92
+  tol: 2.0
+  shard: nb07.exp_profit
+  tol_shard: 0.5
+
+- id: expected_net_bayes
+  slides: ["P(profit > cost), live", "Poll: buy more evidence?"]
+  text: "€17k"
+  expr: "mean(0.35 * tot_ar1) - 75"
+  value: 17
+  tol: 2.0
+  shard: nb07.exp_net
+  tol_shard: 0.5
+
+- id: posterior_sd_sales
+  slides: ["Poll: buy more evidence?"]
+  text: "€72k"
+  expr: "std(tot_ar1)"
+  value: 72
+  tol: 1.5
+  shard: nb07.bayes_sd
+  tol_shard: 0.5
+
+- id: posterior_sd_profit
+  slides: ["Poll: buy more evidence?"]
+  text: "€25k"
+  expr: "0.35 * std(tot_ar1)"
+  value: 25
+  tol: 0.6
+
+- id: k_needed
+  slides: ["Poll: buy more evidence?"]
+  texts: ["~4", "1.28"]
+  shard: nb07.k_needed
+  value: 4
+  tol: 0
+
+- id: headroom
+  slides: ["Headroom and the value of information", "The deliverable", "Close"]
+  text: "€67k"
+  expr: "pctl(0.35 * tot_ar1, 10)"
+  value: 67
+  tol: 1.5
+  shard: nb07.headroom
+  tol_shard: 0.5
+
+- id: headroom_gap_to_price
+  slides: ["Headroom and the value of information"]
+  text: "€8k (11%)"
+  expr: "75 - pctl(0.35 * tot_ar1, 10)"
+  value: 8
+  tol: 1.5
+
+- id: voi
+  slides: ["Headroom and the value of information", "The deliverable", "Close"]
+  text: "€2k"
+  expr: "mean(np.maximum(0.35 * tot_ar1 - 75, 0)) - max(mean(0.35 * tot_ar1) - 75, 0)"
+  value: 2.5
+  tol: 0.6
+  shard: nb07.voi
+  tol_shard: 0.5
+
+- id: skew_guard
+  slides: []
+  # P=0.78, headroom €67k and sd €25k are mutually consistent ONLY under right-skew;
+  # near-symmetric draws would make three headline numbers silently contradict.
+  expr: "skew(tot_ar1)"
+  min: 0.5
+
+# ---- real data (nb07b) --------------------------------------------------------------
+- id: real_design
+  slides: ["The real experiment (live)"]
+  texts: ["100 geos", "50 treated, 50 control", "93 days", "$50k"]
+  shard: nb07b.n_geos
+  value: 100
+  tol: 0
+
+- id: real_baseline
+  slides: ["The real experiment (live)"]
+  text: "$472"
+  shard: nb07b.pre_level
+  value: 471.6
+  tol: 0.5
+  defect: "phase1-2.2: state which baseline (nb07b uses control-arm pre mean; say so or switch)"
+
+- id: real_lift_pct
+  slides: ["The real experiment (live)"]
+  text: "(~22%)"
+  defect: "phase1-2.1: 22% divides by the pre-period; concurrent-control denominator gives ~17%"
+
+- id: real_post_gap
+  slides: ["The real experiment (live)"]
+  text: "+$107"
+  shard: nb07b.post_gap
+  value: 106.5
+  tol: 0.5
+  defect: "phase1-2.2: recover nb07b's window definition and pin it here"
+
+- id: real_cooldown
+  slides: ["The real experiment (live)"]
+  text: "−$3"
+  shard: nb07b.cool_gap
+  value: -2.5
+  tol: 0.5
+  defect: "phase1-2.2: say which estimator (raw vs DiD-adjusted) the -3 is"
+
+- id: referee_total
+  slides: ["On real data: the referee"]
+  text: "$147k"
+  shard: nb07b.did_total
+  value: 147.2
+  tol: 0.5
+
+- id: referee_per_geo_day
+  slides: []
+  expr: "(mean(re_treat[42:70]) - mean(re_treat[:42])) - (mean(re_ctrl[42:70]) - mean(re_ctrl[:42]))"
+  value: 105.3
+  tol: 0.2
+
+- id: referee_total_scaled
+  slides: []
+  expr: "((mean(re_treat[42:70]) - mean(re_treat[:42])) - (mean(re_ctrl[42:70]) - mean(re_ctrl[:42]))) * 50 * 28 / 1000"
+  value: 147.4
+  tol: 0.2
+
+- id: referee_interval
+  slides: ["On real data: the referee"]
+  text: "[$78k, $216k]"
+  shard: nb07b.did_lo
+  value: 78.2
+  tol: 0.5
+
+- id: referee_interval_hi
+  slides: []
+  shard: nb07b.did_hi
+  value: 216.2
+  tol: 0.5
+
+- id: real_iroas_pair
+  slides: ["On real data: the referee"]
+  texts: ["2.94", "2.98"]
+  shard: nb07b.did_iroas
+  value: 2.94
+  tol: 0.01
+
+- id: real_ar_total
+  slides: ["On real data: the referee"]
+  texts: ["$149k", "[$137k, $162k]"]
+  shard: nb07b.ar_total
+  value: 149.2
+  tol: 0.5
+
+- id: real_p_pays
+  slides: ["On real data: the referee"]
+  text: "0.81"
+  shard: nb07b.p_profit_ar
+  value: 0.812
+  tol: 0.005
+
+- id: hull_gate
+  slides: ["On real data: the off-switch"]
+  texts: ["$868", "$665"]
+  shard: nb07b.hull_gate_ref
+  value: 664.65
+  tol: 0.5
+  defect: "phase1-2.4: the 665 is underived on the slide; recover nb07b's rule and derive it"
+
+- id: hull_suppressed_iroas
+  slides: ["On real data: the off-switch"]
+  text: "5.1"
+  shard: nb07b.hull_iroas
+  value: 5.1
+  tol: 0.05
+
+# ---- endnotes -----------------------------------------------------------------------
+- id: coverage_break
+  slides: ["Endnote poll: trust the interval?", "Endnote: the diagnosis and the fix"]
+  texts: ["50%"]
+  shard: nb07.total_cov
+  value: 50
+  tol: 0.5
+
+- id: coverage_per_week
+  slides: ["Endnote poll: trust the interval?"]
+  text: "86%"
+  shard: nb07.week_cov
+  value: 86
+  tol: 0.5
+
+- id: coverage_fixed
+  slides: ["Endnote: the diagnosis and the fix", "Endnote: the shape-correct route"]
+  text: "88%"
+  shard: nb07.total_cov_arone
+  value: 88
+  tol: 0.5
+
+- id: coverage_referee
+  slides: ["Endnote: the diagnosis and the fix"]
+  text: "83%"
+  shard: nb07.ri_cov
+  value: 83
+  tol: 0.5
+
+- id: rho_posterior
+  slides: ["Endnote: the diagnosis and the fix"]
+  texts: ["0.54", "[0.21,\\,0.87]"]
+  shard: nb07.rho_post
+  value: 0.54
+  tol: 0.005
+
+- id: width_repair
+  slides: ["Endnote: the diagnosis and the fix"]
+  text: "2.5×"
+  expr: "std(tot_ar1) / std(tot_iid)"
+  value: 2.5
+  tol: 0.2
+  shard: nb07.total_sd_ratio
+  tol_shard: 0.1
+
+- id: iid_vs_ar1_totals
+  slides: ["Endnote: the diagnosis and the fix"]
+  text: "€229k → €262k"
+  expr: "mean(tot_iid)"
+  value: 229
+  tol: 3.0
+  shard: nb07.iid_total
+  tol_shard: 0.5
+
+- id: iid_interval_excludes_truth
+  slides: []
+  # the sharpest fact in the deck (Phase 5 puts it in prose): the iid 90% interval
+  # excludes the planted truth of 284
+  expr: "float(pctl(tot_iid, 95) < sum(treated[40:] - y0_true[40:]))"
+  value: 1
+  tol: 0
