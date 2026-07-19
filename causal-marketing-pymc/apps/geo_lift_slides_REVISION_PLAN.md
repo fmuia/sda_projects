@@ -1,5 +1,58 @@
 # geo_lift_slides.html revision — plan + state (2026-07-16)
 
+## 2026-07-19 · BOX/BULLETS GRAMMAR REFORMAT (user directive) — DONE, verified
+User: on slides, an important concept = a callout BOX with ONE streamlined sentence; details/
+definitions = BULLETS, one sentence each (+ optional short example); same for text around
+figs/equations; NO running paragraphs; NO em-dashes; balance elements to fit one screen. This is
+FORM, not word-count (a shorter paragraph is still wrong). Captured as the `slide-grammar` skill
+(.claude/skills/slide-grammar/) + [[causal-marketing-pymc-slide-grammar]] memory.
+- ALL 48 content slides reformatted src-side: every `<p>` blob -> box or bullets; overloaded
+  callouts split (headline sentence stays, supporting points become bullets outside, nuance to a
+  mathfold); figure captions/eq lead-ins cut to one line; bold handle + COLON replaces the em-dash.
+- Em-dashes 31 -> 0 (prose, callout titles, h2s, endnote-flag, one JS comment); en-dashes kept
+  (names/ranges: Bernstein-von Mises, EUR239-276k).
+- Balance: slide 3 -> fig-left/reading-right (cols c32); slide 21 -> fig beside setup bullets;
+  slide 20 punchline box moved above its fold. Two inherently-dense slides keep 1-2 trailing
+  elaboration elements a hair below the fold (14: fold+punchline; 32: 2 eye-calibration bullets) --
+  core content fully visible; can split/fold further on request.
+- Preserved everything: all live-figure span IDs, {{tokens}}, equations, figures, polls, tables,
+  and every geo_claims.yaml required-text substring.
+- VERIFIED: build clean; verify_geo_deck.py 304 checks / 0 failures (all numbers intact); whole-deck
+  mjx-merror = 0; console clean on load; screenshots reviewed 2,3,4,5,8,10,14,20,21,32,43,47.
+
+## 2026-07-19 · IV-deck classical-standard port (user directive) — DONE, verified
+User: port the clarity/detail register of the IV deck's classical part (the A1-A8 "world described
+precisely" narrative) into the geo deck's classical slides; case as backbone; define-before-use.
+Seven surgical edits, all inside existing slides (no insertions, numbering unchanged, no shipped
+number changed):
+- S3 rebuilt as the A1 "world inventory": what the file contains (Y_jt defined w/ units, 30x60=1,800
+  observed numbers, the four design facts, who assigned treatment: the marketing team, not a coin);
+  what is NOT in the file and never will be (the 20 counterfactual weeks, the sales machinery),
+  symbol-free since PO notation arrives at S7; two load-bearing measured constants span-filled
+  (panelBase EUR126k/wk; NEW preSd EUR9.2k/wk pre-launch sd, "will matter in Act II"); the two-
+  honest-computations close (B/A +7.2 vs wave-removed step ~10k: same file, two answers, nothing in
+  the file arbitrates). PLANTED-TRUTH BULLET REMOVED from S3 (define-before-use: it used the
+  simulation before S4 introduces it, and spoiled poll S6). panelRead wave string de-overclaimed
+  ("whether that step is the campaign ... is the question Act II answers").
+- S4: new callout "Which of these is ever observed?" (only Y_jt lands in the file; alpha/gamma/f/eps
+  exist in the simulator's code and in reality, in no dataset); new closing line stating the planted
+  truth in business units via NEW spans dgmTruthWk (~14.2k/wk) / dgmTruthTot (~284k) filled from
+  DATA.true_total, + "from here on we pretend not to know it".
+- S13: new callout "None of these numbers ships a warning label" (A3 port: exact arithmetic, errors
+  are wrong claims about Y(0) not noise, 200 weeks still charges the tide to the campaign, cure is
+  a better claim not a bigger sample).
+- S14: new "Read the equation in words" bullet under the mismatch decomposition.
+- S15: new "Notice what is absent from B: the amount of data" bullet (weeks shrink noise only;
+  n shrinks only the 1/n; the 1 is the treated draw, nothing averages over one treated market).
+- S16: cannot-adjust bullet expanded to the full A4 argument (controlling conditions on RECORDED
+  variables; f_t/gamma_1 never written to disk; adjusting for observables removes only the part
+  flowing through them) + structure-not-measurement rescue bullet.
+- JS (panel IIFE): preSd computed from DATA.treated pre-window; dgmTruth spans filled there too.
+Verified: node --check OK; headless 46/46, 0 mjx-merror, 0 console errors, all new spans filled
+(preSd 9.2 / truth 14.2 / total 284 / base 126 checked against baked DATA in python); em-dash sweep
+clean; raw-euro-in-math audit clean (all hits are pre-existing \text{euro}); screenshots 3/4/13/14/15/16
+reviewed (no overflow, no collisions).
+
 ## 2026-07-17 CASE RE-PRICE: CAMPAIGN_COST 90 -> 75 (user decision; 90% bar kept) — DONE end-to-end
 - WHY: user wanted a default where the campaign clearly pays in expectation (~+EUR10-20k net) yet
   stays below a GO. At 75: P(pays)=0.78, E[net]=+16.7k, iROAS 3.47, headroom 67 (11% above), VOI ~2k,
@@ -241,3 +294,19 @@ extract_lecture_data.py; if you do, patch real_tot back to 260 before injecting)
   headroom price rises €66k→€76k (baked: headroom90=66, headroom75=76; chapter quotes ~€67k from MCMC draws).
   The chapter's decision and every table stay as-is; only the headroom sentence would change if the bar changed.
   The "no feasible k" poll answer is ALSO bar-dependent (at 0.75 a ~70-market test would suffice in principle).
+
+## 2026-07-18 · Facure-benchmark pass (assessment + fixes)
+
+Assessment vs Facure's handbook (simplicity/flow) + five axes; then fixes, all deck-only (no shipped number changed, no notebook re-exec needed):
+
+**Same world everywhere (user directive).** Slides 5 and 13 now render the BAKED CASE PANEL from DATA at default dial settings (green badge "showing the case dataset"), with `isCase()` guards; any slider move switches to the live mulberry32(20260716) generator (orange badge "re-simulated world") and a "back to the case" button returns. Slide 5 default readout = true €14.2k/wk, B/A €7.2k/wk (matches slides 3/6); slide 13 default bars = N.naive_* (7.2/19.3/10.3/13.1) vs truth 14.2 (matches its own boxes). The old "sibling world" paragraph rewritten.
+
+**Number fixes (triple-check vs shards).** s17 LOO range 255-266 -> 239-276 (nbSevenLooLo/Hi); s29 stale "45% chance" example -> 78%; s23 leak-figure endpoint labels now use N.sp_clean/sp_contaminated (260/236, kills the 260.5->261 double-rounding); DATA.headroom90 66->67 (dead data, aligned to shard); s16 fh stale "Slide 9's graph" -> "Slide 14's graph"; s38 stale "slide-9 mismatch term" -> "Act II's factor-mismatch term". Everything else verified against nb07/nb07b shards (~40 identities checked, all pass).
+
+**Facure-inspired pedagogy.** s8 factor model UNIFIED to slide-4 notation (alpha_j + gamma_j^T f_t; delta_t/lambda/mu demoted to a "papers' notation" line in the pedigree box); s10 gains the "regression flipped" bridge callout (donors=variables, pre-weeks=observations); s20 gains the Abadie placebo pre-fit filtering bullet (0 dropped of 29, p=0.033 at 2x/5x/20x thresholds - real shard values p_filter_*); s41 retitled "...now with the probability".
+
+**Layout system.** De-columned s4/s8/s31 (cols kept only where genuinely comparative: s13 quartet, s15 two limits, s23/s14/s16 fig+reading, s32, s38, s39, s44); 8 load-bearing eqbox .lbl subtexts promoted to bold bullets (s32 x2, s33 BvM, s36 headroom-invoice + VOI, s40 hull, s44 x2 coverage, s45 n2-n3); pure symbol glossaries kept as .lbl (s18, s34, s45 state-space). First mathfold uses: s2 (the one poison), s15 (Var(B) prefactor derivation), s31 (two caveats). s2 Q&A and s38 "why this dataset" boxes bulletized.
+
+**Verified:** node --check OK; headless: 46 slides, 0 mjx-merror, 0 console errors; per-slide div/ul/details balance OK; em-dash sweep clean; screenshots reviewed (2,5,8,13,23,44).
+
+**Open (chapter-side, not deck):** none from this pass. Realism/consultant-fidelity research (GeoLift/Google/Measured benchmarks) delivered in chat 2026-07-18; possible future endnote "how this runs in practice" NOT added pending user decision.

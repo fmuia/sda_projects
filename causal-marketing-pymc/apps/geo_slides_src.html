@@ -232,34 +232,36 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
   <h2>The boardroom question</h2>
   <div class="sub">A campaign ran in one region. Sales rose. Marketing wants €4M to go national. You decide.</div>
   <div class="sbody">
-    <p><strong>What you have:</strong></p>
-    <ul>
-      <li>Weekly sales for <strong>30 metro markets</strong>, <strong>60 weeks</strong>.</li>
-      <li>In week 40, exactly <strong>one</strong> metro switched on a <strong>€75k</strong> campaign for <strong>20 weeks</strong>.</li>
-      <li>The other 29 did nothing. <strong>No randomisation</strong>: the metro was <em>chosen</em>.</li>
-      <li>Gross margin on incremental sales: <strong>35%</strong> — hold that thought: it will make the bar iROAS &gt; 1/margin ≈ 2.9, not iROAS &gt; 1 (Act IV).</li>
-    </ul>
-    <p style="margin-top:.5rem"><strong>What that data forces you to answer</strong>, in order:</p>
-    <div class="qbig">
-      <div class="qrow"><span class="qn">①</span> How much did the campaign actually <em>cause</em>? <span class="qtag">attribution</span></div>
-      <div class="qrow"><span class="qn">②</span> Is that more than luck? <span class="qtag">significance</span></div>
-      <div class="qrow"><span class="qn">③</span> Is the profit worth the price? <span class="qtag">the decision</span></div>
+    <div class="cols">
+      <div>
+        <p><strong>What you have</strong></p>
+        <ul>
+          <li><strong>30 markets, 60 weeks</strong> of weekly sales.</li>
+          <li><strong>One metro, week 40:</strong> a €75k campaign for 20 weeks; the other 29 did nothing.</li>
+          <li><strong>No randomisation:</strong> the metro was chosen, not drawn.</li>
+          <li><strong>35% gross margin</strong> on incremental sales, so the bar is iROAS &gt; 1/margin ≈ 2.9, not &gt; 1 (Act IV).</li>
+        </ul>
+      </div>
+      <div>
+        <p><strong>What the data forces you to answer</strong>, in order</p>
+        <div class="qbig">
+          <div class="qrow"><span class="qn">①</span> How much did the campaign actually <em>cause</em>? <span class="qtag">attribution</span></div>
+          <div class="qrow"><span class="qn">②</span> Is that more than luck? <span class="qtag">significance</span></div>
+          <div class="qrow"><span class="qn">③</span> Is the profit worth the price? <span class="qtag">the decision</span></div>
+        </div>
+      </div>
     </div>
-    <div class="callout"><div class="ct">The method this data calls for</div>
+    <div class="callout key"><div class="ct">The method this data calls for</div>
+    One treated unit, an observational time series, no A/B test possible: this is synthetic control's home ground, the engine under Meta's <strong>GeoLift</strong> and Google's geo methodology.</div>
+    <div class="callout watch"><div class="ct">"Not randomised. Isn't the test biased anyway?"</div>
+    Not for <em>this</em> metro: the fit rebuilds its counterfactual from its own pre-launch record, so a choice based on character is absorbed; only the rollout to the other 29 markets is a separate, discountable assumption.</div>
+    <details class="mathfold"><summary><span class="tw">▸</span> How the choice bites, and the one poison the method cannot absorb</summary><div class="mfbody">
     <ul style="margin:.2rem 0">
-      <li><strong>One treated unit</strong>, observational data, an aggregate time series: the most common causal problem in marketing analytics, and no A/B test can be run after the fact.</li>
-      <li><strong>Synthetic control</strong> is the field's standard answer. It is what Meta's <strong>GeoLift</strong> and Google's geo methodology run underneath.</li>
-      <li><strong>The route</strong>: build the missing counterfactual (Act II), test it without a likelihood (Act III), turn it into euros (Act IV) and into a probability (Act V), then grade the whole machine against a real randomized experiment (Act VI).</li>
-    </ul></div>
-    <div class="callout watch"><div class="ct">"If the metro was not picked at random, isn't the test biased anyway?"</div>
-    Split the worry in two:
-    <ul style="margin:.25rem 0 0 1.1rem;padding:0">
-      <li><strong>Measuring what happened in that metro: no.</strong> The method never assumes the choice was random: it rebuilds the metro's own counterfactual from its own pre-launch record, so a choice based on pre-launch character (level, momentum, demographics) is absorbed.</li>
-      <li><strong>Extrapolating to the other 29 markets: a separate assumption.</strong> One market's effect travels to the nation only if markets respond alike; and <em>if</em> the pilot was picked for promise, as is common in practice, its effect travels as a <em>ceiling</em>, not a promise: a NO-GO there is reinforced everywhere else, a GO must be discounted before it becomes €4M.</li>
+      <li><strong>Measuring this metro: unbiased.</strong> The fit conditions on pre-launch character (level, momentum, demographics), so a character-based choice leaves no bias.</li>
+      <li><strong>Extrapolating to 29 markets: a separate assumption.</strong> A pilot picked for promise travels as a <em>ceiling</em>, not a promise: a NO-GO is reinforced everywhere, a GO must be discounted before it becomes €4M.</li>
+      <li><strong>The one poison:</strong> timing the launch on private knowledge of a coming local boom leaves no pre-launch fingerprint, and Act III's placebo-in-time hunts precisely that.</li>
     </ul>
-    <details class="mathfold"><summary><span class="tw">▸</span> The one poison the method cannot absorb</summary><div class="mfbody">
-    Timing the launch on <em>private knowledge of a coming local boom</em>: character-based selection is absorbed by the pre-period fit, but foreknowledge of a post-launch shock is not, because it leaves no fingerprint before launch. Act III has a test that hunts precisely that.
-    </div></details></div>
+    </div></details>
   </div>
 </section>
 
@@ -267,28 +269,42 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
 <section class="slide" data-t="The data (live)" data-sec="Act I · The question">
   <div class="kicker">Act I · The question</div>
   <h2>The data you actually get</h2>
-  <div class="sub">The analyst's view: the one frozen dataset the case hands you, and nothing else. No dials, and no column saying what would have happened without the campaign.</div>
+  <div class="sub">One frozen dataset: no dials, and no column for the world without the campaign.</div>
   <div class="sbody">
-    <p><strong>What the file contains.</strong> One table and four design facts:</p>
-    <ul>
-      <li>\(Y_{jt}\): weekly sales of market \(j\) in week \(t\), in €000. Thirty markets (\(j=1,\dots,30\); the treated metro is \(j=1\)), sixty weeks (\(t=0,\dots,59\)): 1,800 numbers, all observed.</li>
-      <li>The design facts: the campaign switched on in the treated metro at week \(T_0=40\) and stayed on for the final 20 weeks; it cost <b>€75k</b>; the gross margin on incremental sales is <b>35%</b>; the other 29 markets ran nothing. Who chose the metro and the week: the firm's marketing team. Not us, and not a coin.</li>
-    </ul>
-    <p><strong>What is not in the file, and never will be.</strong> The treated metro's sales in those same 20 weeks <em>had it not advertised</em>: twenty numbers describing a world that did not happen, and every question on slide 2 is secretly a question about them. Also absent: the machinery that generates sales, each market's size, its sensitivity to the season and to the economy. Real things, recorded nowhere. Act II gives both a name and an estimator; for now, look at what you do have.</p>
-    <div class="fig">
-      <div class="fh"><span class="badge">▶ LIVE</span> 30 markets, one treated at week 40</div>
-      <div class="canvas"><svg viewBox="0 0 720 250" id="svgPanel"></svg></div>
-      <div class="controls">
-        <label><input type="checkbox" id="panelWave"> subtract the cross-market average</label>
-        <span class="readout" id="panelRead"></span>
+    <div class="cols">
+      <div>
+        <ul>
+          <li><b>\(Y_{jt}\):</b> weekly sales of market \(j\) in week \(t\) (€000): 30 markets (\(j=1,\dots,30\), treated = 1), 60 weeks (\(t=0,\dots,59\)) = 1,800 observed numbers.</li>
+          <li><b>The design:</b> the treated metro ran a <b>€75k</b> campaign from week \(T_0=40\) for 20 weeks at a <b>35%</b> margin; the other 29 ran nothing.</li>
+          <li><b>The choice:</b> the firm's marketing team picked the metro and the week. Not us, and not a coin.</li>
+        </ul>
       </div>
-      <div class="cap">Tick the box to subtract the cross-market average, a crude estimate of the shared wave.</div>
+      <div>
+        <div class="callout key"><div class="ct">The number that settles the case</div>
+        It is the only one missing from the file: what the treated metro would have sold in those 20 weeks had it never advertised.</div>
+      </div>
     </div>
-    <ul>
-      <li><b>Two load-bearing numbers, measured from the table.</b> The treated metro sells ≈ <span id="panelBase"></span>/week before launch, and around that base its weekly sales swing with a standard deviation of <span id="preSd"></span> (pre-launch). Keep the second number in mind: whatever the campaign did must be read through variation of that size that the campaign did not cause. It will matter a great deal in Act II.</li>
-      <li><b>The first honest computation: before/after.</b> The treated metro's average week after launch minus its average week before: <span id="baVal"></span>/week. Correct arithmetic; whether it measures the campaign is a separate question entirely.</li>
-      <li><b>The second honest computation: subtract the crowd.</b> Tick the box: removing the cross-market average (a crude stand-in for whatever all thirty markets share) reveals a step of ≈ <span id="panelStep"></span>/week at launch, noticeably larger than the before/after number. Same file, two defensible computations, two different answers, and nothing in the file arbitrates between them. Building the arbiter is what this lecture does.</li>
-    </ul>
+    <div class="cols c32">
+      <div>
+        <div class="fig">
+          <div class="fh"><span class="badge">▶ LIVE</span> 30 markets, one treated at week 40</div>
+          <div class="canvas"><svg viewBox="0 0 720 250" id="svgPanel"></svg></div>
+          <div class="controls">
+            <label><input type="checkbox" id="panelWave"> subtract the cross-market average</label>
+            <span class="readout" id="panelRead"></span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <ul>
+          <li><b>Before/after:</b> post minus pre-launch mean, <span id="baVal"></span>/week.</li>
+          <li><b>Subtract the crowd:</b> remove the shared wave and the step is ≈ <span id="panelStep"></span>/week, larger.</li>
+          <li><b>The noise floor:</b> pre-launch sd <span id="preSd"></span>/week around a <span id="panelBase"></span>/week base; it matters in Act II.</li>
+        </ul>
+        <div class="callout watch"><div class="ct">Two answers, one file</div>
+        Two defensible computations, two different numbers, and nothing arbitrates. Building the arbiter is what this lecture does.</div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -296,16 +312,17 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
 <section class="slide" data-t="The data-generating model" data-sec="Act I · The question">
   <div class="kicker">Act I · The question, and the world behind the data</div>
   <h2>The model that generated the data</h2>
-  <div class="sub">This is a simulation, and that is a feature. You will never need to manipulate these equations; you do need to know what is inside them.</div>
+  <div class="sub">A simulation, on purpose: only here is the counterfactual known, so every estimator can be graded before Act VI lets it loose on real data.</div>
   <div class="sbody">
-    <div class="callout key"><div class="ct">Why simulate at all</div>
-    On real data the counterfactual is forever invisible, so a method can never be graded, only argued about. Here we planted the effect ourselves: every estimator gets marked against a known answer, and only then (Act VI) is it let loose on a real experiment.</div>
-    <p>Every market's no-campaign sales follow one equation: its own <strong>level</strong> \(\alpha_j\), plus its own <strong>exposures</strong> \(\gamma_j\) to three shared ingredients \(f_t\), plus noise. Expanding \(\gamma_j^{\top} f_t\) term by term gives the whole world in one line (all units €000):</p>
+    <p>Each market's no-campaign sales are its level \(\alpha_j\), its exposures \(\gamma_j\) to three shared factors \(f_t\), plus noise: the whole world in one line (all €000).</p>
     <div class="eqbox">
       \[ Y_{jt}(0) \;=\; \alpha_j \;+\; \gamma_j^{\top} f_t \;+\; \varepsilon_{jt}
          \;=\; \alpha_j \;+\; \gamma_{j1}\underbrace{\,0.4\,t\,}_{\text{trend}} \;+\; \gamma_{j2}\underbrace{\bigl[\,8\sin(2\pi t/26)+4\sin(2\pi t/13)\,\bigr]}_{\text{seasonality}} \;+\; \gamma_{j3}\underbrace{\textstyle\sum_{s=1}^{t}\eta_s}_{\text{macro walk }m_t} \;+\; \varepsilon_{jt} \]
     </div>
-    <p><b>Two ingredients matter most</b>: the <b>macro walk</b> \(m_t=\sum_{s\le t}\eta_s\), a running sum of shocks that wanders like an economy (\(\mathrm{Var}(m_t)=t\,\sigma_\eta^2\), growing with time), and the <b>exposures</b> \(\gamma_j\sim\mathrm{U}(1{-}s,1{+}s)\): each market responds to the shared world <em>its own amount</em>. The spread \(s\) is what kills parallel trends.</p>
+    <ul>
+      <li><b>The macro walk</b> \(m_t=\sum_{s\le t}\eta_s\): a running sum of shocks that wanders like an economy, its variance \(t\,\sigma_\eta^2\) growing every week.</li>
+      <li><b>The exposures</b> \(\gamma_j\sim\mathrm{U}(1{-}s,1{+}s)\): each market responds its own amount, and the spread \(s\) is what kills parallel trends.</li>
+    </ul>
     <details class="mathfold"><summary><span class="tw">▸</span> All five ingredients, one by one</summary><div class="mfbody">
     <ul>
       <li><strong>Trend</strong> \(0.4\,t\): steady growth of 0.4 (€000) per week. Deterministic.</li>
@@ -316,13 +333,19 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
     </ul>
     </div></details>
     <div class="callout watch"><div class="ct">Which of these is ever observed?</div>
-    Only \(Y_{jt}\) is written to the file. The level \(\alpha_j\), the loadings \(\gamma_j\), the factors \(f_t\), the noise \(\varepsilon_{jt}\): all of them exist in the simulator's code, and their real-world counterparts (market size, sensitivity to the season, the state of the economy) exist in reality, but none of them appears in any dataset you will ever load. Every estimator in Act II is a different way of coping with that.</div>
-    <p>On top of that no-campaign world we plant the effect:</p>
-    <div class="eqbox">
-      \[ \tau_t \;=\; 0.12\,\bigl(\alpha_1+\gamma_1^{\top}f_t\bigr)\,\mathbf{1}_{\{t\ge T_0\}} \]
+    Only \(Y_{jt}\) reaches the file; the level, loadings, factors and noise (market size, seasonal sensitivity, the economy) are real but recorded nowhere, and every estimator in Act II is a way to cope with that.</div>
+    <div class="cols">
+      <div>
+        <p>On top of that world we plant a <strong>12% lift</strong> on the treated metro's baseline, switched on at launch week \(T_0=40\):</p>
+        <div class="eqbox">
+          \[ \tau_t \;=\; 0.12\,\bigl(\alpha_1+\gamma_1^{\top}f_t\bigr)\,\mathbf{1}_{\{t\ge T_0\}} \]
+        </div>
+      </div>
+      <div>
+        <div class="callout key"><div class="ct">The planted truth, in business units</div>
+        <span class="num" id="dgmTruthWk">·</span>/week on average, <span class="num" id="dgmTruthTot">·</span> over the 20 campaign weeks, and from here on we pretend not to know it.</div>
+      </div>
     </div>
-    <p>A <strong>12% lift</strong> on the treated metro's no-campaign baseline, switched on at launch week \(T_0=40\): the indicator \(\mathbf{1}_{\{t\ge T_0\}}\) is 1 from launch onwards and 0 before, so the campaign adds nothing to the pre-period.</p>
-    <p>In the units the business uses, the planted truth is <span class="num" id="dgmTruthWk">·</span>/week on average, <span class="num" id="dgmTruthTot">·</span> over the 20 campaign weeks. From here on we pretend not to know it, and grade every procedure by how much of it it recovers.</p>
   </div>
 </section>
 
@@ -330,7 +353,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
 <section class="slide" data-t="Simulate the world (live)" data-sec="Act I · The question">
   <div class="kicker">Act I · The question, and the world behind the data</div>
   <h2>Simulate the world yourself</h2>
-  <div class="sub">Slide 3 was the analyst's view: one frozen dataset, truth invisible. This is the model-owner's view: the same world with the truth switched on. At the case's own dial settings the sandbox shows <b>the case dataset itself</b>, truth overlaid; move any dial and the equations re-run live on a fresh world.</div>
+  <div class="sub">Slide 3 was the analyst's view; this is the same world with the truth switched on. At the case's own dials it shows the case dataset itself, and moving any dial re-runs the equations on a fresh world.</div>
   <div class="sbody">
     <div class="fig">
       <div class="fh"><span class="badge">▶ LIVE</span> The equations of the previous slide. Grey: donor markets. White: the treated metro. <span class="badge" id="dgpMode" style="margin-left:auto"></span></div>
@@ -344,13 +367,20 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
         <button id="dgpReset">back to the case</button>
         <span class="readout" id="dgpRead"></span>
       </div>
-      <div class="cap">Dashed blue: the treated market's \(Y(0)\), drawn by re-running the same equations with the campaign switched off. It is the <b>potential outcome itself</b>, not an estimate: no synthetic control has been built yet, and in real data this line does not exist.</div>
+      <div class="cap">Dashed blue: the treated market's \(Y(0)\), the <b>potential outcome itself</b> (not an estimate), which in real data does not exist.</div>
     </div>
     <div class="cols">
-      <div class="callout"><div class="ct">What the readout means</div>
-      <b>True lift</b>: the effect is planted as a <em>rate</em> (12% of the baseline), so its euro value varies week to week; the readout shows its average over the 20 post-launch weeks. <b>Before/after</b>: the treated series' post-launch mean minus its pre-launch mean. Its <b>error</b> is the percentage gap between the two: it exists because before/after charges everything that changed in the world (tide included) to the campaign.</div>
-      <div class="callout watch"><div class="ct">What the sliders teach</div>
-      <b>Loading spread \(s\)</b>: each market's three exposures are drawn from \(\mathrm{U}(1{-}s,\,1{+}s)\). At \(s=0\) every market reacts identically, so trends are parallel; larger \(s\) pulls them apart and difference-in-differences dies. <b>Macro shock \(\sigma_\eta\)</b>: push it up and the shared wave dominates; before/after becomes garbage.</div>
+      <div>
+        <ul>
+          <li><b>True lift:</b> the planted 12% rate averaged over the 20 post-launch weeks (its euro value varies week to week).</li>
+          <li><b>Before/after:</b> the treated series' post-launch mean minus its pre-launch mean.</li>
+          <li><b>Its error:</b> the % gap between them, because before/after charges the whole tide to the campaign.</li>
+        </ul>
+      </div>
+      <div>
+        <div class="callout watch"><div class="ct">What the sliders teach</div>
+        Send loading spread \(s\to 0\) and every market reacts alike, so trends are parallel and DiD lives; push macro shock \(\sigma_\eta\) up and the shared wave dominates, and before/after becomes garbage.</div>
+      </div>
     </div>
   </div>
 </section>
@@ -380,13 +410,16 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
   <h2>Causal inference is a missing-data problem</h2>
   <div class="sbody"><div class="cols">
     <div>
-      <p>Write the treated metro's sales in week \(t\) two ways: \(Y_t(1)\) with the campaign, \(Y_t(0)\) without. (Only the treated metro is in play here, so the market index is dropped.) The causal effect is the difference between two worlds:</p>
+      <p>Write the treated metro's sales two ways: \(Y_t(1)\) with the campaign, \(Y_t(0)\) without. The causal effect is the gap between the two worlds:</p>
       <div class="eqbox">
         \[ \tau_t \;=\; Y_t(1)-Y_t(0), \qquad \tau \;=\; \sum_{t\ge T_0}\tau_t \]
       </div>
-      <p>\(\tau_t\) is the effect in week \(t\); the sum \(\tau\), the 20-week total, is the estimand the business actually buys. After launch we observe \(Y_t(1)\). We <strong>never</strong> observe \(Y_t(0)\): the fundamental problem of causal inference. Every method in this course is a different way to fill that cell.</p>
+      <ul>
+        <li><b>\(\tau_t\) vs \(\tau\):</b> the weekly effect, and the 20-week total the business actually buys.</li>
+        <li><b>We observe \(Y_t(1)\), never \(Y_t(0)\):</b> the fundamental problem of causal inference, and every method fills that one cell.</li>
+      </ul>
       <div class="callout key"><div class="ct">Define the estimand first</div>
-      Per-week effect and 20-week total are <em>different estimands</em> with different uncertainties. The rollout decision turns on the <strong>total</strong>.</div>
+      Per-week effect and 20-week total are different estimands with different uncertainties, and the rollout decision turns on the total.</div>
     </div>
     <div>
       <table class="mini">
@@ -397,7 +430,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
           <tr><td>29 donors · \(Y(0)\)</td><td><b style="color:var(--green)">observed ✓</b></td><td><b style="color:var(--green)">observed ✓</b></td></tr>
         </tbody>
       </table>
-      <p>Three of the four cells are data. The donors' post-period is untreated, so it carries live information about the no-campaign world, <em>if</em> we can map donors onto the treated metro.</p>
+      <ul><li><b>Three of four cells are data:</b> the donors' untreated post-period carries live information about the no-campaign world, if we can map donors onto the treated metro.</li></ul>
       <p class="q-biz">"What would this metro have sold anyway?" is an estimation target, not a rhetorical question.</p>
     </div>
   </div></div>
@@ -407,28 +440,29 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
 <section class="slide" data-t="Abadie's idea: the synthetic twin" data-sec="Act II · The counterfactual">
   <div class="kicker">Act II · The counterfactual problem</div>
   <h2>Abadie's idea: if no twin exists, build one</h2>
-  <div class="sub">The missing cell is one market's sales in a world where it never advertised. No single donor is that market's twin: each is too big, too small, or too differently exposed. So stop shopping for a twin and <em>manufacture</em> one.</div>
+  <div class="sub">No single donor is the treated market's twin: each is too big, too small, or too differently exposed. So stop shopping for a twin and manufacture one.</div>
   <div class="sbody">
-    <p>Assume untreated sales follow a <strong>factor structure</strong>: the equation you already know from slide 4, now taken as the <em>assumption</em> rather than the recipe.</p>
+    <p>Assume untreated sales follow a <strong>factor structure</strong>, the slide-4 equation now taken as the assumption rather than the recipe:</p>
     <div class="eqbox">
       \[ Y_{jt}(0) \;=\; \alpha_j \;+\; \gamma_j^{\top} f_t \;+\; \varepsilon_{jt} \]
     </div>
     <ul>
-      <li>\(f_t\): the <strong>latent common factors</strong>. Their week-to-week movements are the "shocks": the macro wave rising, the season turning. Every market feels them, but not equally.</li>
-      <li>\(\gamma_j\): market \(j\)'s <strong>loadings</strong>, how strongly it responds to each factor. A tourist town has a big season loading; a commuter suburb a big macro loading. \(\alpha_j\) is its own level. <em>In real data none of these are observed.</em></li>
-      <li>In the simulation \(f_t\) is literally trend + season + macro walk. On real data you never learn what the factors <em>are</em>; the method works without naming them.</li>
+      <li><b>\(f_t\), the latent factors:</b> the shared shocks (macro wave rising, season turning) that every market feels, but not equally.</li>
+      <li><b>\(\gamma_j\), the loadings:</b> how strongly market \(j\) responds to each factor (\(\alpha_j\) is its level); in real data none of these are observed.</li>
+      <li><b>The method never names them:</b> in the sim \(f_t\) is trend + season + macro walk, but on real data it works without knowing what the factors are.</li>
     </ul>
-    <p>Now take a weighted blend of donors. Its level and loadings are the blend of theirs. If the weights make them equal the treated metro's:</p>
+    <p>Blend the donors so their level and loadings equal the treated metro's:</p>
     <div class="eqbox">
       \[ \sum_j w_j\,(\alpha_j,\;\gamma_j) = (\alpha_1,\;\gamma_1) \;\Longrightarrow\; \sum_j w_j\,Y_{jt} \approx Y_{1t}(0)\ \ \text{for all } t \]
     </div>
     <ul>
-      <li><b>Same loadings \(\Rightarrow\) same response to every factor movement</b>, including movements that have not happened yet. That forward guarantee is the whole trick.</li>
+      <li><b>Same loadings, same response</b> to every factor movement, including ones that have not happened yet: that forward guarantee is the whole trick.</li>
     </ul>
     <div class="callout key"><div class="ct">The key intuition</div>
-    DiD matches a <em>level</em>. Synthetic control matches <strong>the response to shocks</strong>. That is why it survives the non-parallel trends that break DiD. The next slide shows this happening.</div>
-    <div class="callout"><div class="ct">Pedigree, and the papers' notation</div>
-    Abadie &amp; Gardeazabal (2003); Abadie, Diamond &amp; Hainmueller (2010): "arguably the most important innovation in the policy-evaluation literature in the last 15 years" (Athey &amp; Imbens 2017). The literature writes the factors \(\lambda_t\) and the loadings \(\mu_j\), and adds a common shock \(\delta_t\) felt identically by every market; any cross-market comparison cancels \(\delta_t\), so nothing changes here. The same machinery now prices ad campaigns.</div>
+    DiD matches a level; synthetic control matches the response to shocks, which is why it survives the non-parallel trends that break DiD.</div>
+    <details class="mathfold"><summary><span class="tw">▸</span> Pedigree, and the papers' notation</summary><div class="mfbody">
+    Abadie &amp; Gardeazabal (2003); Abadie, Diamond &amp; Hainmueller (2010): "arguably the most important innovation in the policy-evaluation literature in the last 15 years" (Athey &amp; Imbens 2017). The literature writes the factors \(\lambda_t\) and the loadings \(\mu_j\), and adds a common shock \(\delta_t\) felt identically by every market; any cross-market comparison cancels \(\delta_t\), so nothing changes here.
+    </div></details>
   </div>
 </section>
 
@@ -445,10 +479,10 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
         <label>weight on donor B <input type="range" id="loadW" min="0" max="100" value="20" step="1"><span class="val" id="loadWv">0.20</span></label>
         <span class="readout" id="loadRead"></span>
       </div>
-      <div class="cap">The blend's loading is \(0.8\,(1-w) + 1.6\,w\). At \(w=0.5\) it equals the treated market's 1.2 and the blend rides <em>every</em> bump identically, including the out-of-sample weeks right of the divider, which the fit never saw. Any other \(w\) tracks well in calm weeks and splits apart exactly when the factor moves.</div>
+      <div class="cap">At \(w=0.5\) the blend's loading \(0.8(1-w)+1.6w\) equals the treated market's 1.2 and rides every bump identically, including the out-of-sample weeks the fit never saw.</div>
     </div>
     <div class="callout key"><div class="ct">Why the pre-period is enough</div>
-    We cannot see loadings, but we can see their <strong>fingerprint</strong>: the pre-launch trajectory. A blend that tracks the treated metro through 40 weeks of factor movements has, with high probability, matched its loadings, and matched loadings keep working on the weeks that come after.</div>
+    We cannot see loadings, but a blend that tracks the treated metro through 40 pre-launch weeks has matched their fingerprint, and matched loadings keep working on the weeks that decide the case.</div>
   </div>
 </section>
 
@@ -462,19 +496,24 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
       \[ \hat w \;=\; \arg\min_{w\in\Delta}\; \sum_{t \lt T_0}\Bigl(Y_{1t}-\sum_j w_j Y_{jt}\Bigr)^{2}, \qquad \Delta=\Bigl\{w : w_j\ge 0,\ \textstyle\sum_j w_j=1\Bigr\} \]
     </div>
     <ul>
-      <li>\(\sum_{t\lt T_0}(\cdot)^2\): plain <strong>least squares on the 40 pre-launch weeks</strong>. The post-period is never shown to the optimiser, so the fit cannot "learn" the effect it is about to measure.</li>
-      <li>\(\Delta\) is the <strong>simplex</strong>: weights are non-negative and sum to one. The synthetic is a <em>weighted average</em> of donors, an interpolation, never "−80% of Milan + 190% of Rome".</li>
-      <li>No likelihood, no prior, no standard error. This is <strong>constrained least squares</strong> (solved by SLSQP), and it ships a point estimate only. Inference comes later, from placebos.</li>
+      <li><b>Least squares on the 40 pre-launch weeks:</b> the post-period is never shown to the optimiser, so the fit cannot learn the effect it will measure.</li>
+      <li><b>The simplex \(\Delta\):</b> weights are non-negative and sum to one, so the synthetic is an interpolation, never "−80% of Milan + 190% of Rome".</li>
+      <li><b>No likelihood, no standard error:</b> constrained least squares (SLSQP) ships a point estimate only, and inference comes later, from placebos.</li>
     </ul>
     <div class="callout"><div class="ct">If you know regression, you already know this</div>
-    Ordinary regression predicts an outcome from variables, one row per observation. Flip the table on its side: here the <b>donor markets are the variables</b> and the <b>40 pre-launch weeks are the observations</b>. Synthetic control is a regression of the treated metro's pre-period on the donors' pre-periods, with the coefficients forced to be portfolio weights. Everything special about the method lives in that constraint.</div>
+    Flip the table on its side: the donor markets are the variables, the 40 pre-launch weeks are the observations, and the coefficients are forced to be portfolio weights.</div>
     <p>Then read the effect off the post-period gap:</p>
     <div class="eqbox">
       \[ \hat\tau_t \;=\; Y_{1t}-\sum_j \hat w_j Y_{jt}, \qquad\qquad \hat\tau \;=\; \sum_{t\ge T_0}\hat\tau_t \]
       <span class="lbl">\(\hat\tau_t\): treated minus synthetic in week \(t\) &nbsp;·&nbsp; \(\hat\tau\): the 20-week total the business buys</span>
     </div>
     <div class="callout key"><div class="ct">Why constrain at all?</div>
-    The simplex buys three things: <strong>interpretability</strong> ("our metro behaves like 40% dma_08 + 32% dma_20 + 17% dma_03" is a sentence a planner can act on), <strong>regularisation</strong> (most weights land on exactly zero), and an <strong>off-switch</strong> (a market no blend can match fails loudly instead of extrapolating). The next slide shows the evidence.</div>
+    The simplex buys three things ordinary regression cannot: interpretability, regularisation, and an off-switch.</div>
+    <ul>
+      <li><b>Interpretability:</b> "40% dma_08 + 32% dma_20 + 17% dma_03" is a sentence a planner can act on.</li>
+      <li><b>Regularisation:</b> most weights land on exactly zero.</li>
+      <li><b>An off-switch:</b> a market no blend can match fails loudly instead of extrapolating.</li>
+    </ul>
   </div>
 </section>
 
@@ -487,21 +526,21 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
     <div class="fig">
       <div class="fh"><span class="badge">▶ LIVE</span> Two synthetics against the truth only a simulation can draw</div>
       <div class="canvas"><svg viewBox="0 0 720 235" id="svgOls"></svg></div>
-      <div class="cap">OLS hugs the pre-period <em>tighter</em> (pre-fit error <span id="olsPre"></span> vs <span id="clPre"></span>) and then drifts <em>further</em> from the true \(Y(0)\) after launch (post error <span id="olsPost"></span> vs <span id="clPost"></span>). Fitting noise with wild weights is overfitting; the simplex refuses to.</div>
+      <div class="cap">OLS hugs the pre-period tighter (<span id="olsPre"></span> vs <span id="clPre"></span>) yet drifts further from the true \(Y(0)\) after launch (<span id="olsPost"></span> vs <span id="clPost"></span>): overfitting the simplex refuses.</div>
     </div>
     <div class="cols">
       <div class="fig">
         <div class="fh">The weights OLS chose</div>
         <div class="canvas"><svg viewBox="0 0 720 170" id="svgNeff"></svg></div>
-        <div class="cap">OLS puts <b>negative</b> weight on <span id="olsNeg"></span> of the 29 donors (down to <span id="olsMin"></span>) and gross weight <span id="olsSum"></span> where the simplex uses exactly 1. Each grey bar is a bet no planner can explain.</div>
+        <div class="cap">OLS puts negative weight on <span id="olsNeg"></span> donors (down to <span id="olsMin"></span>) and gross weight <span id="olsSum"></span>, where the simplex uses exactly 1.</div>
       </div>
       <div>
         <div class="eqbox">
           \[ n_{\mathrm{eff}} \;=\; \frac{1}{\sum_j \hat w_j^{2}} \]
-          <span class="lbl"><b>Effective number of donors</b> (inverse Herfindahl). All weight on one donor \(\Rightarrow n_{\mathrm{eff}}=1\); spread over all 29 equally \(\Rightarrow n_{\mathrm{eff}}=29\). Ours: <b>3.3</b>, the twin is really a blend of about three markets.</span>
+          <span class="lbl"><b>Effective number of donors</b> (inverse Herfindahl): one donor \(\Rightarrow n_{\mathrm{eff}}=1\), all 29 equally \(\Rightarrow 29\). Ours: <b>3.3</b>.</span>
         </div>
         <div class="callout watch"><div class="ct">A measured caution</div>
-        Across 24 re-simulated worlds the simplex predicts the missing \(Y(0)\) about <strong>1.6× better</strong> out of sample than OLS. The constraint is a guarantee about the <em>object</em> (a defensible interpolation), not a promise to win every panel.</div>
+        Across 24 re-simulated worlds the simplex predicts the missing \(Y(0)\) about 1.6× better out of sample than OLS: a guarantee about the object, not a promise to win every panel.</div>
       </div>
     </div>
   </div>
@@ -511,7 +550,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
 <section class="slide" data-t="Why not just forecast it?" data-sec="Act II · The counterfactual">
   <div class="kicker">Act II · The counterfactual problem, versus machine learning</div>
   <h2>"Why not gradient boosting / Prophet / an LSTM?"</h2>
-  <div class="sub">The obvious modern move: treat \(Y(0)\) as a forecasting problem — donors and time features in, next week's sales out. Here is that model, fitted for real on this panel.</div>
+  <div class="sub">The obvious modern move: treat \(Y(0)\) as a forecasting problem, donors and time features in, next week's sales out. Here is that model, fitted for real on this panel.</div>
   <div class="sbody"><div class="cols">
     <div>
       <div class="fig"><div class="fh"><span class="badge">▶ LIVE</span> A kitchen-sink forecaster (donors + trend + seasonality, fit pre-launch only)</div>
@@ -519,15 +558,15 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
         <div class="cap">Solid: treated sales. Dashed blue: the forecaster. Dashed grey: the simplex twin. Both fit only the 40 pre-launch weeks.</div>
       </div>
       <ul>
-        <li><b>In-sample it wins, honestly:</b> pre-fit RMSE <span class="num" id="mlPre"></span> vs the simplex's <span class="num" id="mlScPre"></span>. Flexibility buys fit — it always does.</li>
-        <li><b>On this one world the implied effects are a wash</b> (<span id="mlEff"></span> vs <span id="mlScEff"></span> against a truth of €284k) — one draw proves nothing either way. The systematic result is the sweep: across <b>24 fresh worlds</b>, the flexible unconstrained fit is <b>{{nb07.hull_oos_ratio}}× worse out of sample</b> than the simplex — the same pathology as slide 11's OLS panel, with no weight vector left to inspect.</li>
+        <li><b>In-sample it wins, honestly:</b> pre-fit RMSE <span class="num" id="mlPre"></span> vs the simplex's <span class="num" id="mlScPre"></span>; flexibility always buys fit.</li>
+        <li><b>On one world the effects are a wash</b> (<span id="mlEff"></span> vs <span id="mlScEff"></span> against a truth of €284k), but the sweep is systematic: across <b>24 fresh worlds</b> the unconstrained fit is <b>{{nb07.hull_oos_ratio}}× worse out of sample</b>, with no weight vector left to inspect.</li>
       </ul>
     </div>
     <div>
       <div class="callout watch"><div class="ct">The interval is the real disagreement</div>
-      A forecaster's prediction interval prices <b>forecast error under the training distribution</b>: "how wrong am I in weeks that look like the weeks I saw?" The question the campaign asks is different: <b>"is my reconstruction of a world that never happened right?"</b> Cross-validation, held-out weeks, backtesting — all of them score the first question. On <b>one treated unit</b> the second question is the entire game, and no amount of validation reaches it.</div>
+      A forecaster prices error under the training distribution ("how wrong in weeks like those I saw?"); the campaign instead asks whether a reconstruction of a world that never happened is right, and no cross-validation reaches that on one treated unit.</div>
       <ul>
-        <li><b>What the simplex trades away, and for what.</b> It fits worse in-sample <em>on purpose</em>: the convex-hull constraint forbids the extrapolation that lets flexible models chase noise. Its weights are an inspectable claim (slide 9's loadings; the n_eff you will meet on the model slide); a boosted tree's counterfactual is a claim you cannot audit.</li>
+        <li><b>The simplex fits worse in-sample on purpose:</b> the convex-hull constraint forbids the extrapolation that lets flexible models chase noise, and its weights are an inspectable claim a boosted tree cannot offer.</li>
         <li class="q-biz"><b>The forecaster is better at prediction. The simplex is better at the job.</b></li>
       </ul>
     </div>
@@ -551,9 +590,9 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
       <div class="cap">Dashed blue: your synthetic. Shaded area: the implied lift.</div>
     </div>
     <ul>
-      <li><b>This is where the lecture's headline number is born.</b> The implied lift is the shaded area: \(\hat\tau=\sum_{t\ge 40}\bigl(Y_{1t}-\sum_j w_j Y_{jt}\bigr)\), the post-launch gap between the treated series and the blend, summed over the 20 campaign weeks. The readout computes it live as you move the sliders.</li>
-      <li>At the optimiser's weights (press <em>Reset to optimum</em>) the pre-fit error is <span class="num">{{nb07.rmspe_simplex}}</span> and the implied lift reads <b>€260k</b>: the number every later slide interrogates.</li>
-      <li>Move any slider and watch both numbers: <em>the counterfactual, and hence the effect, is a function of the fit</em>. That is why the pre-fit error, not taste, will be the gate.</li>
+      <li><b>Where the headline number is born:</b> the implied lift is the shaded post-launch gap \(\hat\tau=\sum_{t\ge 40}(Y_{1t}-\sum_j w_j Y_{jt})\), computed live as you move the sliders.</li>
+      <li><b>At the optimiser's weights</b> (press Reset to optimum) the pre-fit error is <span class="num">{{nb07.rmspe_simplex}}</span> and the lift reads <b>€260k</b>, the number every later slide interrogates.</li>
+      <li><b>The effect is a function of the fit:</b> move any slider and both numbers move, which is why the pre-fit error, not taste, will be the gate.</li>
     </ul>
   </div>
 </section>
@@ -562,28 +601,28 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
 <section class="slide" data-t="Every shortcut is an assumption" data-sec="Act II · The counterfactual">
   <div class="kicker">Act II · The counterfactual problem</div>
   <h2>Every "obvious" estimator is a claim about \(Y(0)\)</h2>
-  <div class="sub">You have built one estimator. Here are the three shortcuts a boardroom would have reached for instead, each run on the same simulated panel, each graded against the planted truth of €14.2k/week.</div>
+  <div class="sub">You have built one estimator. Here are the three shortcuts a boardroom would reach for instead, each run on the same panel, each graded against the planted truth of €14.2k/week.</div>
   <div class="sbody">
     <div class="cols">
       <div>
         <div class="eqbox">
           \[ \hat\tau^{\text{BA}} \;=\; \bar Y_{1,\text{post}} - \bar Y_{1,\text{pre}} \]
         </div>
-        <p><b>Before/after.</b> Implied \(Y(0)\): "sales would have stayed at their pre-launch average." Assumes <b>no trend, no season, no macro wave</b>. On the case dataset: <span class="num" id="nvBaC">·</span> vs truth €14.2k/wk.</p>
+        <p><b>Before/after:</b> assumes \(Y(0)\) stays at the pre-launch average (no trend, season, or wave). Case <span class="num" id="nvBaC">·</span> vs truth €14.2k/wk.</p>
         <div class="eqbox">
           \[ \hat\tau^{\text{T-C}} \;=\; \bar Y_{1,\text{post}} - \bar Y_{\text{ctrl},\text{post}} \]
         </div>
-        <p><b>Treated vs average control.</b> Implied \(Y(0)\): "our metro sells what the average metro sells." Assumes <b>one shared level</b>, false the moment markets differ in size. Case dataset: <span class="num" id="nvTcC">·</span>.</p>
+        <p><b>Treated vs average control:</b> assumes one shared level, false the moment markets differ in size. Case <span class="num" id="nvTcC">·</span>.</p>
       </div>
       <div>
         <div class="eqbox">
           \[ \hat\tau^{\text{DiD}} \;=\; \Delta_{\text{treated}} - \Delta_{\text{ctrl}}, \quad \Delta = \bar Y_{\text{post}} - \bar Y_{\text{pre}} \]
         </div>
-        <p><b>Difference-in-differences.</b> Implied \(Y(0)\): "our metro moves in lockstep with the average control." Removes the level gap but assumes <b>parallel trends</b>. Case dataset: <span class="num" id="nvDidC">·</span>.</p>
+        <p><b>Difference-in-differences:</b> removes the level gap but assumes parallel trends. Case <span class="num" id="nvDidC">·</span>.</p>
         <div class="eqbox">
           \[ \hat\tau^{\text{SC}} \;=\; \bar Y_{1,\text{post}} - \textstyle\sum_j w_j\, \bar Y_{j,\text{post}} \]
         </div>
-        <p><b>Synthetic control: the one you just fitted.</b> Implied \(Y(0)\): "a weighted blend of donors that matched us pre-launch keeps matching us." Assumes <b>matched exposures</b>, and earns that assumption by fitting. Case dataset: <span class="num" id="nvScC">·</span>.</p>
+        <p><b>Synthetic control (the one you fitted):</b> assumes matched exposures, and earns it by fitting. Case <span class="num" id="nvScC">·</span>.</p>
       </div>
     </div>
     <div class="fig"><div class="fh"><span class="badge">▶ LIVE</span> Four estimates, one truth: now with the world's dials exposed <span class="badge" id="nvMode" style="margin-left:auto"></span></div>
@@ -594,7 +633,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
       <button id="nvReset">back to the case</button>
       <span class="readout" id="nvRead"></span>
     </div>
-    <div class="cap">At the case's own dials the bars <b>are</b> the case dataset: the same four numbers as the boxes above, against the same truth. Move a dial and the whole world re-simulates (slide 5's generator and seed) and every estimator re-scores on it.</div></div>
+    <div class="cap">At the case's dials the bars are the case dataset; move a dial and the whole world re-simulates and every estimator re-scores.</div></div>
     <details class="mathfold"><summary><span class="tw">▸</span> How to read the dials (red = error against the truth)</summary><div class="mfbody">
     <ul>
       <li><b>Loading spread → 0</b>: markets react identically, trends become parallel, DiD's error collapses to noise. Treated-minus-control keeps its error: the level gap never dies.</li>
@@ -602,29 +641,29 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
     </ul>
     </div></details>
     <div class="callout watch"><div class="ct">None of these numbers ships a warning label</div>
-    Each error is a wrong <em>claim about \(Y(0)\)</em>, and a wrong claim does not improve with more data: before/after on two hundred weeks still charges the tide to the campaign, only more precisely. The cure is never a bigger sample; it is a better claim about \(Y(0)\). DiD's claim fails here because metros differ in their exposures \(\gamma_j\) — a bias the sliders let you feel but not yet <em>name</em>. The next two slides name it: on the graph, then in algebra.</div>
+    Each error is a wrong claim about \(Y(0)\), and a wrong claim never improves with more data: the cure is a better claim, not a bigger sample, and the next two slides name the bias, on the graph then in algebra.</div>
   </div>
 </section>
 
 <!-- ================= 14 · Confounding, on a graph ================= -->
 <section class="slide" data-t="Confounding, on a graph" data-sec="Act II · The counterfactual">
   <div class="kicker">Act II · The counterfactual problem</div>
-  <h2>The problem on a graph — and the repair, one toggle away</h2>
+  <h2>The problem on a graph, and the repair one toggle away</h2>
   <div class="sbody"><div class="cols">
     <div>
-      <p>Notice what this graph does <em>not</em> contain: an arrow into \(X\). The factors \(f_t\) feed <em>every</em> market's sales, each through its own loadings \(\gamma_j\), and the treated metro's \(\gamma_1\) is nobody's average. Whatever fixed control you subtract, the comparison keeps a mismatch:</p>
+      <p>Notice what this graph does <em>not</em> contain: an arrow into \(X\). The factors \(f_t\) feed every market through its own loadings \(\gamma_j\), and the treated metro's \(\gamma_1\) is nobody's average, so any fixed control keeps a mismatch:</p>
       <div class="eqbox">
         \[ \hat\tau^{\text{T-C}} \;=\; \bar\tau \;+\; \underbrace{(\alpha_1-\bar\alpha)}_{\text{level gap}} \;+\; \underbrace{(\gamma_1-\bar\gamma)^{\top}\bar f_{\text{post}}}_{\text{factor mismatch}} \;+\; \text{noise} \]
       </div>
       <ul>
-        <li><b>In words</b>: besides the truth \(\bar\tau\) (the average weekly effect; slide 7's total is \(\tau=20\,\bar\tau\)), the estimate keeps the size gap, and the difference in how the two respond to the world times whatever the world did after launch. <b>DiD removes the level gap and nothing else</b> — and with <b>one</b> treated market, nothing averages the mismatch away.</li>
-        <li><b>The repair (tick the box)</b>: a donor blend <em>built to carry the same loadings</em>, \(\sum_j w_j\gamma_j \approx \gamma_1\), rides the same latent \(f_t\); the gap \(Y_{1t}-\sum_j w_j Y_{jt}\) cancels the factors. <b>The mismatch dies at any spread \(s\)</b>, where DiD had to hope for \(s\to 0\). The pre-period fit you achieved on the mixer is the <em>evidence</em> the footprints match.</li>
+        <li><b>In words:</b> besides the truth \(\bar\tau\), the estimate keeps the size gap and the factor mismatch; DiD removes only the level gap, and with one treated market nothing averages the mismatch away.</li>
+        <li><b>The repair (tick the box):</b> a blend built to carry the same loadings \(\sum_j w_j\gamma_j \approx \gamma_1\) rides the same \(f_t\), so the gap cancels the factors and the mismatch dies at any spread \(s\).</li>
       </ul>
       <details class="mathfold"><summary><span class="tw">▸</span> Why not just control for the confounders?</summary><div class="mfbody">
       Controlling means conditioning on <em>recorded</em> variables, and the variables doing the damage were never recorded: no column of the file contains \(f_t\) or \(\gamma_1\). You cannot adjust for what was never written down. What rescues us is structure, not measurement: the factors are <b>shared</b> and the loadings <b>stable</b>, so the donors' observed sales are live readings of the same unmeasured \(f_t\).
       </div></details>
       <details class="mathfold"><summary><span class="tw">▸</span> And if the metro was picked for its character?</summary><div class="mfbody">
-      Plausible in practice: firms test where the outlook is good. The graph then gains one arrow, \(X \leftarrow f_t\): a textbook <b>back-door</b> — the same \(f_t\) drives both the choice to advertise and the sales. <b>One cure, both readings</b>: the same loading-matching closes the back-door too. Synthetic control never needs to know which world it is in.
+      Plausible in practice: firms test where the outlook is good. The graph then gains one arrow, \(X \leftarrow f_t\): a textbook <b>back-door</b>, the same \(f_t\) driving both the choice to advertise and the sales. <b>One cure, both readings</b>: the same loading-matching closes the back-door too, so synthetic control never needs to know which world it is in.
       </div></details>
     </div>
     <div>
@@ -633,7 +672,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
         <div class="canvas"><svg viewBox="0 0 720 300" id="svgDagP"></svg></div>
         <div class="cap" id="dagCap">Each market feels \(f_t\) through its own loadings \(\gamma_j\). Nothing points into \(X\), and the danger is already there.</div>
       </div>
-      <p class="small" style="margin-top:.4rem">That mismatch is the identification problem of this lecture, and it exists <em>however</em> the metro was picked — it is exactly the bias the sliders moved. Ahead: the algebra that prices it (deep dive), then the named assumptions the repair must earn.</p>
+      <p class="small" style="margin-top:.4rem">This mismatch is the identification problem of the lecture, and it exists however the metro was picked: exactly the bias the sliders moved. Ahead: the algebra that prices it, then the assumptions the repair must earn.</p>
     </div>
   </div></div>
 </section>
@@ -648,8 +687,8 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
       \[ \hat\tau^{\text{DiD}} \;=\; \bar\tau \;+\; \underbrace{(\gamma_1-\bar\gamma_C)^{\top}\,\Delta\bar f}_{\text{systematic bias }B} \;+\; \underbrace{\Delta\bar\varepsilon_1-\Delta\bar\varepsilon_C}_{\text{idiosyncratic noise}} \]
     </div>
     <ul>
-      <li>\(\Delta\bar f\): the <b>post-minus-pre drift</b> of the three factors (trend, seasonality, macro walk). \(\bar\gamma_C\): the \(n\) controls' average loadings. \(\Delta\bar\varepsilon\): the same post-minus-pre change in the idiosyncratic noise.</li>
-      <li>\(B\) is <b>mean-zero over the exposure draw</b> (every loading averages to 1), but your world is one draw: in it, \(B\) is a fixed nonzero number whose typical size is</li>
+      <li><b>The pieces:</b> \(\Delta\bar f\) is the post-minus-pre drift of the three factors, \(\bar\gamma_C\) the \(n\) controls' average loadings, \(\Delta\bar\varepsilon\) the change in idiosyncratic noise.</li>
+      <li><b>\(B\) is mean-zero over the exposure draw,</b> but your world is one draw, so in it \(B\) is a fixed nonzero number whose typical size is:</li>
     </ul>
     <div class="eqbox">
       \[ \operatorname{Var}(B) \;=\; \frac{s^{2}}{3}\Bigl(1+\frac{1}{n}\Bigr)\Bigl[(\Delta\bar f_{\text{trend}})^{2}+(\Delta\bar f_{\text{season}})^{2}+(\Delta\bar f_{\text{walk}})^{2}\Bigr] \]
@@ -672,8 +711,8 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
       </ul></div>
     </div>
     <ul>
-      <li><b>Notice what is absent from \(B\): the amount of data.</b> \(\Delta\bar f\) is the world's drift, not sampling error; more weeks shrink only the noise term, and with one treated market nothing ever averages over its own loading draw. Data buys precision around the same biased number.</li>
-      <li><b>This is why you fitted a blend instead of averaging the donors.</b> DiD is stuck with the equal-weight \(\bar\gamma_C\) and must <em>hope</em> \(s\) is small. Synthetic control replaces it with fitted weights \(\sum_j w_j\gamma_j\) built to match \(\gamma_1\), which kills \(B\) at <em>any</em> spread — the repair you just toggled on the graph.</li>
+      <li><b>\(B\) carries no term for the amount of data:</b> \(\Delta\bar f\) is the world's drift, not sampling error, so more weeks shrink only noise and buy precision around the same biased number.</li>
+      <li><b>This is why you fitted a blend:</b> DiD is stuck with the equal-weight \(\bar\gamma_C\) and must hope \(s\) is small, while fitted weights \(\sum_j w_j\gamma_j\) match \(\gamma_1\) and kill \(B\) at any spread.</li>
     </ul>
     <details class="mathfold"><summary><span class="tw">▸</span> The noise term, and the honest claim</summary><div class="mfbody">
     The idiosyncratic noise survives both limits: it carries \(\sigma_\varepsilon \approx 3\) whatever \(s\) and \(\sigma_\eta\) do. The honest claim in a limit is "the <em>systematic</em> bias vanishes", never "DiD equals the truth".
@@ -709,7 +748,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
       </tbody>
     </table>
     <div class="callout key"><div class="ct">The referee principle</div>
-    ①, ②, ④ are testable, and the notebook tests all three (slides ahead show ② and the spillover simulation for ③). The one that is <em>not</em> testable is exactly why geo-test <strong>design</strong> matters more than any statistic computed afterwards.</div>
+    Three of the four are testable and the notebook tests them; the one that is not, no-spillover, is exactly why geo-test <strong>design</strong> matters more than any statistic computed afterwards.</div>
   </div>
 </section>
 
@@ -720,22 +759,22 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
   <div class="sub">Before answering, remember how "is it real?" is normally tested, and why none of that machinery works here.</div>
   <div class="sbody"><div class="cols">
     <div>
-      <p>With an A/B test you have <strong>many treated units</strong>. The recipe is a century old:</p>
+      <p>With an A/B test you have many treated units, and the recipe is a century old:</p>
       <div class="eqbox">
         \[ t \;=\; \frac{\bar Y_{\text{treated}} - \bar Y_{\text{control}}}{\mathrm{SE}}, \qquad \mathrm{SE} \;=\; \sqrt{\tfrac{s_T^2}{n_T} + \tfrac{s_C^2}{n_C}} \]
         <span class="lbl">the standard error is estimated <b>from the spread across treated units</b>, and the CLT turns \(t\) into a p-value</span>
       </div>
-      <p>Every piece needs replication: \(s_T^2\) is a variance <em>across treated units</em>, and the normal approximation needs \(n_T\) to grow.</p>
+      <ul><li><b>Every piece needs replication:</b> \(s_T^2\) is a variance across treated units, and the normal approximation needs \(n_T\) to grow.</li></ul>
     </div>
     <div>
-      <p>Here:</p>
+      <p><b>Here, none of it applies:</b></p>
       <ul>
-        <li>\(n_T = 1\). A variance across one unit <strong>does not exist</strong>; there is no SE to put in the denominator.</li>
-        <li>No likelihood was written down anywhere, so there is no model-based standard error to fall back on either.</li>
-        <li>Asymptotics in \(n_T\) have nothing to bite on. The t-test is not weak here; it is <strong>undefined</strong>.</li>
+        <li><b>\(n_T = 1\):</b> a variance across one unit does not exist, so there is no SE for the denominator.</li>
+        <li><b>No likelihood anywhere:</b> there is no model-based standard error to fall back on either.</li>
+        <li><b>Nothing for asymptotics to bite:</b> the t-test is not weak here, it is undefined.</li>
       </ul>
       <div class="callout watch"><div class="ct">The way out</div>
-      Change what you randomise over. We cannot replicate the treated metro, but we can ask how big a gap the method finds in markets where <strong>nothing happened</strong>. That comparison set is buildable from the data we already have.</div>
+      Change what you randomise over: ask how big a gap the method finds in markets where nothing happened, a comparison set buildable from the data we already have.</div>
     </div>
   </div></div>
 </section>
@@ -769,21 +808,27 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
       <div class="canvas"><svg viewBox="0 0 720 250" id="svgPlacebo"></svg></div>
       <div class="cap">The histogram is the null: the "effects" the method reports where nothing happened. The green line is our metro.</div>
     </div>
-    <ul>
-      <li><b>How the null is built, without a formula.</b> Take a donor where <em>no campaign ran</em>, pretend it was treated, and run the entire pipeline on it: fit weights on its pre-period, subtract, sum the 20 post-launch weeks. Whatever comes out is pure luck, because there was nothing to find. Do that 29 times and the histogram <em>is</em> the distribution of luck.</li>
-      <li><b>Read the picture.</b> Luck centres on zero and rarely clears <span id="plSd">·</span>. The best any placebo manages is <b><span id="plWorst">·</span></b> (orange). Our metro reports <b>€260k</b>: not in the tail of the cloud, <em>outside it</em>, more than twice the luckiest fake.</li>
-      <li><b>So the p-value is just a rank</b>, and it needs no bell curve, no independence, no asymptotics: the placebos <em>measured</em> the noise instead of assuming it.</li>
-      <li><b>One hygiene rule (Abadie's).</b> A placebo whose own pre-launch fit is terrible measures fitting failure, not luck, so standard practice drops placebos whose pre-fit error is many times the treated metro's before reading the rank. Here it changes nothing: none of the 29 is bad enough to drop, and the notebook re-checks the rank under every threshold it tries (2×, 5×, 20× our pre-fit error): p = 0.033 every time.</li>
-    </ul>
     <div class="cols">
-      <div class="eqbox">
-        \[ p \;=\; \frac{1+\#\{\,j:\ |\hat\tau_j| \ge |\hat\tau_1|\,\}}{J+1} \;=\; \frac{1+0}{30} \;\approx\; 0.033 \]
+      <div>
+        <ul>
+          <li><b>How the null is built:</b> pretend an untreated donor was treated and run the whole pipeline; whatever comes out is pure luck, and 29 of them are the distribution of luck.</li>
+          <li><b>Read the picture:</b> luck centres on zero and rarely clears <span id="plSd">·</span>; the best placebo manages <b><span id="plWorst">·</span></b>, while our metro's <b>€260k</b> sits outside the cloud entirely.</li>
+          <li><b>The p-value is just a rank:</b> no bell curve, no independence, no asymptotics, because the placebos measured the noise instead of assuming it.</li>
+        </ul>
       </div>
-      <div class="callout" style="margin:.55rem 0"><div class="ct">Design lesson: your donors are your resolution</div>
-      \(\hat\tau_1\) is our metro's estimate, \(\hat\tau_j\) each donor's placebo, \(J=29\). Nothing beat us, so \(p\) hits its <b>floor</b> \(1/(J+1) = 1/30\). That floor is set by the <em>number of control markets</em>, not the weeks of data: with 9 donors the best attainable \(p\) is 0.1, and no campaign, however large, could ever be called significant at 5%.</div>
+      <div>
+        <div class="eqbox">
+          \[ p \;=\; \frac{1+\#\{\,j:\ |\hat\tau_j| \ge |\hat\tau_1|\,\}}{J+1} \;=\; \frac{1+0}{30} \;\approx\; 0.033 \]
+        </div>
+        <div class="callout"><div class="ct">Your donors are your resolution</div>
+        Nothing beat us, so \(p\) hits its floor \(1/(J+1)=1/30\), set by the number of control markets, not the weeks of data: with 9 donors the best attainable \(p\) is 0.1.</div>
+      </div>
     </div>
     <div class="callout watch"><div class="ct">What this did not tell you</div>
-    That the campaign was <b>worth the money</b>. "Real" and "profitable" are different questions, asked of different objects. Act IV asks the second one.</div>
+    Whether the campaign was worth the money: "real" and "profitable" are different questions, and Act IV asks the second.</div>
+    <details class="mathfold"><summary><span class="tw">▸</span> Abadie's hygiene rule, and the robustness check</summary><div class="mfbody">
+    A placebo whose own pre-launch fit is terrible measures fitting failure, not luck, so standard practice drops placebos whose pre-fit error is many times the treated metro's before reading the rank. Here none of the 29 is bad enough to drop, and the notebook re-checks the rank at 2×, 5×, 20× our pre-fit error: p = 0.033 every time.
+    </div></details>
   </div>
 </section>
 
@@ -793,31 +838,37 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
   <h2>From a test to an interval: inversion</h2>
   <div class="sub">You have one number, €260k, and one question: which true lifts could have produced it? Ask the placebo test about <em>every</em> candidate, and the survivors form the interval. No bell curve is used anywhere.</div>
   <div class="sbody">
-    <ul>
-      <li><b>What the placebos already gave you: the estimator's error.</b> Run on a market with a true lift of zero, the method still reports something: the cloud, centred on 0, spread ±€50k. That spread is <em>this estimator's mistake distribution</em>.</li>
-      <li><b>The one assumption.</b> That the mistake does not change size when the truth is not zero. So if the true lift were \(H\), the estimator would report <b>\(H\) + the same cloud</b>: the cloud slides right, its shape untouched. That is the blue cloud in the figure, and the slider moves it.</li>
-      <li><b>Test one \(H\).</b> \(H\) survives if our actual €260k lands inside the middle 90% of its slid cloud. If €260k falls in the tails, that \(H\) would have made our data a freak event: reject it.</li>
-    </ul>
+    <div class="cols">
+      <div>
+        <ul>
+          <li><b>The placebos gave you the error:</b> on a true lift of zero the method still reports a cloud centred on 0, spread ±€50k, its mistake distribution.</li>
+          <li><b>The one assumption:</b> that mistake keeps its size when the truth is not zero, so a true lift \(H\) reports as \(H\) + the same cloud (the blue cloud the slider moves).</li>
+          <li><b>Test one \(H\):</b> it survives if our €260k lands in the middle 90% of its slid cloud, and is rejected if €260k falls in the tails.</li>
+        </ul>
+      </div>
+      <div>
+        <div class="fig">
+          <div class="fh"><span class="badge">▶ LIVE</span> Drag \(H\). The green line is the data: it never moves. The cloud is the hypothesis: it does.</div>
+          <div class="canvas"><svg viewBox="0 0 720 285" id="svgInv"></svg></div>
+          <div class="controls">
+            <label>hypothesised true lift \(H\) <input type="range" id="invH" min="120" max="400" value="300" step="1"><span class="val" id="invHv"></span></label>
+            <span class="readout" id="invRead"></span>
+          </div>
+          <div class="cap">Drag until the green line leaves the shaded 90% band: the exact moment \(H\) is rejected, at the interval's edges.</div>
+        </div>
+      </div>
+    </div>
     <div class="eqbox">
       \[ \underbrace{H + q_{0.05} \;\le\; 260 \;\le\; H + q_{0.95}}_{\text{\(H\) survives: our gap is an ordinary draw under \(H\)}}
          \qquad\Longleftrightarrow\qquad
          \underbrace{260 - q_{0.95} \;\le\; H \;\le\; 260 - q_{0.05}}_{\text{the same statement, solved for \(H\)}} \]
     </div>
     <ul>
-      <li><b>That rearrangement is the whole trick, and it is where the name comes from.</b> The left side asks "is the <em>data</em> ordinary under this \(H\)?"; solving the inequality for \(H\) turns a test you run once per hypothesis into a <em>range of \(H\)</em> you can read off directly. Inverting the test <em>is</em> the interval.</li>
-      <li>With the placebo quantiles \(q_{0.05}=-75\) and \(q_{0.95}=+65\): \(\;[260-65,\ 260+75] = \) <b>[€195k, €335k]</b>. Note the asymmetry is inherited from the placebos, not imposed.</li>
+      <li><b>Inverting the test is the interval:</b> solving the survival inequality for \(H\) turns a per-hypothesis test into a range you read off directly, which is where the name comes from.</li>
+      <li><b>The numbers:</b> with \(q_{0.05}=-75\) and \(q_{0.95}=+65\), \([260-65,\ 260+75]=\) <b>[€195k, €335k]</b>, the asymmetry inherited from the placebos, not imposed.</li>
     </ul>
-    <div class="fig">
-      <div class="fh"><span class="badge">▶ LIVE</span> Drag \(H\). The green line is the data: it never moves. The cloud is the hypothesis: it does.</div>
-      <div class="canvas"><svg viewBox="0 0 720 285" id="svgInv"></svg></div>
-      <div class="controls">
-        <label>hypothesised true lift \(H\) <input type="range" id="invH" min="120" max="400" value="300" step="1"><span class="val" id="invHv"></span></label>
-        <span class="readout" id="invRead"></span>
-      </div>
-      <div class="cap">Drag until the green line leaves the shaded 90% band: that is the exact moment \(H\) gets rejected, and it happens at the interval's edges.</div>
-    </div>
     <div class="callout key"><div class="ct">Why this interval is the referee</div>
-    It assumed no normality, no independence, no error model: the placebos <b>measured</b> the noise instead. Every model-based interval later in this lecture has to answer to it.</div>
+    It assumed no normality, no independence, no error model, so every model-based interval later in this lecture has to answer to it.</div>
   </div>
 </section>
 
@@ -825,7 +876,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
 <section class="slide" data-t="Falsification 1: placebo-in-time" data-sec="Act III · Is it real, how big?">
   <div class="kicker">Act III · Is it real, and how big? Stress-test the estimate</div>
   <h2>Falsification 1: a launch that did not happen</h2>
-  <div class="sub">How it is computed: refit the whole estimator using only weeks 0-29, <em>pretend</em> the launch happened at week 30, and read the "effect" in weeks 30-39, where we know the truth is zero.</div>
+  <div class="sub">How it is computed: refit using only weeks 0-29, pretend the launch happened at week 30, and read the "effect" in weeks 30-39, where the truth is zero.</div>
   <div class="sbody">
     <div class="fig"><div class="fh"><span class="badge">▶ LIVE</span> The weekly gap (treated minus synthetic) around a back-dated launch</div>
       <div class="canvas"><svg viewBox="0 0 720 235" id="svgPtime"></svg></div>
@@ -833,10 +884,10 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
         <label><input type="checkbox" id="ptAnt"> show a broken world: sales leak 6 weeks early</label>
         <span class="readout" id="ptRead"></span>
       </div>
-      <div class="cap">Clean world: the gap hugs zero through the fake window (average <b>≈ €1.7k</b>, inside the grey pre-fit noise band) and lifts to ≈ €13k/week only after the <em>real</em> launch. Tick the box for a world where the launch leaked (customers anticipate, or the campaign was pre-announced): the gap climbs <b>before</b> week 40 and the fake window lights up. That is what this check is built to catch.</div>
+      <div class="cap">Clean world: the gap hugs zero through the fake window (average ≈ €1.7k) and lifts only after the real launch. Tick the box for a leaked launch: the gap climbs before week 40 and the fake window lights up.</div>
     </div>
     <div class="callout key"><div class="ct">What passing rules out</div>
-    Stock-piling, pre-announcement, a leaked launch: anything that would make sales react <em>before</em> the campaign and smear the attribution across the boundary. A synthetic control that "detects" an effect before treatment is broken. This one does not.</div>
+    Stockpiling, pre-announcement, a leaked launch: anything that makes sales react before the campaign, which a synthetic control that "detects" an effect before treatment would reveal.</div>
   </div>
 </section>
 
@@ -860,10 +911,10 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
       </div>
     </div>
     <ul>
-      <li><b>What \(\varphi\) means, and what the figure does.</b> \(\varphi\) is the share of the treated metro's lift that leaks into 5 neighbouring donors: \(\varphi=0.25\) means those neighbours each get a quarter of the campaign's effect. For each \(\varphi\) in \(0,\ 0.1,\ 0.25,\ 0.5\) we rebuild the whole panel with the leak planted, rerun the full SLSQP fit, and plot the total it reports.</li>
-      <li><b>The result</b>: the reported total slides from <b>€260k</b> down to <b>€236k</b> as the leak grows. The campaign did not get weaker; our <em>measuring stick</em> got contaminated. Since the synthetic is built <em>out of</em> the donors, lifting them lifts the counterfactual, and the gap closes. The bias is always <b>toward zero</b>.</li>
-      <li><b>Why this one is genuinely dangerous</b>: it is invisible. The contaminated world still fits beautifully pre-launch (the leak starts at launch), so the pre-fit gate stays green and every placebo still passes. A diagnostic can only catch a violation that leaves a fingerprint <em>in the data you have</em>, and this one does not.</li>
-      <li><b>So the defence is design, not statistics</b>: choose donors far from the treated metro's media footprint, or exclude the commuter belt from the pool. If you cannot, say so in the memo: the number you ship is a <b>floor</b>, which is comforting if you are about to say NO-GO and unhelpful if you are about to say GO.</li>
+      <li><b>What \(\varphi\) does:</b> the share of the lift leaking into 5 neighbour donors; sweeping \(\varphi\in\{0,0.1,0.25,0.5\}\), each a full rebuild and refit.</li>
+      <li><b>The result:</b> the reported total slides from <b>€260k</b> to <b>€236k</b> as the leak grows, because lifting the donors lifts the counterfactual; the bias is always toward zero.</li>
+      <li><b>Genuinely dangerous because invisible:</b> the leak starts at launch, so the pre-fit gate stays green and every placebo still passes, leaving no fingerprint to catch.</li>
+      <li><b>The defence is design, not statistics:</b> keep donors off the treated metro's media footprint, and if you cannot, ship the number as a floor.</li>
     </ul>
   </div>
 </section>
@@ -882,10 +933,11 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
         <tr><td>Give or take?</td><td><b>[€195k, €335k]</b> at 90%</td><td style="text-align:left">test inversion over the placebo cloud</td></tr>
       </tbody>
     </table>
-    <p><strong>Truth check</strong> (only a simulation allows it): the planted total is <span class="num">€284k</span>. It sits inside the interval, €24k above the estimate. The machinery works, and its self-reported uncertainty is honest.</p>
-    <p><strong>Do not memorise the euros that follow.</strong> Every number in the next two acts is derived from these three rows plus one price (€75k) and one margin (35%), and the full board table returns on the deliverable slide at the end.</p>
+    <div class="callout key"><div class="ct">Truth check (only a simulation allows it)</div>
+    The planted total €284k sits inside the interval, €24k above the estimate: the machinery works, and its self-reported uncertainty is honest.</div>
+    <ul><li><b>Do not memorise the euros that follow:</b> every number in the next two acts comes from these three rows plus one price (€75k) and one margin (35%), and the full board table returns at the end.</li></ul>
     <div class="callout watch"><div class="ct">The sentence that loses money</div>
-    "The campaign drove €260k of sales for €75k, a 3.5× return. Roll it out." Every number in that sentence is true, and the conclusion still does not follow: question ③, <em>is the profit worth the price, and with what confidence?</em>, has not been answered yet, and it is not a statistics question.</div>
+    "The campaign drove €260k of sales for €75k, a 3.5× return. Roll it out." Every number is true and the conclusion still does not follow: question ③, is the profit worth the price and with what confidence, is not a statistics question.</div>
   </div>
 </section>
 
@@ -917,11 +969,11 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
     <div class="cols">
       <div>
         <div class="eqbox">\[ \text{profit} \;=\; m\,\tau \;-\; c \]</div>
-        <p>\(\tau\) is <strong>incremental sales</strong> (revenue). The business keeps only the gross margin \(m=35\%\) of it; the campaign cost \(c\) is paid in full. Comparing \(\tau\) to \(c\) directly means treating revenue as if it were cash.</p>
+        <ul><li><b>Revenue is not cash:</b> the business keeps only the gross margin \(m=35\%\) of the lift \(\tau\) yet pays the cost \(c\) in full, so comparing \(\tau\) to \(c\) treats revenue as profit.</li></ul>
       </div>
       <div>
         <div class="eqbox">\[ \tau_{\mathrm{BE}} = \frac{c}{m} = \frac{75}{0.35} = \text{€}214\mathrm{k}, \qquad \mathrm{iROAS}_{\mathrm{BE}} = \frac{1}{m} = 2.86 \]</div>
-        <p>The <strong>break-even lift</strong>: sales must clear €214k, not €75k. Our €260k clears it by <strong>€46k</strong> of revenue, ≈ €16k of profit. In return-on-ad-spend language the bar is \(1/m = 2.86\), and ours is 3.47: comfortably above, on the point estimate.</p>
+        <ul><li><b>Break-even is €214k of sales, not €75k:</b> our €260k clears it by <b>€46k</b> of revenue (≈ €16k of profit), an iROAS of 3.47 against the \(1/m=2.86\) bar.</li></ul>
       </div>
     </div>
     <div class="fig">
@@ -931,7 +983,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
         <label>Gross margin <input type="range" id="funMargin" min="10" max="60" value="{{nb07.margin}}" step="1"><span class="val" id="funMarginv">{{nb07.margin}}%</span></label>
         <span class="readout" id="funRead"></span>
       </div>
-      <div class="cap">"iROAS &gt; 1" is a vanity bar; the real bar is 1/margin. Software (90% margin) breaks even at 1.1; grocery (20%) needs 5.0. Same campaign, same lift, opposite verdicts across businesses.</div>
+      <div class="cap">"iROAS &gt; 1" is a vanity bar; the real bar is 1/margin. Software (90% margin) breaks even at 1.1; grocery (20%) needs 5.0. Same campaign, opposite verdicts.</div>
     </div>
   </div>
 </section>
@@ -943,8 +995,8 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
   <div class="sub">The estimate and its interval are fixed; only the price moves. Two different lines get crossed, and they mean different things.</div>
   <div class="sbody">
     <div class="cols">
-      <div><p><strong>Line 1, the point-estimate line:</strong> expected net profit \(m\hat\tau - c\) crosses zero at \(c = 0.35 \times 260 = \text{€}91\mathrm{k}\). Below that price the deal looks profitable <em>on average</em>.</p></div>
-      <div><p><strong>Line 2, the uncertainty zone:</strong> convert the sales interval to profit, \(0.35\times[195, 335] = [\text{€}68\mathrm{k}, \text{€}117\mathrm{k}]\). Any price <em>inside</em> that range is one the evidence cannot separate from break-even: the <b>straddle zone</b>.</p></div>
+      <div><ul><li><b>Line 1, the point estimate:</b> expected net \(m\hat\tau-c\) crosses zero at \(c=0.35\times260=\text{€}91\mathrm{k}\); below that price it looks profitable on average.</li></ul></div>
+      <div><ul><li><b>Line 2, the uncertainty zone:</b> the profit interval \(0.35\times[195,335]=[\text{€}68\mathrm{k},\text{€}117\mathrm{k}]\), the <b>straddle zone</b> the evidence cannot separate from break-even.</li></ul></div>
     </div>
     <div class="fig">
       <div class="fh"><span class="badge">▶ LIVE</span> Slide the campaign price and watch the verdict move</div>
@@ -953,7 +1005,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
         <label>Price <input type="range" id="costC" min="40" max="140" value="{{nb07.cost}}" step="1"><span class="val" id="costCv"></span></label>
         <span class="readout" id="costRead"></span>
       </div>
-      <div class="cap">Between the two lines live the dangerous campaigns: "looks profitable" (left of €91k) but not <em>provably</em> so (inside the straddle zone). Ours, at €75k, is exactly one of them: a comfortable mean the interval refuses to bless.</div>
+      <div class="cap">Between the lines live the dangerous campaigns: "looks profitable" (left of €91k) but not provably so. Ours at €75k is one of them, a comfortable mean the interval refuses to bless.</div>
     </div>
     <table class="mini" id="sweepTbl">
       <thead><tr><th>Price</th><th>Break-even lift</th><th>Net at \(\hat\tau\)</th><th>Verdict</th><th>The lesson</th></tr></thead>
@@ -974,8 +1026,9 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
       <li><strong>③ Confident?</strong> No. The profit interval [€68k, €117k] still <em>straddles</em> the €75k price. The upside is real; a loss is still inside the evidence.</li>
     </ul>
     <div class="callout key"><div class="ct">Verdict, banked</div>
-    <b>Not a confident buy at €75k, though probably a profitable one.</b> No posterior was consulted, and none was needed. Nothing that follows will change this action.</div>
-    <p>So why is there another act? Because "the interval straddles the cost" is a yes/no fact about where an interval sits. A board allocating capital across ten campaigns asks a sharper question: <em>with what probability does this one pay?</em> A p-value cannot answer it; it scores a procedure under a null, not a bet about \(\tau\). The next slide shows exactly what is missing.</p>
+    Not a confident buy at €75k though probably a profitable one, reached with no posterior and unchanged by anything that follows.</div>
+    <div class="callout watch"><div class="ct">So why another act?</div>
+    "The interval straddles the cost" is a yes/no about where an interval sits; a board allocating capital across ten campaigns asks with what probability this one pays, which a p-value cannot answer.</div>
   </div>
 </section>
 
@@ -988,7 +1041,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
     <div>
       <div class="callout key"><div class="ct">The deliverable, said out loud</div>
       <em>"The campaign worked: it drove about <b>€260k</b> of incremental sales, and that is not luck (it beat all 29 control markets, p = 0.033). At our 35% margin that is about <b>€91k</b> of gross profit against a <b>€75k</b> price: a <b>+€16k</b> expected net. But the evidence is consistent with anywhere between <b>€68k and €117k</b> of profit, so a loss is still on the table. My recommendation: <b>do not roll it out nationally on this evidence.</b> Renegotiate the price, or buy the certainty with a bigger test."</em></div>
-      <p>Notice the shape of that sentence: <b>a real effect, a positive expectation, and an unproven buy can coexist.</b> Significance is a statement about luck; profitability is a statement about price; confidence is a statement about width. This campaign passes the first test, probably passes the second, and cannot yet prove it.</p>
+      <ul><li><b>A real effect, a positive expectation, and an unproven buy coexist:</b> significance is about luck, profitability about price, and confidence about width, and this campaign passes the first, probably the second, and cannot yet prove it.</li></ul>
     </div>
     <div>
       <table class="mini">
@@ -1003,7 +1056,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
         </tbody>
       </table>
       <div class="callout watch"><div class="ct">The one question this memo cannot answer</div>
-      A board allocating capital across ten campaigns will ask: <em>"so what are the odds this one actually pays?"</em> Everything above is a yes/no about where an interval sits. It cannot produce a number like "there is a 78% chance it pays", and it cannot tell you the <b>highest price</b> at which this same evidence would have been a buy, or whether a follow-up study is worth funding. Those three answers need one more object, and Act V builds it.</div>
+      Everything above is a yes/no about where an interval sits: it cannot say "78% chance it pays", name the highest price this evidence would still buy, or whether a follow-up study is worth funding, and those three answers need Act V's posterior.</div>
     </div>
   </div></div>
 </section>
@@ -1019,21 +1072,22 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
         \[ \text{profit}_{\text{rollout}} \;=\; 0.35 \times \delta \times R \times \hat\tau \;-\; \text{€4M}, \qquad R = \tfrac{\text{€4M}}{\text{€75k}} \approx 53 \]
       </div>
       <ul>
-        <li><b>The reach assumption, stated:</b> the €4M buys the pilot's playbook at the pilot's intensity — <b>R ≈ 53 pilot-equivalents</b> of spend. At \(\delta=1\) the €4M cancels out of the break-even: the rollout is the pilot, 53 times over, against the <b>same iROAS bar of 2.86</b>.</li>
-        <li><b>\(\delta\) is transportability</b> — the fraction of the pilot effect that survives the trip. Slide 2 argued a pilot picked for promise travels as a <em>ceiling</em>: \(\delta&lt;1\).</li>
-        <li><b>Point verdict at \(\delta=1\):</b> 0.35 × 53 × €260k − €4M ≈ <b>+€860k</b> expected net. The interval, scaled the same way: <b>[−€360k, +€2.25M]</b> — it straddles zero.</li>
+        <li><b>The reach assumption:</b> €4M buys <b>R ≈ 53 pilot-equivalents</b> of spend, so at \(\delta=1\) the €4M cancels and the rollout is the pilot ×53 against the same 2.86 bar.</li>
+        <li><b>\(\delta\) is transportability:</b> the fraction of the pilot effect that survives the trip, and slide 2 argued a pilot picked for promise travels as a ceiling, \(\delta&lt;1\).</li>
+        <li><b>Point verdict at \(\delta=1\):</b> 0.35 × 53 × €260k − €4M ≈ <b>+€860k</b>, with the interval scaled the same way, <b>[−€360k, +€2.25M]</b>, straddling zero.</li>
       </ul>
     </div>
     <div>
-      <div class="callout key"><div class="ct">The δ-zone map — three lines of arithmetic</div>
-      <ul style="margin:.2rem 0 0 1.1rem;padding:0">
-        <li><b>δ ≥ 1.10</b> (= 214/195): the whole interval clears the cost — the buy would be <em>provable</em>. Unreachable: \(\delta\le 1\).</li>
-        <li><b>0.64 &lt; δ &lt; 1.10</b>: the interval straddles the €4M — not provable either way. The point estimate breaks even at <b>δ ≈ 0.82</b> (= 214/260), inside this zone.</li>
-        <li><b>δ ≤ 0.64</b> (= 214/335): the whole interval sits below the cost — <em>provably</em> does not pay.</li>
-      </ul></div>
-      <p><b>Verdict, banked classically:</b> at <em>no</em> admissible \(\delta\) is the rollout provably profitable, and below \(\delta\approx 0.64\) it provably is not. <b>Do not commit the €4M on this evidence.</b> Nothing that follows will change this action.</p>
+      <p><b>The δ-zone map, three lines of arithmetic:</b></p>
+      <ul>
+        <li><b>δ ≥ 1.10</b> (= 214/195): the whole interval clears the cost, provable, but unreachable since \(\delta\le 1\).</li>
+        <li><b>0.64 &lt; δ &lt; 1.10:</b> the interval straddles the €4M, not provable either way; the point breaks even at <b>δ ≈ 0.82</b> (= 214/260).</li>
+        <li><b>δ ≤ 0.64</b> (= 214/335): the whole interval sits below the cost, provably does not pay.</li>
+      </ul>
+      <div class="callout key"><div class="ct">Verdict, banked classically</div>
+      At no admissible \(\delta\) is the rollout provably profitable, and below \(\delta\approx 0.64\) it provably is not, so do not commit the €4M on this evidence.</div>
       <div class="callout watch"><div class="ct">What this map cannot say</div>
-      How likely the open zone's outcomes are, or what resolving them would be worth — "the interval straddles" has no size. Act V returns to this ledger with a posterior and prices both.</div>
+      How likely the open zone is, or what resolving it is worth: "the interval straddles" has no size, and Act V returns with a posterior to price both.</div>
     </div>
   </div></div>
 </section>
@@ -1047,10 +1101,10 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
     <div class="fig">
       <div class="fh">Same classical report, three probabilities that the campaign pays</div>
       <div class="canvas"><svg viewBox="0 0 720 250" id="svgTri"></svg></div>
-      <div class="cap">The orange line is the break-even lift €214k. P(campaign pays) is the mass to its right: <b>0.88</b> if beliefs are symmetric, a near-confident buy; <b>0.72</b> if the mass piles up low with a long right tail; <b>0.73</b> if the world is split between "worked" and "worked barely". One classical report, and it cannot tell a near-GO from a clearly-unsettled bet.</div>
+      <div class="cap">The orange line is the break-even lift €214k; P(pays) is the mass to its right: <b>0.88</b> if symmetric, <b>0.72</b> if mass piles low with a long right tail, <b>0.73</b> if split between "worked" and "worked barely".</div>
     </div>
     <div class="callout key"><div class="ct">The gap in the classical toolkit</div>
-    The interval tells you <em>where</em> the truth plausibly lives, but not <em>how the plausibility is distributed inside</em>. To integrate a probability of profit you need a full distribution over \(\tau\), chosen by explicit assumptions rather than by accident. That object has a name: a <strong>posterior</strong>. Act V builds one.</div>
+    The interval says where the truth plausibly lives but not how the plausibility is distributed inside, and integrating a probability of profit needs a full distribution over \(\tau\): a posterior.</div>
   </div>
 </section>
 
@@ -1062,11 +1116,11 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
     <div class="eqbox">
       \[ \underbrace{p(\theta \mid \text{data})}_{\text{posterior}} \;\propto\; \underbrace{p(\text{data} \mid \theta)}_{\text{likelihood}} \;\times\; \underbrace{p(\theta)}_{\text{prior}} \]
     </div>
-    <p>\(\theta\) is whatever you do not know. <b>In this warm-up \(\theta\) is the campaign's weekly lift in €k, and the data are the 20 weekly gaps your synthetic control just produced</b> (their mean is €13.0k/week, the shipped €260k spread over 20 weeks). The posterior is a full distribution over \(\theta\), not a point and not a yes/no.</p>
     <ul style="margin:.3rem 0">
+      <li><b>\(\theta\) is the weekly lift:</b> here \(\theta\) is the campaign's weekly lift in €k and the data are the 20 synthetic-control gaps (mean €13.0k/week, the €260k over 20 weeks); the posterior is a full distribution over it.</li>
       <li><strong>Prior</strong> \(p(\theta)\): what you believed before the data (grey, dashed).</li>
       <li><strong>Likelihood</strong> \(p(\text{data}\mid\theta)\): how well each candidate \(\theta\) explains the 20 observed weeks (orange).</li>
-      <li><strong>Posterior</strong> \(p(\theta\mid\text{data})\): the compromise, weighted by precision (blue). A distribution can be <em>integrated</em>: \(\mathbb{P}(\text{profit} \gt c)\), expected loss, value of information. A point estimate and a p-value can do none of that.</li>
+      <li><strong>Posterior</strong> \(p(\theta\mid\text{data})\): the precision-weighted compromise (blue), a distribution you can integrate into \(\mathbb{P}(\text{profit} \gt c)\), expected loss, or VOI, which a point estimate cannot.</li>
     </ul>
     <details class="mathfold"><summary><span class="tw">▸</span> Two caveats, so the toy does not mislead</summary><div class="mfbody">
       The real model's estimand is the <b>20-week total</b> \(\tau\), not the weekly rate; and this warm-up treats the 20 gaps as independent, which the endnote will show is the very assumption that breaks. Read it as calibration for your eye, not as the shipped model.
@@ -1084,8 +1138,8 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
       <div class="cap">Data: the 20 weekly synthetic-control gaps: mean <span id="byYbar">·</span>/week, measured week-to-week sd \(\hat\sigma\) = <span id="bySigCap">·</span>.</div>
     </div>
     <ul>
-      <li><b>Calibrate your eye</b>: with 20 weeks the posterior sd is \(\hat\sigma/\sqrt{20} \approx\) <span id="byPostSd">·</span>, where \(\hat\sigma\) = <span id="bySig">·</span> is the gap series' own measured wobble. Against the default sd-8 prior the data carry <span id="byWeight">·</span> of the posterior's weight: slide the prior mean and the blue curve barely moves. With this much data the prior is nearly irrelevant, which is why the two paradigms will agree on the point estimate.</li>
-      <li><b>Posterior vs predictive</b>: the <b>posterior</b> is belief about the <em>parameter</em> \(\theta\) and sharpens as weeks accumulate; the <b>predictive</b> forecasts <em>next week's observation</em>, keeps the full <span id="bySig2">·</span> weekly noise, and stays wide no matter how much data arrives. Tick the box: they are different objects, and confusing them is how people over-promise precision.</li>
+      <li><b>Calibrate your eye:</b> the posterior sd is \(\hat\sigma/\sqrt{20}\approx\) <span id="byPostSd">·</span> (with \(\hat\sigma\) = <span id="bySig">·</span>), so the data carry <span id="byWeight">·</span> of the weight and the prior is nearly irrelevant, which is why the paradigms agree on the point.</li>
+      <li><b>Posterior vs predictive:</b> the posterior sharpens as weeks accumulate, while the predictive keeps the full <span id="bySig2">·</span> weekly noise and stays wide, and confusing them is how people over-promise precision.</li>
     </ul>
   </div>
 </section>
@@ -1109,7 +1163,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
     idata = pm.<span class="fn">sample</span>()                     <span class="cm"># NUTS</span></pre>
     </div>
     <div>
-      <p><strong>How the posterior of \(\tau\) is built.</strong> Each posterior draw of \(w\) is a full counterfactual path, so each draw yields one 20-week total. The estimate arrives <em>as a distribution</em>:</p>
+      <p><strong>How the posterior of \(\tau\) is built:</strong> each draw of \(w\) is a full counterfactual path yielding one 20-week total, so the estimate arrives as a distribution:</p>
       <div class="eqbox">
         \[ \tau^{(s)} = \sum_{t\ge T_0}\Bigl(Y_{1t} - \sum_j w_j^{(s)} Y_{jt} - \varepsilon_t^{(s)}\Bigr), \quad s=1,\dots,S \]
       </div>
@@ -1118,7 +1172,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
         <li><strong>Same identification:</strong> same donors, same simplex, same estimand. The sampler adds a distribution, not causality.</li>
         <li><strong>Prior robustness (checked):</strong> sweeping the Dirichlet concentration \(\alpha\in\{0.5,1,2\}\) barely moves the total; 40 pre-weeks swamp the prior.</li>
         <li><strong>A real trade on the weights:</strong> the flat Dirichlet spreads over 23.4 effective donors vs the classical 3.3: more stable out of sample, less interpretable to a planner.</li>
-        <li><strong>Shown in its iid form</strong> — the model everyone writes first. The shipped arm adds one parameter (AR(1) errors); the endnote shows why, and what it costs to skip it.</li>
+        <li><strong>Shown in its iid form,</strong> the model everyone writes first; the shipped arm adds one parameter (AR(1) errors), and the endnote shows why.</li>
       </ul>
     </div>
   </div></div>
@@ -1135,7 +1189,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
         \[ p(\tau\mid\text{data}) \;\xrightarrow[\;n\to\infty\;]{}\; \mathcal{N}\bigl(\hat\tau_{\text{MLE}},\, \mathcal{I}^{-1}\bigr) \]
       </div>
       <ul style="margin:.25rem 0"><li><b>Bernstein–von Mises:</b> with a well-specified likelihood and enough data, the posterior concentrates where the maximum-likelihood estimate does. Agreement on the point is the expected outcome, not a coincidence.</li></ul>
-      <p>The causal work was done by the <em>identification</em>: the simplex, the pre-fit, the factor matching. Every arm shares it. The sampler adds a <strong>distribution</strong>, not a different number.</p>
+      <ul style="margin:.25rem 0"><li><b>Identification did the causal work:</b> the simplex, the pre-fit, the factor matching, shared by every arm, so the sampler adds a distribution, not a different number.</li></ul>
     </div>
     <div>
       <table class="mini">
@@ -1147,7 +1201,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
         </tbody>
       </table>
       <div class="callout key"><div class="ct">So what does Bayes buy?</div>
-      Not a better point estimate; it <em>could not</em>, the identification is shared. It buys the one thing the classical arm cannot produce: a probability distribution to integrate into \(\mathbb{P}(\text{profit}>c)\), headroom, and VOI.</div>
+      Not a better point estimate (the identification is shared) but the one thing the classical arm cannot produce: a distribution to integrate into \(\mathbb{P}(\text{profit}>c)\), headroom, and VOI.</div>
     </div>
   </div></div>
 </section>
@@ -1166,9 +1220,9 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
         <p>At the asking price of €75k the integral evaluates to <strong>0.78</strong>: the number a p-value cannot produce.</p>
       </div>
       <div>
-        <p><strong>House rule for reading it:</strong></p>
+        <p><strong>House rule:</strong></p>
         <p style="font-size:1.05rem">P &gt; 0.9 → <span class="tag go">GO</span> &nbsp;·&nbsp; P &lt; 0.5 → <span class="tag nogo">NO-GO</span> &nbsp;·&nbsp; in between → <span class="tag test">{{nb07b.decision}}</span></p>
-        <p>At €75k: <span class="tag test">TEST FURTHER</span>. The same action the classical arm banked, now stated as one number a board can trade against its other nine campaigns: four worlds in five pay, and the rule demands nine in ten.</p>
+        <ul><li><b>At €75k, <span class="tag test">TEST FURTHER</span>:</b> the same action the classical arm banked, now one number a board can trade against its other nine campaigns (four in five pay, the rule demands nine in ten).</li></ul>
       </div>
     </div>
     <div class="fig">
@@ -1178,7 +1232,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
         <label>Decision price <input type="range" id="skewC" min="60" max="130" value="{{nb07.cost}}" step="1"><span class="val" id="skewCv"></span></label>
         <span class="readout" id="skewRead"></span>
       </div>
-      <div class="cap">The thing to notice: E[profit] = €92k clears the €75k cost by €17k, and still P(profit &gt; cost) = 0.78, because a fifth of the mass sits left of the line. A healthy mean and a real chance of losing the budget coexist, and only the probability shows both at once. Slide the price to €90k and watch the same posterior collapse toward a coin flip: the verdict is a property of the pair (evidence, price), never of the evidence alone. (The live histogram runs on a 1,200-draw subsample, so its P can sit a point or two off the shipped 0.78.)</div>
+      <div class="cap">E[profit] = €92k clears the €75k cost by €17k, yet P(profit &gt; cost) = 0.78 because a fifth of the mass sits left of the line: a healthy mean and a real chance of losing the budget coexist. Slide to €90k and the same posterior collapses toward a coin flip. (Live histogram: 1,200-draw subsample, so P can sit a point or two off 0.78.)</div>
     </div>
   </div>
 </section>
@@ -1217,13 +1271,14 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
       <div class="eqbox">
         \[ \mathrm{VOI} = \mathbb{E}\bigl[\max(\text{profit}-c,\,0)\bigr] - \max\bigl(\mathbb{E}[\text{profit}]-c,\,0\bigr) \approx \text{€}2\mathrm{k} \]
       </div>
-      <ul style="margin:.25rem 0"><li><b>VOI compares deciding after uncertainty resolves with committing now.</b> Most of the mass already clears the price, so an oracle rarely flips the commit: further information is nearly worthless <em>for this buy</em>.</li></ul>
+      <ul style="margin:.25rem 0"><li><b>VOI compares deciding after uncertainty resolves with committing now:</b> most mass already clears the price, so an oracle rarely flips the commit and information is nearly worthless for this buy.</li></ul>
     </div>
     <div>
       <div class="callout key"><div class="ct">How to read them together</div>
-      For <em>this</em> €75k buy, information is worth at most €2k, so funding a real test against this ledger is waste, even though the previous slide showed a ~4-market test would work. The test's true customer is the <b>€4M rollout</b>, whose stakes pay for it — the next slide runs that ledger. The negotiation-ready sentence: <em>"this evidence supports a confident buy up to €67k; the asking price was €75k."</em> Renegotiate toward €67k, take the four-in-five bet explicitly, or buy the test on the rollout ledger.</div>
+      For this €75k buy information is worth at most €2k, so a test is waste here; its true customer is the <b>€4M rollout</b>, whose stakes pay for it.</div>
+      <ul><li><b>The negotiation-ready sentence:</b> "this evidence supports a confident buy up to €67k; the asking price was €75k," so renegotiate toward €67k, take the four-in-five bet, or buy the test on the rollout ledger.</li></ul>
       <div class="callout"><div class="ct">Why these needed Bayes</div>
-      Both are integrals over the posterior. The classical arm, honest as it is, has no distribution to integrate. This, and only this, is what the Bayesian layer added: the decision was already made in Act IV.</div>
+      Both are integrals over the posterior, which the classical arm has no distribution to compute: this, and only this, is what Bayes added, since the decision was already made in Act IV.</div>
     </div>
   </div></div>
 </section>
@@ -1239,8 +1294,8 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
         \[ \text{profit}_{\text{rollout}} \;=\; 0.35 \times \delta \times R \times \tau \;-\; \text{€4M}, \qquad R = \tfrac{\text{€4M}}{\text{€75k}} \approx 53 \]
       </div>
       <ul>
-        <li><b>Same ledger, same reach assumption as the classical read.</b> At \(\delta=1\) the rollout is the pilot ×53 against the same bar — so "does it pay?" is the <em>same event</em> as the pilot's, and the <b>same P(pays) = 0.78</b> carries over unchanged.</li>
-        <li><b>\(\delta\) is transportability</b> — the fraction of the pilot effect that survives the trip. Slide 2 argued a pilot picked for promise travels as a <em>ceiling</em>, so \(\delta&lt;1\) is the realistic reading; break-even sits at <b>\(\delta \approx\) <span id="rollBE"></span></b>. The whole €4M verdict hangs on a number the data cannot supply — which is exactly why it is a slider here and not a footnote.</li>
+        <li><b>Same ledger, same reach assumption:</b> at \(\delta=1\) the rollout is the pilot ×53 against the same bar, so "does it pay?" is the same event and the <b>same P(pays) = 0.78</b> carries over.</li>
+        <li><b>\(\delta\) is transportability:</b> a pilot picked for promise travels as a ceiling (\(\delta&lt;1\)), with break-even at <b>\(\delta \approx\) <span id="rollBE"></span></b>, a number the data cannot supply, which is why it is a slider here and not a footnote.</li>
       </ul>
       <div class="controls">
         <label>transportability \(\delta\) <input type="range" id="rollD" min="50" max="100" value="80" step="5"><span class="val" id="rollDv">0.80</span></label>
@@ -1250,10 +1305,10 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
     <div>
       <div class="fig"><div class="fh"><span class="badge">▶ LIVE</span> What the rollout ledger does to the value of information</div>
         <div class="canvas"><svg viewBox="0 0 720 235" id="svgRoll"></svg></div>
-        <div class="cap">P(rollout pays) falls as \(\delta\) falls; the value of information <b>peaks near break-even</b> — information is worth most exactly where the decision is genuinely open.</div>
+        <div class="cap">P(rollout pays) falls as \(\delta\) falls; the value of information <b>peaks near break-even</b>, worth most exactly where the decision is genuinely open.</div>
       </div>
       <div class="callout key"><div class="ct">The sentence the deck owed slide 2</div>
-      For the <b>€75k</b> buy, perfect information is worth ≈ <b>€2k</b>: funding a test on that ledger is waste. Against the <b>€4M</b> rollout, the <em>same posterior</em> prices information around <b>€<span id="rollVoiBE"></span>k</b> at plausible \(\delta\) — this, not the pilot, is what pays for slide 36's ~4-market confirmatory test. Same evidence, opposite conclusion, different stakes.</div>
+      For the €75k buy perfect information is worth ≈ <b>€2k</b> (waste), but against the €4M rollout the same posterior prices it around <b>€<span id="rollVoiBE"></span>k</b>: same evidence, opposite conclusion, different stakes.</div>
     </div>
   </div></div>
 </section>
@@ -1281,7 +1336,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
       <ul>
         <li><b>Two league tables, same means.</b> By expected net: TV first, Search fourth. By P(pays): <b>Search first, TV fourth</b>. Nothing moved but the widths.</li>
         <li><b>A point-estimate table funds the loudest campaign; a probability table funds the surest euro.</b> Boards allocating one budget across ten bets live in the second table.</li>
-        <li><b>This is what Act V actually bought.</b> Not a better estimate of one campaign — slide 34 showed it could not be — but a number that lets ten incomparable bets share one decision rule.</li>
+        <li><b>This is what Act V actually bought:</b> not a better estimate of one campaign (slide 34 showed it could not be) but a number that lets ten incomparable bets share one decision rule.</li>
       </ul>
     </div>
   </div></div>
@@ -1320,17 +1375,18 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
           <li><strong>93 days</strong> of daily sales per geo: 42 pre-launch days, a <strong>28-day campaign</strong> (day 42 onward), then 23 cooldown days.</li>
           <li>Ad spend: <strong>$50k</strong>, all of it inside the campaign window. Pre-period spend is exactly zero.</li>
           <li>Baseline: about <strong>$<span id="reBase"></span></strong> of sales per geo per day before launch. During the campaign the treated arm runs <strong>+$<span id="reDaily"></span></strong> per geo per day above the concurrent control: <strong>~<span id="rePct"></span>%</strong> of the no-campaign level.</li>
-          <li class="small">Against its own pre-period the same lift reads ~<span id="rePctPre"></span>% — Act II's rejected denominator: the shared wave lifted every geo during the window, and the concurrent control is the honest baseline.</li>
+          <li class="small">Against its own pre-period the same lift reads ~<span id="rePctPre"></span>%, Act II's rejected denominator: the shared wave lifted every geo, and the concurrent control is the honest baseline.</li>
         </ul>
       </div>
       <div>
         <div class="callout key"><div class="ct">Why this dataset, specifically</div>
-        <ul style="margin:.2rem 0 0 1.1rem;padding:0">
-          <li>It is <strong>randomized</strong>, so treated-minus-control is unbiased <em>by design</em>: a referee that depends on no model.</li>
-          <li>What the coin does and does not do: it cuts any assignment arrow (\(f_t \to X\) is gone), but the shared factors still drive every geo's sales.</li>
-          <li>With <strong>50</strong> treated geos that surviving influence averages out across the group, which is what makes the unbiased referee also <em>precise enough to referee</em>; one treated geo would have left Act II's factor-mismatch term standing.</li>
-          <li>So: pretend the randomization did not exist, run synthetic control as if this were our one-metro problem, and grade it against the referee.</li>
-        </ul></div>
+        A randomized experiment gives a referee that depends on no model, and 50 treated geos make it precise enough to referee.</div>
+        <ul>
+          <li><b>Randomized:</b> treated-minus-control is unbiased by design.</li>
+          <li><b>What the coin does:</b> it cuts the assignment arrow (\(f_t \to X\) gone), but the shared factors still drive every geo.</li>
+          <li><b>Why 50 treated:</b> the surviving influence averages out, where one treated geo would leave Act II's factor-mismatch term standing.</li>
+          <li><b>The test:</b> pretend the randomization did not exist, run synthetic control as our one-metro problem, and grade it against the referee.</li>
+        </ul>
       </div>
     </div>
     <div class="fig">
@@ -1360,9 +1416,9 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
     </div>
     <div>
       <div class="callout key"><div class="ct">Read the two rows together</div>
-      The model lands <strong>$2k from the referee's point</strong> (0.05 of the referee's standard errors) on data it has never seen, and its interval is <strong>5× tighter</strong>. That is the trade in one line: randomization buys unbiasedness, the model buys precision, and the referee is what lets you trust the precision.</div>
+      The model lands $2k from the referee's point on data it has never seen and its interval is 5× tighter: randomization buys unbiasedness, the model buys precision, and the referee lets you trust it.</div>
       <div class="callout watch"><div class="ct">The simulation also said TEST FURTHER. Same label, same story?</div>
-      Same label, opposite anatomy, and the pair teaches more than either alone. The simulated campaign clears its bar by a <b>wide margin on a wide posterior</b> (iROAS 3.47 vs 2.86; P(pays) = 0.78). This one clears by a <b>whisker on a posterior 5× tighter</b> (2.98 vs 2.86; P(pays) = <strong>0.81</strong>): averaging 50 treated geos buys precision, but no amount of precision buys a bigger victory margin, which only the economics set. A probability quoted without its anatomy hides exactly this: always read P next to the margin and the width that produced it.</div>
+      Same label, opposite anatomy: the sim clears by a <b>wide margin on a wide posterior</b> (3.47 vs 2.86, P = 0.78), this one by a <b>whisker on a 5× tighter posterior</b> (2.98 vs 2.86, P = <strong>0.81</strong>), because precision buys no extra victory margin, which only the economics set. Always read P next to the margin and width that produced it.</div>
     </div>
   </div></div>
 </section>
@@ -1378,14 +1434,14 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
         \[ \text{pre-RMSE} = \$868 \;\;\gg\;\; \text{gate} = \$665 \]
       </div>
       <ul style="margin:.25rem 0">
-        <li class="small"><b>Where $665 comes from:</b> the same rule as the simulation's gate — pre-RMSE must beat a third of the lift the fit itself claims. The 50-geo cell claimed ~${{nb07b.post_gap}}/geo/day, so its bar was ${{nb07b.gate_ref}} (and it passed); this geo's fit claims a daily lift of nearly $2,000 (3 × $665), and still cannot track the pre-period to a third of that.</li>
+        <li class="small"><b>Where $665 comes from:</b> the same rule as the simulation's gate, pre-RMSE must beat a third of the lift the fit claims; the 50-geo cell claimed ~${{nb07b.post_gap}}/geo/day so its bar was ${{nb07b.gate_ref}} (and passed), while this geo's fit claims nearly $2,000 (3 × $665) and still cannot track the pre-period to a third of that.</li>
         <li><b>Why it fires: simplex weights can only average.</b> No convex combination of smaller metros can reach the largest one, which sits outside its donors' hull.</li>
       </ul>
       <p>Had the gate not fired, the shipped estimate would have implied an iROAS of <strong>5.1</strong>, where the randomized experiment says 2.94. The gate, not hindsight, is what keeps that number out of the memo.</p>
     </div>
     <div>
       <div class="callout watch"><div class="ct">Why this is the honest headline</div>
-      A method that always returns a number is more dangerous than one that sometimes says <em>"this market is not reconstructable: get more comparable donors, or run a real experiment."</em> The convex-hull constraint is what lets synthetic control know when it is out of its depth.</div>
+      A method that always returns a number is more dangerous than one that sometimes says "this market is not reconstructable," and the convex-hull constraint is what lets synthetic control know when it is out of its depth.</div>
       <p class="q-biz">The off-switch is the feature, not the failure. Trust the tool that tells you when to stop.</p>
     </div>
   </div></div>
@@ -1399,7 +1455,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
     <div>
       <div class="callout key"><div class="ct">The deliverable</div>
       <em>"The campaign's effect is real (p = {{nb07.p_ratio}}) and worth ≈ €{{nb07.cl_total}}k of sales. At our {{nb07.margin}}% margin that is ≈ €{{nb07.cl_profit}}k of gross profit against a €75k price: +€16k of expected net, with P(pays) = 0.78, short of our 0.9 bar. This evidence supports a confident buy up to <strong>€{{nb07.headroom}}k</strong>. Renegotiate toward €67k, accept the four-in-five bet explicitly, or fund a ~4-market confirmatory test on the rollout ledger (for this buy alone, information is worth ≈ €2k). Do <strong>not</strong> roll out nationally on this evidence."</em></div>
-      <p>Statistical significance and commercial worthiness are different questions asked of different objects. This campaign answers the first yes and the second <em>probably, not provably</em>, and probably-profitable is exactly where sloppy analysis is most expensive: it is the zone where a healthy mean gets waved through as if it were a certainty.</p>
+      <ul><li><b>Probably-profitable is where sloppy analysis is most expensive:</b> significance and worthiness are different questions, and this is the zone where a healthy mean gets waved through as if it were a certainty.</li></ul>
     </div>
     <div>
       <table class="mini">
@@ -1436,7 +1492,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
 <!-- ================= 42 · Endnote poll: trust the interval? ================= -->
 <section class="slide" data-t="Endnote poll: trust the interval?" data-depth="deep" data-sec="Endnote · for the modellers">
   <div class="kicker">Endnote · For the modellers</div>
-  <div><span class="endnote-flag">Advanced note: the <b>action</b> does not change — Act IV banked it without a posterior. The <b>0.78 does</b>, and here is what it would have been worth from the first model.</span></div>
+  <div><span class="endnote-flag">Advanced note: the <b>action</b> does not change (Act IV banked it without a posterior), but the <b>0.78 does</b>, and here is what it would have been worth from the first model.</span></div>
   <h2>One question before you reuse that posterior elsewhere</h2>
   <div class="sbody">
     <p>The 0.78 was integrated off a posterior. Its honesty depends entirely on the posterior's <em>width</em>. Because this is a simulation, we can do something impossible with real data: re-run the world 24 times and grade the interval.</p>
@@ -1471,7 +1527,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
         <div class="eqbox">
           \[ e_t = \rho\, e_{t-1} + \varepsilon_t, \qquad \hat\rho = 0.54\ [0.21,\,0.87] \]
         </div>
-        <ul style="margin:.25rem 0"><li><b>An AR(1) likelihood ≡ GLS re-weighting of the pre-period.</b> It moves the estimate (€229k → €262k, beside the classical €260k), re-prices the width (2.5×), and lifts <b>coverage 50% → 88%</b>, level with the referee's 83%.</li><li><b>How bad was the first model, concretely?</b> Its 90% interval is <b>[€{{nb07.iid_lo}}k, €{{nb07.iid_hi}}k]</b> — it <b>excludes the planted truth of €{{nb07.true_total}}k</b>. On one dataset it would have looked perfectly well-behaved: clean fit, tight interval, wrong.</li></ul>
+        <ul style="margin:.25rem 0"><li><b>An AR(1) likelihood ≡ GLS re-weighting of the pre-period.</b> It moves the estimate (€229k → €262k, beside the classical €260k), re-prices the width (2.5×), and lifts <b>coverage 50% → 88%</b>, level with the referee's 83%.</li><li><b>How bad was the first model, concretely?</b> Its 90% interval <b>[€{{nb07.iid_lo}}k, €{{nb07.iid_hi}}k]</b> excludes the planted truth of <b>€{{nb07.true_total}}k</b>, yet on one dataset it looks well-behaved: clean fit, tight interval, wrong.</li></ul>
       </div>
       <div>
         <div class="fig">
@@ -1489,7 +1545,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
       </div>
     </div>
     <div class="callout key"><div class="ct">The transferable rule (Bertrand et al. 2004, in Bayesian dress)</div>
-    Serially correlated errors, summed over time, destroy naive uncertainty; it cost the diff-in-diff literature a decade. The rule is not "always AR(1)" (its ACF decays; the data's is flat; it matches the <em>variance of the sum</em>, not the shape; a local-level model à la CausalImpact matches the shape). The rule is: <b>when a posterior feeds a decision about a sum, check its coverage against a design-based referee.</b> None of this changed the verdict; it was banked in Act IV.</div>
+    Serially correlated errors summed over time destroy naive uncertainty, a lesson that cost the diff-in-diff literature a decade. The rule is not "always AR(1)" but this: <b>when a posterior feeds a decision about a sum, check its coverage against a design-based referee.</b></div>
   </div>
 </section>
 
@@ -2305,7 +2361,7 @@ window.fitSlide=fitSlide;
 /* ==== weight profiles: OLS vs simplex ==== */
 (function(){
   const svg=document.getElementById('svgNeff'); if(!svg)return;
-  /* sort each method's profile largest-to-smallest, as the axis label says —
+  /* sort each method's profile largest-to-smallest, as the axis label says;
      the bundle stores weights in donor order */
   const desc=a=>[...a].sort((x,y)=>y-x);
   const wo=desc(DATA.ols_w_all), wc=desc(DATA.w_cl_all);
