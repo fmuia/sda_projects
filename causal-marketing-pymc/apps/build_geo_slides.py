@@ -125,10 +125,38 @@ def main() -> None:
     bundle_meta["rho_meas"] = bundle_meta["acf"]["measured"]
     bundle_meta["real_tot"] = bundle_meta["scalars"]["cl_total"]
 
-    marker = re.compile(r"/\*__DATA__\*/\{.*?\};", re.S)
-    if not marker.search(html):
-        sys.exit("FAIL: template has no /*__DATA__*/{...}; marker.")
-    html = marker.sub("/*__DATA__*/" + json.dumps(bundle_meta, separators=(",", ":")) + ";", html, count=1)
+    # INTERIM: keys the deck's live charts need but the nb07 lecture-bundle cell does not yet
+    # emit, frozen at the deck's last consistent state (see the file's _note). Merged LAST, so
+    # anything listed here silently wins over the bundle — hence the loud print. Phase 2 of the
+    # slide remediation moves these into nb07/nb07b and deletes the file.
+    extras_path = HERE / "geo_lecture_extras.json"
+    if extras_path.exists():
+        extras = {k: v for k, v in json.loads(extras_path.read_text()).items()
+                  if not k.startswith("_")}
+        overridden = sorted(k for k in extras if k in bundle_meta)
+        added = sorted(k for k in extras if k not in bundle_meta)
+        bundle_meta.update(extras)
+        print(f"extras: +{len(added)} keys, OVERRIDING {len(overridden)}: {', '.join(overridden)}")
+
+    if "/*__DATA__*/" not in html:
+        sys.exit("FAIL: template has no /*__DATA__*/ marker.")
+    j = html.index("{", html.index("/*__DATA__*/"))
+    _, end = json.JSONDecoder().raw_decode(html, j)
+    html = html[:j] + json.dumps(bundle_meta, separators=(",", ":")) + html[end:]
+
+    # 2b · the N map: formatted number strings the deck's JS writes into prose spans.
+    # The template's /*__NUMS__*/{...}/*__ENDNUMS__*/ map supplies the KEYS; every value is
+    # re-derived from the shards (nb07.<key>), so a number can no more go stale here than in
+    # the {{token}} prose layer. A key missing from the shards is a build error.
+    nm = re.search(r"/\*__NUMS__\*/(\{.*?\})/\*__ENDNUMS__\*/", html, re.S)
+    if nm:
+        n_keys = list(json.loads(nm.group(1)))
+        missing_n = [k for k in n_keys if f"nb07.{k}" not in tokens and f"nb07b.{k}" not in tokens]
+        if missing_n:
+            sys.exit("FAIL: N-map keys not in the shards: " + ", ".join(missing_n))
+        nmap = {k: tokens.get(f"nb07.{k}", tokens.get(f"nb07b.{k}")) for k in n_keys}
+        html = html[:nm.start(1)] + json.dumps(nmap, separators=(",", ":")) + html[nm.end(1):]
+        print(f"N map: {len(nmap)} formatted numbers injected from shards")
 
     # 3 · book figures -------------------------------------------------------------------
     fig_names = sorted(set(re.findall(r"<!--FIG:([a-z0-9_]+)-->", html)))
