@@ -643,7 +643,7 @@
 
 # ---- Phase 3: the rollout ledger and the portfolio ---------------------------------
 - id: rollout_reach
-  slides: ["The €4M decision"]
+  slides: ["The €4M call, without a posterior"]
   texts: ["R ≈ 53 pilot-equivalents", "€4M"]
   expr: "4000 / 75"
   value: 53.3
@@ -751,3 +751,46 @@
   tol: 2.0
   shard: nb07.iid_lo
   tol_shard: 1.0
+
+# ---- the classical €4M read (Act IV), which the posterior slide now builds on -------
+- id: rollout_classical_net
+  slides: ["The €4M call, without a posterior"]
+  text: "+€860k"
+  expr: "0.35 * (4000/75) * sum(treated[40:] - synth_cl[40:]) - 4000"
+  value: 860
+  tol: 3.0
+
+- id: rollout_classical_interval
+  slides: ["The €4M call, without a posterior"]
+  # scaled from the published design-based interval [195, 335]: 18.667x195-4000 / x335-4000
+  text: "[−€360k, +€2.25M]"
+  expr: "0.35 * (4000/75) * 195 - 4000"
+  value: -360
+  tol: 0.5
+
+- id: rollout_classical_interval_hi
+  slides: []
+  expr: "0.35 * (4000/75) * 335 - 4000"
+  value: 2253
+  tol: 1.0
+
+- id: rollout_delta_zone_provable
+  slides: ["The €4M call, without a posterior"]
+  text: "δ ≥ 1.10"
+  expr: "(75/0.35) / 195"
+  value: 1.099
+  tol: 0.005
+
+- id: rollout_delta_zone_disproven
+  slides: ["The €4M call, without a posterior"]
+  text: "δ ≤ 0.64"
+  expr: "(75/0.35) / 335"
+  value: 0.64
+  tol: 0.005
+
+- id: rollout_delta_breakeven_classical
+  slides: ["The €4M call, without a posterior"]
+  text: "δ ≈ 0.82"
+  expr: "(75/0.35) / sum(treated[40:] - synth_cl[40:])"
+  value: 0.823
+  tol: 0.005

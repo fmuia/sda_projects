@@ -1008,6 +1008,36 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
   </div></div>
 </section>
 
+<!-- ================= The €4M call, without a posterior ================= -->
+<section class="slide" data-t="The €4M call, without a posterior" data-sec="Act IV · The decision in euros">
+  <div class="kicker">Act IV · The decision in euros, scaled up</div>
+  <h2>The €4M question, answered as far as intervals can</h2>
+  <div class="sub">Slide 2's real decision. No new machinery: the same point, interval and break-even arithmetic, carried to the rollout ledger.</div>
+  <div class="sbody"><div class="cols">
+    <div>
+      <div class="eqbox">
+        \[ \text{profit}_{\text{rollout}} \;=\; 0.35 \times \delta \times R \times \hat\tau \;-\; \text{€4M}, \qquad R = \tfrac{\text{€4M}}{\text{€75k}} \approx 53 \]
+      </div>
+      <ul>
+        <li><b>The reach assumption, stated:</b> the €4M buys the pilot's playbook at the pilot's intensity — <b>R ≈ 53 pilot-equivalents</b> of spend. At \(\delta=1\) the €4M cancels out of the break-even: the rollout is the pilot, 53 times over, against the <b>same iROAS bar of 2.86</b>.</li>
+        <li><b>\(\delta\) is transportability</b> — the fraction of the pilot effect that survives the trip. Slide 2 argued a pilot picked for promise travels as a <em>ceiling</em>: \(\delta&lt;1\).</li>
+        <li><b>Point verdict at \(\delta=1\):</b> 0.35 × 53 × €260k − €4M ≈ <b>+€860k</b> expected net. The interval, scaled the same way: <b>[−€360k, +€2.25M]</b> — it straddles zero.</li>
+      </ul>
+    </div>
+    <div>
+      <div class="callout key"><div class="ct">The δ-zone map — three lines of arithmetic</div>
+      <ul style="margin:.2rem 0 0 1.1rem;padding:0">
+        <li><b>δ ≥ 1.10</b> (= 214/195): the whole interval clears the cost — the buy would be <em>provable</em>. Unreachable: \(\delta\le 1\).</li>
+        <li><b>0.64 &lt; δ &lt; 1.10</b>: the interval straddles the €4M — not provable either way. The point estimate breaks even at <b>δ ≈ 0.82</b> (= 214/260), inside this zone.</li>
+        <li><b>δ ≤ 0.64</b> (= 214/335): the whole interval sits below the cost — <em>provably</em> does not pay.</li>
+      </ul></div>
+      <p><b>Verdict, banked classically:</b> at <em>no</em> admissible \(\delta\) is the rollout provably profitable, and below \(\delta\approx 0.64\) it provably is not. <b>Do not commit the €4M on this evidence.</b> Nothing that follows will change this action.</p>
+      <div class="callout watch"><div class="ct">What this map cannot say</div>
+      How likely the open zone's outcomes are, or what resolving them would be worth — "the interval straddles" has no size. Act V returns to this ledger with a posterior and prices both.</div>
+    </div>
+  </div></div>
+</section>
+
 <!-- ================= 29 · Three worlds, one classical report ================= -->
 <section class="slide" data-t="Three worlds, one classical report" data-sec="Act V · Adding a probability">
   <div class="kicker">Act IV → Act V · Why one more tool is needed</div>
@@ -1202,14 +1232,14 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
 <section class="slide" data-t="The €4M decision" data-sec="Act V · Adding a probability">
   <div class="kicker">Act V · Adding a probability, cashed in</div>
   <h2>The decision that was actually on the table: €4M</h2>
-  <div class="sub">Every number so far priced the €75k pilot. Slide 2 promised a €4M call. Same posterior, bigger ledger.</div>
+  <div class="sub">Act IV banked the action: never provable, provably-not below δ ≈ 0.64. The posterior adds the two numbers the interval could not produce: the probability, and the price of information.</div>
   <div class="sbody"><div class="cols">
     <div>
       <div class="eqbox">
         \[ \text{profit}_{\text{rollout}} \;=\; 0.35 \times \delta \times R \times \tau \;-\; \text{€4M}, \qquad R = \tfrac{\text{€4M}}{\text{€75k}} \approx 53 \]
       </div>
       <ul>
-        <li><b>The reach assumption, stated:</b> the €4M buys the pilot's playbook at the pilot's intensity, in enough markets to spend it — <b>R ≈ 53 pilot-equivalents</b>. At \(\delta=1\) the rollout <em>is</em> the pilot, 53 times over: same iROAS bar (2.86), and therefore the <b>same P(pays) = 0.78</b>.</li>
+        <li><b>Same ledger, same reach assumption as the classical read.</b> At \(\delta=1\) the rollout is the pilot ×53 against the same bar — so "does it pay?" is the <em>same event</em> as the pilot's, and the <b>same P(pays) = 0.78</b> carries over unchanged.</li>
         <li><b>\(\delta\) is transportability</b> — the fraction of the pilot effect that survives the trip. Slide 2 argued a pilot picked for promise travels as a <em>ceiling</em>, so \(\delta&lt;1\) is the realistic reading; break-even sits at <b>\(\delta \approx\) <span id="rollBE"></span></b>. The whole €4M verdict hangs on a number the data cannot supply — which is exactly why it is a slider here and not a footnote.</li>
       </ul>
       <div class="controls">
@@ -1223,7 +1253,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
         <div class="cap">P(rollout pays) falls as \(\delta\) falls; the value of information <b>peaks near break-even</b> — information is worth most exactly where the decision is genuinely open.</div>
       </div>
       <div class="callout key"><div class="ct">The sentence the deck owed slide 2</div>
-      For the <b>€75k</b> buy, perfect information is worth ≈ <b>€2k</b>: funding a test on that ledger is waste. Against the <b>€4M</b> rollout, the <em>same posterior</em> prices information around <b>€<span id="rollVoiBE"></span>k</b> at plausible \(\delta\) — this, not the pilot, is what pays for slide 35's ~4-market confirmatory test. Same evidence, opposite conclusion, different stakes.</div>
+      For the <b>€75k</b> buy, perfect information is worth ≈ <b>€2k</b>: funding a test on that ledger is waste. Against the <b>€4M</b> rollout, the <em>same posterior</em> prices information around <b>€<span id="rollVoiBE"></span>k</b> at plausible \(\delta\) — this, not the pilot, is what pays for slide 36's ~4-market confirmatory test. Same evidence, opposite conclusion, different stakes.</div>
     </div>
   </div></div>
 </section>
@@ -1232,7 +1262,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
 <section class="slide" data-t="The portfolio view" data-sec="Act V · Adding a probability">
   <div class="kicker">Act V · Adding a probability, across the desk</div>
   <h2>Ten campaigns, one budget: why the board wants a probability</h2>
-  <div class="sub">Slides 28, 29 and 34 kept invoking "the other nine campaigns". Here is that desk, and what the house rule is actually for.</div>
+  <div class="sub">Slides 28, 29 and 35 kept invoking "the other nine campaigns". Here is that desk, and what the house rule is actually for.</div>
   <div class="sbody"><div class="cols c32">
     <div>
       <table class="mini" id="pfTable">
@@ -1251,7 +1281,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
       <ul>
         <li><b>Two league tables, same means.</b> By expected net: TV first, Search fourth. By P(pays): <b>Search first, TV fourth</b>. Nothing moved but the widths.</li>
         <li><b>A point-estimate table funds the loudest campaign; a probability table funds the surest euro.</b> Boards allocating one budget across ten bets live in the second table.</li>
-        <li><b>This is what Act V actually bought.</b> Not a better estimate of one campaign — slide 33 showed it could not be — but a number that lets ten incomparable bets share one decision rule.</li>
+        <li><b>This is what Act V actually bought.</b> Not a better estimate of one campaign — slide 34 showed it could not be — but a number that lets ten incomparable bets share one decision rule.</li>
       </ul>
     </div>
   </div></div>
