@@ -97,6 +97,7 @@ def make_env(data):
         "rmse": lambda a, b: float(np.sqrt(np.mean((np.asarray(a, float) - np.asarray(b, float)) ** 2))),
         "skew": skew,
         "norm_q90": 1.2815515655446004,
+        "norm_cdf": lambda z: 0.5 * (1 + __import__("math").erf(z / 2**0.5)),
     }
     for k, v in data.items():
         if isinstance(v, list):
