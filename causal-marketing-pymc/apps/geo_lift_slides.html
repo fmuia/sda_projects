@@ -47,6 +47,13 @@ details.mathfold[open]>summary .tw{transform:rotate(90deg);}
 details.mathfold>summary:hover{color:var(--blue);}
 details.mathfold .mfbody{padding:.1rem 1rem .55rem; border-top:1px dashed var(--rule);}
 
+/* core/deep presenter modes */
+.slide[data-depth="deep"] .kicker::after{content:" · deep dive"; color:var(--gold); letter-spacing:.08em;}
+#tocList li.deep a{opacity:.65;}
+#tocList li.deep a::after{content:" · deep"; color:var(--gold); font-size:.78em;}
+body.coreOnly #tocList li.deep a{text-decoration:line-through; opacity:.35;}
+#coreBtn.on{color:var(--gold); font-weight:800;}
+
 /* deck */
 .deck{position:fixed; inset:0;}
 .slide{position:absolute; inset:0; display:none; flex-direction:column; padding:2.6rem 5rem 3rem;
@@ -230,7 +237,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
       <li>Weekly sales for <strong>30 metro markets</strong>, <strong>60 weeks</strong>.</li>
       <li>In week 40, exactly <strong>one</strong> metro switched on a <strong>€75k</strong> campaign for <strong>20 weeks</strong>.</li>
       <li>The other 29 did nothing. <strong>No randomisation</strong>: the metro was <em>chosen</em>.</li>
-      <li>Gross margin on incremental sales: <strong>35%</strong>.</li>
+      <li>Gross margin on incremental sales: <strong>35%</strong> — hold that thought: it will make the bar iROAS &gt; 1/margin ≈ 2.9, not iROAS &gt; 1 (Act IV).</li>
     </ul>
     <p style="margin-top:.5rem"><strong>What that data forces you to answer</strong>, in order:</p>
     <div class="qbig">
@@ -298,13 +305,16 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
       \[ Y_{jt}(0) \;=\; \alpha_j \;+\; \gamma_j^{\top} f_t \;+\; \varepsilon_{jt}
          \;=\; \alpha_j \;+\; \gamma_{j1}\underbrace{\,0.4\,t\,}_{\text{trend}} \;+\; \gamma_{j2}\underbrace{\bigl[\,8\sin(2\pi t/26)+4\sin(2\pi t/13)\,\bigr]}_{\text{seasonality}} \;+\; \gamma_{j3}\underbrace{\textstyle\sum_{s=1}^{t}\eta_s}_{\text{macro walk }m_t} \;+\; \varepsilon_{jt} \]
     </div>
+    <p><b>Two ingredients matter most</b>: the <b>macro walk</b> \(m_t=\sum_{s\le t}\eta_s\), a running sum of shocks that wanders like an economy (\(\mathrm{Var}(m_t)=t\,\sigma_\eta^2\), growing with time), and the <b>exposures</b> \(\gamma_j\sim\mathrm{U}(1{-}s,1{+}s)\): each market responds to the shared world <em>its own amount</em>. The spread \(s\) is what kills parallel trends.</p>
+    <details class="mathfold"><summary><span class="tw">▸</span> All five ingredients, one by one</summary><div class="mfbody">
     <ul>
       <li><strong>Trend</strong> \(0.4\,t\): steady growth of 0.4 (€000) per week. Deterministic.</li>
-      <li><strong>Seasonality</strong> \(8\sin(2\pi t/26)+4\sin(2\pi t/13)\): two sine waves, a slow 26-week half-year cycle of amplitude 8 and a faster 13-week quarterly cycle of amplitude 4. Deterministic, identical for every market.</li>
-      <li><strong>The macro walk</strong> \(m_t=\eta_1+\eta_2+\cdots+\eta_t\): a running <b>sum of random shocks</b> \(\eta_s\sim\mathcal{N}(0,\sigma_\eta^2)\), one fresh shock per week, none ever forgotten. Because shocks accumulate, its variance grows with time, \(\mathrm{Var}(m_t)=t\,\sigma_\eta^2\): the walk wanders. This is "the economy".</li>
-      <li><strong>Exposures</strong> \(\gamma_j\): each market multiplies each of the three ingredients by its own loading, drawn independently from \(\mathrm{U}(1{-}s,\,1{+}s)\). The spread \(s\) makes markets respond <em>differently</em> to the same shock; this is what kills parallel trends.</li>
+      <li><strong>Seasonality</strong> \(8\sin(2\pi t/26)+4\sin(2\pi t/13)\): a 26-week half-year cycle of amplitude 8 and a 13-week quarterly cycle of amplitude 4. Identical for every market.</li>
+      <li><strong>The macro walk</strong> \(m_t\): one fresh shock \(\eta_s\sim\mathcal{N}(0,\sigma_\eta^2)\) per week, none ever forgotten. This is "the economy".</li>
+      <li><strong>Exposures</strong> \(\gamma_j\): each market multiplies each ingredient by its own loading.</li>
       <li><strong>Noise</strong> \(\varepsilon_{jt}\sim\mathcal{N}(0,\sigma_\varepsilon^2)\): the market's own weekly wobble, \(\sigma_\varepsilon\approx 3\).</li>
     </ul>
+    </div></details>
     <div class="callout watch"><div class="ct">Which of these is ever observed?</div>
     Only \(Y_{jt}\) is written to the file. The level \(\alpha_j\), the loadings \(\gamma_j\), the factors \(f_t\), the noise \(\varepsilon_{jt}\): all of them exist in the simulator's code, and their real-world counterparts (market size, sensitivity to the season, the state of the economy) exist in reality, but none of them appears in any dataset you will ever load. Every estimator in Act II is a different way of coping with that.</div>
     <p>On top of that no-campaign world we plant the effect:</p>
@@ -558,49 +568,51 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
       <span class="readout" id="nvRead"></span>
     </div>
     <div class="cap">At the case's own dials the bars <b>are</b> the case dataset: the same four numbers as the boxes above, against the same truth. Move a dial and the whole world re-simulates (slide 5's generator and seed) and every estimator re-scores on it.</div></div>
+    <details class="mathfold"><summary><span class="tw">▸</span> How to read the dials (red = error against the truth)</summary><div class="mfbody">
     <ul>
-      <li><b>Read the red segments</b>: each bar's red part is its <b>error against the truth line</b>, recomputed at every move (synthetic control refits its weights each time).</li>
-      <li><b>Loading spread → 0</b>: every market reacts to the shared shocks identically, so trends become parallel and DiD's red segment collapses to noise. Treated-minus-control keeps its error: the level gap never dies.</li>
-      <li><b>Macro shock up, with spread &gt; 0</b> (Limit 2): before/after's error explodes, DiD's grows with the walk, and synthetic control stays pinned near the truth: it matches loadings instead of hoping they are equal.</li>
+      <li><b>Loading spread → 0</b>: markets react identically, trends become parallel, DiD's error collapses to noise. Treated-minus-control keeps its error: the level gap never dies.</li>
+      <li><b>Macro shock up, with spread &gt; 0</b>: before/after's error explodes, DiD's grows with the walk, and synthetic control stays pinned near the truth: it matches loadings instead of hoping they are equal.</li>
     </ul>
+    </div></details>
     <div class="callout watch"><div class="ct">None of these numbers ships a warning label</div>
-    Each formula is exact arithmetic on the same 1,800 observed numbers, and each prints to the decimal with equal confidence. Their errors are not noise waiting to be averaged away: each error is a wrong <em>claim about \(Y(0)\)</em>, and a wrong claim does not improve with more data. Run before/after on two hundred weeks instead of sixty and it still charges the tide to the campaign, only more precisely. The cure is never a bigger sample; it is a better claim about \(Y(0)\).</div>
-    <div class="callout"><div class="ct">Why DiD is not enough here</div>
-    Difference-in-differences assumes an identical response to shared shocks. In the model that generated this world, metros differ in their exposures \(\gamma_j\), so trends are <em>not</em> parallel, and DiD keeps a bias that the sliders let you feel but not yet <em>name</em>. The next two slides name it: first on the graph, then in algebra.</div>
+    Each error is a wrong <em>claim about \(Y(0)\)</em>, and a wrong claim does not improve with more data: before/after on two hundred weeks still charges the tide to the campaign, only more precisely. The cure is never a bigger sample; it is a better claim about \(Y(0)\). DiD's claim fails here because metros differ in their exposures \(\gamma_j\) — a bias the sliders let you feel but not yet <em>name</em>. The next two slides name it: on the graph, then in algebra.</div>
   </div>
 </section>
 
 <!-- ================= 14 · Confounding, on a graph ================= -->
 <section class="slide" data-t="Confounding, on a graph" data-sec="Act II · The counterfactual">
   <div class="kicker">Act II · The counterfactual problem</div>
-  <h2>Our campaign, on the graph: one market, shared factors</h2>
+  <h2>The problem on a graph — and the repair, one toggle away</h2>
   <div class="sbody"><div class="cols">
     <div>
-      <p>Notice what this graph does <em>not</em> contain: an arrow into \(X\). The danger here needs no confounding story. The factors \(f_t\) feed <em>every</em> market's sales, each through its own loadings \(\gamma_j\), and the treated metro's \(\gamma_1\) is nobody's average. Whatever control you subtract, the comparison keeps a mismatch:</p>
+      <p>Notice what this graph does <em>not</em> contain: an arrow into \(X\). The factors \(f_t\) feed <em>every</em> market's sales, each through its own loadings \(\gamma_j\), and the treated metro's \(\gamma_1\) is nobody's average. Whatever fixed control you subtract, the comparison keeps a mismatch:</p>
       <div class="eqbox">
         \[ \hat\tau^{\text{T-C}} \;=\; \bar\tau \;+\; \underbrace{(\alpha_1-\bar\alpha)}_{\text{level gap}} \;+\; \underbrace{(\gamma_1-\bar\gamma)^{\top}\bar f_{\text{post}}}_{\text{factor mismatch}} \;+\; \text{noise} \]
       </div>
       <ul>
-        <li>\(\bar\tau\) is the true <b>average weekly effect</b> over the 20 post-launch weeks: the per-week version of slide 7's total, \(\tau = 20\,\bar\tau\). Every estimator in this act is a per-week number.</li>
-        <li><b>Read the equation in words</b>: compare your metro to any fixed control and the estimate keeps two leftovers besides the truth: the size gap between the two, and the difference in how they respond to the world, multiplied by whatever the world happened to do after launch.</li>
-        <li><b>DiD removes the level gap and nothing else</b>: the factor mismatch survives, with the post-minus-pre factor drift in place of \(\bar f_{\text{post}}\).</li>
-        <li>With <b>many</b> treated markets the mismatch would average toward zero. With <b>one</b>, there is nothing to average: the term is whatever your metro's loadings and the post-launch wave happen to be.</li>
-        <li>That is the identification problem of this lecture, and it exists <em>however</em> the metro was picked. It is also exactly the bias you just watched the sliders move. The next slide proves it in algebra.</li>
+        <li><b>In words</b>: besides the truth \(\bar\tau\) (the average weekly effect; slide 7's total is \(\tau=20\,\bar\tau\)), the estimate keeps the size gap, and the difference in how the two respond to the world times whatever the world did after launch. <b>DiD removes the level gap and nothing else</b> — and with <b>one</b> treated market, nothing averages the mismatch away.</li>
+        <li><b>The repair (tick the box)</b>: a donor blend <em>built to carry the same loadings</em>, \(\sum_j w_j\gamma_j \approx \gamma_1\), rides the same latent \(f_t\); the gap \(Y_{1t}-\sum_j w_j Y_{jt}\) cancels the factors. <b>The mismatch dies at any spread \(s\)</b>, where DiD had to hope for \(s\to 0\). The pre-period fit you achieved on the mixer is the <em>evidence</em> the footprints match.</li>
       </ul>
+      <details class="mathfold"><summary><span class="tw">▸</span> Why not just control for the confounders?</summary><div class="mfbody">
+      Controlling means conditioning on <em>recorded</em> variables, and the variables doing the damage were never recorded: no column of the file contains \(f_t\) or \(\gamma_1\). You cannot adjust for what was never written down. What rescues us is structure, not measurement: the factors are <b>shared</b> and the loadings <b>stable</b>, so the donors' observed sales are live readings of the same unmeasured \(f_t\).
+      </div></details>
+      <details class="mathfold"><summary><span class="tw">▸</span> And if the metro was picked for its character?</summary><div class="mfbody">
+      Plausible in practice: firms test where the outlook is good. The graph then gains one arrow, \(X \leftarrow f_t\): a textbook <b>back-door</b> — the same \(f_t\) drives both the choice to advertise and the sales. <b>One cure, both readings</b>: the same loading-matching closes the back-door too. Synthetic control never needs to know which world it is in.
+      </div></details>
     </div>
     <div>
-      <div class="fig"><div class="fh"><span class="badge">▶ LIVE</span> The shared factors drive every market</div>
+      <div class="fig"><div class="fh"><span class="badge">▶ LIVE</span> The shared factors drive every market
+        <label style="float:right;font-weight:600;cursor:pointer"><input type="checkbox" id="dagRepair"> draw the repair</label></div>
         <div class="canvas"><svg viewBox="0 0 720 300" id="svgDagP"></svg></div>
-        <div class="cap">Each market feels \(f_t\) through its own loadings \(\gamma_j\). Nothing points into \(X\).</div>
+        <div class="cap" id="dagCap">Each market feels \(f_t\) through its own loadings \(\gamma_j\). Nothing points into \(X\), and the danger is already there.</div>
       </div>
-      <div class="callout key"><div class="ct">And if the metro was picked for its character?</div>
-      Plausible in practice: firms tend to test where the outlook is good. Then the graph gains one more arrow, \(X \leftarrow f_t\), and the problem becomes a textbook <b>back-door</b>: the same \(f_t\) now drives <em>both</em> the choice to advertise and the sales, so even a comparison that was right on average is biased. The case says only that the metro was <em>chosen</em>, not how, and the data cannot settle it. Both readings get the same cure, two slides from now.</div>
+      <p class="small" style="margin-top:.4rem">That mismatch is the identification problem of this lecture, and it exists <em>however</em> the metro was picked — it is exactly the bias the sliders moved. Ahead: the algebra that prices it (deep dive), then the named assumptions the repair must earn.</p>
     </div>
   </div></div>
 </section>
 
 <!-- ================= 15 · When does DiD work? The algebra ================= -->
-<section class="slide" data-t="When does DiD work? The algebra" data-sec="Act II · The counterfactual">
+<section class="slide" data-t="When does DiD work? The algebra" data-depth="deep" data-sec="Act II · The counterfactual">
   <div class="kicker">Act II · The counterfactual problem</div>
   <h2>Push the world to its limits, on paper</h2>
   <div class="sub">Substitute the factor model into DiD (treated change minus control-average change, post minus pre) and the estimator decomposes exactly. Then send each dial of the simulator to zero and read off what dies.</div>
@@ -633,32 +645,13 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
       </ul></div>
     </div>
     <ul>
-      <li><b>The noise term survives both limits</b>: it carries \(\sigma_\varepsilon \approx 3\) whatever \(s\) and \(\sigma_\eta\) do. The honest claim is "the <em>systematic</em> bias vanishes", never "DiD equals the truth".</li>
-      <li><b>Notice what is absent from \(B\): the amount of data.</b> More weeks shrink the noise term only; \(\Delta\bar f\) is the world's drift, not sampling error, and does not go to zero as the panel lengthens. More control markets shrink only the \(1/n\) inside the prefactor; the 1 next to it is the treated metro's own loading draw, and with one treated market nothing ever averages over it. Data buys precision around the same biased number.</li>
-      <li><b>This is why you fitted a blend instead of averaging the donors.</b> DiD is stuck with the equal-weight \(\bar\gamma_C\) and must <em>hope</em> \(s\) is small. Synthetic control replaces it with fitted weights \(\sum_j w_j\gamma_j\) built to match \(\gamma_1\), which kills \(B\) at <em>any</em> spread. The next slide shows that repair back on the graph.</li>
+      <li><b>Notice what is absent from \(B\): the amount of data.</b> \(\Delta\bar f\) is the world's drift, not sampling error; more weeks shrink only the noise term, and with one treated market nothing ever averages over its own loading draw. Data buys precision around the same biased number.</li>
+      <li><b>This is why you fitted a blend instead of averaging the donors.</b> DiD is stuck with the equal-weight \(\bar\gamma_C\) and must <em>hope</em> \(s\) is small. Synthetic control replaces it with fitted weights \(\sum_j w_j\gamma_j\) built to match \(\gamma_1\), which kills \(B\) at <em>any</em> spread — the repair you just toggled on the graph.</li>
     </ul>
+    <details class="mathfold"><summary><span class="tw">▸</span> The noise term, and the honest claim</summary><div class="mfbody">
+    The idiosyncratic noise survives both limits: it carries \(\sigma_\varepsilon \approx 3\) whatever \(s\) and \(\sigma_\eta\) do. The honest claim in a limit is "the <em>systematic</em> bias vanishes", never "DiD equals the truth".
+    </div></details>
   </div>
-</section>
-
-<!-- ================= 16 · What the blend does to the graph ================= -->
-<section class="slide" data-t="What the blend does to the graph" data-sec="Act II · The counterfactual">
-  <div class="kicker">Act II · The counterfactual, closed on the graph</div>
-  <h2>What the fitted blend does to the graph</h2>
-  <div class="sbody"><div class="cols c32">
-    <div class="fig"><div class="fh"><span class="badge">▶ LIVE</span> Slide 14's graph, with the repair drawn in</div>
-      <div class="canvas"><svg viewBox="0 0 720 300" id="svgDag"></svg></div>
-      <div class="cap">The dashed green arrow is the repair: a donor blend built to carry the same loadings, subtracted from the treated series.</div>
-    </div>
-    <div>
-      <ul>
-        <li><b>Why not just control for the confounders?</b> Controlling means conditioning on <em>recorded</em> variables, and the variables doing the damage were never recorded: no column of the file contains \(f_t\) or \(\gamma_1\). Adjusting for observed covariates removes only the part of the shared drift that flows through them, and leaves the rest intact. You cannot adjust for what was never written down.</li>
-        <li>What rescues us is structure, not measurement: the factors are <b>shared</b> across markets and the loadings are <b>stable</b> in time, so the donors' observed sales are live readings of the same unmeasured \(f_t\), taken through loadings a blend can match.</li>
-        <li>The blend you fitted on the mixer carries loadings \(\sum_j w_j\gamma_j \approx \gamma_1\), so it rides the <em>same</em> latent \(f_t\). The gap \(Y_{1t}-\sum_j w_j Y_{jt}\) cancels the factors: <b>the mismatch term dies at any spread \(s\)</b>, where DiD had to hope for \(s \to 0\).</li>
-        <li><b>One cure, both readings.</b> The same matching also closes the back-door \(X \leftarrow f_t\), if the metro was picked on its character. Synthetic control never needs to know which world it is in.</li>
-        <li>The pre-period fit you just achieved is the <b>evidence</b> that the footprints really match. The next slide turns that evidence into named assumptions, and marks which of them can be tested.</li>
-      </ul>
-    </div>
-  </div></div>
 </section>
 
 <!-- ================= 17 · Identification: what must hold ================= -->
@@ -768,7 +761,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
 </section>
 
 <!-- ================= 21 · Interval by test inversion (live) ================= -->
-<section class="slide" data-t="Interval by test inversion (live)" data-sec="Act III · Is it real, how big?">
+<section class="slide" data-t="Interval by test inversion (live)" data-depth="deep" data-sec="Act III · Is it real, how big?">
   <div class="kicker">Act III · Is it real, and how big?</div>
   <h2>From a test to an interval: inversion</h2>
   <div class="sub">You have one number, €260k, and one question: which true lifts could have produced it? Ask the placebo test about <em>every</em> candidate, and the survivors form the interval. No bell curve is used anywhere.</div>
@@ -1041,7 +1034,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
 </section>
 
 <!-- ================= 31 · The Bayesian synthetic control ================= -->
-<section class="slide" data-t="The Bayesian synthetic control" data-sec="Act V · Adding a probability">
+<section class="slide" data-t="The Bayesian synthetic control" data-depth="deep" data-sec="Act V · Adding a probability">
   <div class="kicker">Act V · Adding a probability</div>
   <h2>The same synthetic control, as a probability model</h2>
   <div class="sbody"><div class="cols">
@@ -1075,7 +1068,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
 </section>
 
 <!-- ================= 32 · Why the two paradigms agree ================= -->
-<section class="slide" data-t="Why the two paradigms agree" data-sec="Act V · Adding a probability">
+<section class="slide" data-t="Why the two paradigms agree" data-depth="deep" data-sec="Act V · Adding a probability">
   <div class="kicker">Act V · Adding a probability</div>
   <h2>Does Bayes move the answer? On the estimate, no.</h2>
   <div class="sbody"><div class="cols">
@@ -1325,7 +1318,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
 </section>
 
 <!-- ================= 42 · Endnote poll: trust the interval? ================= -->
-<section class="slide" data-t="Endnote poll: trust the interval?" data-sec="Endnote · for the modellers">
+<section class="slide" data-t="Endnote poll: trust the interval?" data-depth="deep" data-sec="Endnote · for the modellers">
   <div class="kicker">Endnote · For the modellers</div>
   <div><span class="endnote-flag">Advanced note: the verdict above does not depend on this</span></div>
   <h2>One question before you reuse that posterior elsewhere</h2>
@@ -1346,7 +1339,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
 </section>
 
 <!-- ================= 43 · Endnote: the diagnosis and the fix ================= -->
-<section class="slide" data-t="Endnote: the diagnosis and the fix" data-sec="Endnote · for the modellers">
+<section class="slide" data-t="Endnote: the diagnosis and the fix" data-depth="deep" data-sec="Endnote · for the modellers">
   <div class="kicker">Endnote · For the modellers</div>
   <div><span class="endnote-flag">Advanced note</span></div>
   <h2>Why the sum breaks, and the one-parameter repair</h2>
@@ -1385,7 +1378,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
 </section>
 
 <!-- ================= 44 · Endnote: the shape-correct route ================= -->
-<section class="slide" data-t="Endnote: the shape-correct route" data-sec="Endnote · for the modellers">
+<section class="slide" data-t="Endnote: the shape-correct route" data-depth="deep" data-sec="Endnote · for the modellers">
   <div class="kicker">Endnote · For the modellers</div>
   <div><span class="endnote-flag">Advanced note</span></div>
   <h2>The more precise route we did not take</h2>
@@ -1429,6 +1422,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
   <span>Causal Marketing · SDA Bocconi · Synthetic Control</span>
   <span class="spacer"></span>
   <button id="tocBtn">☰ Contents (t)</button>
+  <button id="coreBtn">◆ Core-only (c)</button>
   <button id="themeBtn">◑ Theme (d)</button>
   <span class="ctr" id="ctr">1 / 1</span>
 </div>
@@ -2062,7 +2056,14 @@ window.fitSlide=fitSlide;
       svg.appendChild(el('text',{x:Y1[0],y:Y1[1]+44,'text-anchor':'middle',fill:c.faint,'font-size':11},'treated sales'));
       svg.appendChild(el('text',{x:Yj[0],y:Yj[1]+44,'text-anchor':'middle',fill:withRepair?c.green:c.faint,'font-size':11},withRepair?'synthetic control':'donor sales'));
       if(withRepair)svg.appendChild(el('text',{x:(Y1[0]+Yj[0])/2,y:Y1[1]+64,'text-anchor':'middle',fill:c.green,'font-size':10.5,'font-weight':700},'matches the fₜ-loading, subtracts the shared flow'));};}
-  [make('svgDagP',false),make('svgDag',true)].filter(Boolean).forEach(f=>{f();window.__redraw.push(f);});
+  const cb=document.getElementById('dagRepair'),cap=document.getElementById('dagCap');
+  const probCap='Each market feels \\(f_t\\) through its own loadings \\(\\gamma_j\\). Nothing points into \\(X\\), and the danger is already there.';
+  const repCap='The dashed green arrow is the repair: a donor blend built to carry the same loadings, subtracted from the treated series.';
+  const draw=()=>{const f=make('svgDagP',!!(cb&&cb.checked));if(f)f();};
+  if(cb)cb.addEventListener('change',()=>{draw();
+    if(cap){cap.textContent=cb.checked?repCap:probCap;
+      if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([cap]).catch(()=>{});}});
+  draw();window.__redraw.push(draw);
 })();
 
 /* ==== placebo-in-time ==== */
@@ -2285,12 +2286,23 @@ document.querySelectorAll('div.poll').forEach(p=>{
   const slides=[...document.querySelectorAll('.slide')];
   const ctr=document.getElementById('ctr'),pbar=document.getElementById('pbar');
   let cur=0;
+  let coreOnly=(()=>{try{return localStorage.getItem('geoSlidesCore')==='1';}catch(e){return false;}})();
+  const visible=()=>slides.map((s,i)=>i).filter(i=>!coreOnly||slides[i].dataset.depth!=='deep');
   function show(i){cur=Math.max(0,Math.min(slides.length-1,i));
     slides.forEach((s,k)=>s.classList.toggle('on',k===cur));
-    ctr.textContent=(cur+1)+' / '+slides.length;
-    pbar.style.width=((cur+1)/slides.length*100)+'%';
+    const vis=visible(),p=vis.indexOf(cur);
+    ctr.textContent=(p>=0?p+1:'·')+' / '+vis.length+(coreOnly?' core':'');
+    pbar.style.width=(((p>=0?p:0)+1)/vis.length*100)+'%';
     location.hash=String(cur+1);
     requestAnimationFrame(()=>fitSlide(slides[cur]));}
+  function step(d){const vis=visible();let p=vis.indexOf(cur);
+    if(p<0){p=vis.findIndex(v=>v>cur);p=d>0?(p<0?vis.length-1:p-1):(p<0?vis.length-1:Math.max(0,p-1));}
+    show(vis[Math.max(0,Math.min(vis.length-1,p+d))]);}
+  function setCore(on){coreOnly=on;try{localStorage.setItem('geoSlidesCore',on?'1':'0');}catch(e){}
+    document.body.classList.toggle('coreOnly',on);
+    const b=document.getElementById('coreBtn');if(b)b.classList.toggle('on',on);
+    if(on&&slides[cur].dataset.depth==='deep'){const vis=visible();
+      const nxt=vis.find(v=>v>cur);show(nxt===undefined?vis[vis.length-1]:nxt);}else show(cur);}
   window.__show=show; window.__getcur=()=>cur;
   const h=parseInt(location.hash.slice(1),10);
   show(isNaN(h)?0:h-1);
@@ -2302,20 +2314,24 @@ document.querySelectorAll('div.poll').forEach(p=>{
     if(d.open)requestAnimationFrame(()=>d.querySelectorAll('mjx-container[display="true"]').forEach(fitEq));}));
   addEventListener('keydown',e=>{
     if(e.target.tagName==='INPUT')return;
-    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();show(cur+1);}
-    else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();show(cur-1);}
-    else if(e.key==='Home')show(0); else if(e.key==='End')show(slides.length-1);
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();step(1);}
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();step(-1);}
+    else if(e.key==='Home')show(visible()[0]); else if(e.key==='End'){const v=visible();show(v[v.length-1]);}
     else if(e.key==='t'||e.key==='T')toggleToc();
+    else if(e.key==='c'||e.key==='C')setCore(!coreOnly);
     else if(e.key==='d'||e.key==='D')toggleTheme();
     else if(e.key==='Escape')document.getElementById('tocOv').classList.remove('on');});
-  document.getElementById('navL').onclick=()=>show(cur-1);
-  document.getElementById('navR').onclick=()=>show(cur+1);
+  document.getElementById('navL').onclick=()=>step(-1);
+  document.getElementById('navR').onclick=()=>step(1);
+  document.getElementById('coreBtn').onclick=()=>setCore(!coreOnly);
+  if(coreOnly)setCore(true);
   const ov=document.getElementById('tocOv'),list=document.getElementById('tocList');
   let lastSec='';
   slides.forEach((s,i)=>{
     const sec=s.dataset.sec||'';
     if(sec!==lastSec){const li=document.createElement('li');li.className='sec';li.textContent=sec;list.appendChild(li);lastSec=sec;}
     const li=document.createElement('li');
+    if(s.dataset.depth==='deep')li.className='deep';
     li.innerHTML=`<a>${i+1} · ${s.dataset.t}</a>`;
     li.querySelector('a').onclick=()=>{show(i);ov.classList.remove('on');};
     list.appendChild(li);});

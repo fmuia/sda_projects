@@ -42,8 +42,8 @@ DECK = HERE / "geo_lift_slides.html"
 CLAIMS = HERE / "geo_claims.yaml"
 RESULTS = REPO / "book" / "build" / "results"
 
-CHAR_BUDGET = 2600          # visible chars per slide; WARN until the Phase-4 trim
-CHAR_BUDGET_HARD = False    # Phase 4 flips this
+CHAR_BUDGET = 2600          # visible chars per slide (fold-out bodies excluded)
+CHAR_BUDGET_HARD = True
 
 
 def load_deck():
@@ -54,14 +54,22 @@ def load_deck():
     nm = re.search(r"/\*__NUMS__\*/(\{.*?\})/\*__ENDNUMS__\*/", html, re.S)
     nmap = json.loads(nm.group(1)) if nm else {}
     body = html[: html.index("/* ==== baked data (injected) ==== */")]
-    slides = {}
-    for chunk in re.split(r'(?=<section class="slide)', body)[1:]:
-        t = re.search(r'data-t="([^"]*)"', chunk)
+    slides, slides_visible = {}, {}
+
+    def strip_tags(chunk):
         txt = re.sub(r"<[^>]+>", " ", chunk)
         txt = htmllib.unescape(txt)
-        txt = re.sub(r"[\s   ]+", " ", txt).strip()
-        slides[htmllib.unescape(t.group(1)) if t else f"slide{len(slides)+1}"] = txt
-    return data, nmap, slides
+        return re.sub(r"[\s   ]+", " ", txt).strip()
+
+    for chunk in re.split(r'(?=<section class="slide)', body)[1:]:
+        t = re.search(r'data-t="([^"]*)"', chunk)
+        key = htmllib.unescape(t.group(1)) if t else f"slide{len(slides)+1}"
+        slides[key] = strip_tags(chunk)
+        # what the audience sees before opening any fold: keep each <details>'s summary,
+        # drop its body
+        vis = re.sub(r"<details.*?<summary>(.*?)</summary>.*?</details>", r" \1 ", chunk, flags=re.S)
+        slides_visible[key] = strip_tags(vis)
+    return data, nmap, slides, slides_visible
 
 
 def load_shards():
@@ -106,7 +114,7 @@ def norm(s):
 
 
 def main() -> int:
-    data, nmap, slides = load_deck()
+    data, nmap, slides, slides_visible = load_deck()
     shards = load_shards()
     env = make_env(data)
     claims = yaml.safe_load(CLAIMS.read_text())
@@ -175,7 +183,7 @@ def main() -> int:
         report(f"nmap:{k}", ok, f"N[{k}]={v!r} vs shard {rec.get('text') if rec else 'MISSING'!r}")
 
     # -- slide length budget -----------------------------------------------------------
-    for st, txt in slides.items():
+    for st, txt in slides_visible.items():
         if len(txt) > CHAR_BUDGET:
             msg = f"slide {st!r}: {len(txt)} visible chars > budget {CHAR_BUDGET}"
             (failures if CHAR_BUDGET_HARD else warnings).append((f"length:{st}", msg))
