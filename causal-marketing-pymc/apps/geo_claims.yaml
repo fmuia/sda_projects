@@ -25,8 +25,8 @@
 
 - id: weeks_indexing
   slides: ["The data (live)"]
-  text: 't=1,\dots,60'
-  defect: "phase1-2.5 off-by-one: data are 0-indexed, t=0,...,59 with T_0=40"
+  text: 't=0,\dots,59'
+
 
 - id: planted_lift_rule
   slides: ["The data-generating model"]
@@ -357,8 +357,11 @@
 
 - id: bayes_arm_labelled_ar1
   slides: ["Why the two paradigms agree"]
-  text: "Bayesian posterior mean"
-  defect: "phase1-2.3: row must say 'Bayesian posterior mean (AR(1))'; slide 32 shows the iid code"
+  text: "Bayesian posterior mean (AR(1), the shipped arm)"
+
+- id: iid_form_disclaimer
+  slides: ["The Bayesian synthetic control"]
+  text: "Shown in its iid form"
 
 - id: p_go
   slides: ["P(profit > cost), live", "Poll: buy more evidence?", "On real data: the referee",
@@ -451,34 +454,38 @@
   value: 100
   tol: 0
 
+# Slide 38's stated numbers are JS-filled spans (reBase/reDaily/rePct/rePctPre/reCool),
+# computed in the deck from the SAME re_treat/re_ctrl series its chart draws:
+# matched-arms DiD over the campaign window [42,70), % against the concurrent
+# counterfactual (post - lift). The exprs below mirror the deck's JS exactly.
+# (nb07b's tokens pre_level=471.6 / post_gap=+106.5 / cool_gap=-2.5 are the AR(1)-
+# posterior versions from the newer notebook run; Phase 2 refreshes DATA.re_* to it.)
 - id: real_baseline
   slides: ["The real experiment (live)"]
-  text: "$472"
-  shard: nb07b.pre_level
-  value: 471.6
+  expr: "mean(re_treat[:42])"
+  value: 475.5
   tol: 0.5
-  defect: "phase1-2.2: state which baseline (nb07b uses control-arm pre mean; say so or switch)"
 
-- id: real_lift_pct
+- id: real_lift_pct_concurrent
   slides: ["The real experiment (live)"]
-  text: "(~22%)"
-  defect: "phase1-2.1: 22% divides by the pre-period; concurrent-control denominator gives ~17%"
+  text: "of the no-campaign level"
+  expr: "100 * ((mean(re_treat[42:70]) - mean(re_treat[:42])) - (mean(re_ctrl[42:70]) - mean(re_ctrl[:42]))) / (mean(re_treat[42:70]) - ((mean(re_treat[42:70]) - mean(re_treat[:42])) - (mean(re_ctrl[42:70]) - mean(re_ctrl[:42]))))"
+  value: 17.3
+  tol: 0.3
 
-- id: real_post_gap
+- id: real_lift_pct_naive_callback
   slides: ["The real experiment (live)"]
-  text: "+$107"
-  shard: nb07b.post_gap
-  value: 106.5
-  tol: 0.5
-  defect: "phase1-2.2: recover nb07b's window definition and pin it here"
+  text: "Act II's rejected denominator"
+  expr: "100 * ((mean(re_treat[42:70]) - mean(re_treat[:42])) - (mean(re_ctrl[42:70]) - mean(re_ctrl[:42]))) / mean(re_treat[:42])"
+  value: 22.1
+  tol: 0.3
 
 - id: real_cooldown
   slides: ["The real experiment (live)"]
-  text: "−$3"
-  shard: nb07b.cool_gap
-  value: -2.5
-  tol: 0.5
-  defect: "phase1-2.2: say which estimator (raw vs DiD-adjusted) the -3 is"
+  text: "per geo per day vs the concurrent control in the cooldown"
+  expr: "(mean(re_treat[70:]) - mean(re_treat[:42])) - (mean(re_ctrl[70:]) - mean(re_ctrl[:42]))"
+  value: -4.4
+  tol: 0.3
 
 - id: referee_total
   slides: ["On real data: the referee"]
@@ -535,11 +542,25 @@
 
 - id: hull_gate
   slides: ["On real data: the off-switch"]
-  texts: ["$868", "$665"]
+  texts: ["$868", "$665", "Where $665 comes from", "nearly $2,000 (3 × $665)"]
   shard: nb07b.hull_gate_ref
   value: 664.65
   tol: 0.5
-  defect: "phase1-2.4: the 665 is underived on the slide; recover nb07b's rule and derive it"
+
+- id: hull_gate_derivation
+  slides: ["On real data: the off-switch"]
+  # nb07b: gate1_ref = |gap1[post].mean()|/3, i.e. the slide-17 rule on geo 1's own
+  # claimed lift; "nearly $2,000" = 3 x 664.65 = 1994
+  expr: "3 * 664.65"
+  value: 1993.9
+  tol: 1.0
+
+- id: hull_cell_gate_contrast
+  slides: ["On real data: the off-switch"]
+  texts: ["+107", "$36"]
+  shard: nb07b.gate_ref
+  value: 35.5
+  tol: 0.5
 
 - id: hull_suppressed_iroas
   slides: ["On real data: the off-switch"]

@@ -264,7 +264,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
   <div class="sbody">
     <p><strong>What the file contains.</strong> One table and four design facts:</p>
     <ul>
-      <li>\(Y_{jt}\): weekly sales of market \(j\) in week \(t\), in €000. Thirty markets (\(j=1,\dots,30\); the treated metro is \(j=1\)), sixty weeks (\(t=1,\dots,60\)): 1,800 numbers, all observed.</li>
+      <li>\(Y_{jt}\): weekly sales of market \(j\) in week \(t\), in €000. Thirty markets (\(j=1,\dots,30\); the treated metro is \(j=1\)), sixty weeks (\(t=0,\dots,59\)): 1,800 numbers, all observed.</li>
       <li>The design facts: the campaign switched on in the treated metro at week \(T_0=40\) and stayed on for the final 20 weeks; it cost <b>€75k</b>; the gross margin on incremental sales is <b>35%</b>; the other 29 markets ran nothing. Who chose the metro and the week: the firm's marketing team. Not us, and not a coin.</li>
     </ul>
     <p><strong>What is not in the file, and never will be.</strong> The treated metro's sales in those same 20 weeks <em>had it not advertised</em>: twenty numbers describing a world that did not happen, and every question on slide 2 is secretly a question about them. Also absent: the machinery that generates sales, each market's size, its sensitivity to the season and to the economy. Real things, recorded nowhere. Act II gives both a name and an estimator; for now, look at what you do have.</p>
@@ -1068,6 +1068,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
         <li><strong>Same identification:</strong> same donors, same simplex, same estimand. The sampler adds a distribution, not causality.</li>
         <li><strong>Prior robustness (checked):</strong> sweeping the Dirichlet concentration \(\alpha\in\{0.5,1,2\}\) barely moves the total; 40 pre-weeks swamp the prior.</li>
         <li><strong>A real trade on the weights:</strong> the flat Dirichlet spreads over 23.4 effective donors vs the classical 3.3: more stable out of sample, less interpretable to a planner.</li>
+        <li><strong>Shown in its iid form</strong> — the model everyone writes first. The shipped arm adds one parameter (AR(1) errors); the endnote shows why, and what it costs to skip it.</li>
       </ul>
     </div>
   </div></div>
@@ -1091,7 +1092,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
         <thead><tr><th>Arm</th><th>Total lift</th></tr></thead>
         <tbody>
           <tr><td>Classical SLSQP</td><td>€260k</td></tr>
-          <tr><td>Bayesian posterior mean</td><td>€262k</td></tr>
+          <tr><td>Bayesian posterior mean (AR(1), the shipped arm)</td><td>€262k</td></tr>
           <tr><td>Planted truth</td><td>€284k</td></tr>
         </tbody>
       </table>
@@ -1209,7 +1210,8 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
           <li><strong>100 geos</strong>, randomized in matched pairs: <strong>50 treated, 50 control</strong>.</li>
           <li><strong>93 days</strong> of daily sales per geo: 42 pre-launch days, a <strong>28-day campaign</strong> (day 42 onward), then 23 cooldown days.</li>
           <li>Ad spend: <strong>$50k</strong>, all of it inside the campaign window. Pre-period spend is exactly zero.</li>
-          <li>Baseline: about <strong>$472</strong> of sales per geo per day; the campaign window shows a lift of roughly <strong>+$107</strong> per geo per day (~22%).</li>
+          <li>Baseline: about <strong>$<span id="reBase"></span></strong> of sales per geo per day before launch. During the campaign the treated arm runs <strong>+$<span id="reDaily"></span></strong> per geo per day above the concurrent control: <strong>~<span id="rePct"></span>%</strong> of the no-campaign level.</li>
+          <li class="small">Against its own pre-period the same lift reads ~<span id="rePctPre"></span>% — Act II's rejected denominator: the shared wave lifted every geo during the window, and the concurrent control is the honest baseline.</li>
         </ul>
       </div>
       <div>
@@ -1225,7 +1227,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
     <div class="fig">
       <div class="fh"><span class="badge">▶ LIVE</span> First look at the raw data: mean daily sales per geo, treated vs control</div>
       <div class="canvas"><svg viewBox="0 0 720 235" id="svgReal"></svg></div>
-      <div class="cap">The two groups ride the same weekly rhythm and sit on top of each other for 42 days (that is randomization working). They separate the day the money starts, and close back up when it stops: the effect switches off with the spend, collapsing to about −$3 per geo per day in the cooldown. No carryover annuity.</div>
+      <div class="cap">The two groups ride the same weekly rhythm and sit on top of each other for 42 days (that is randomization working). They separate the day the money starts, and close back up when it stops: the effect switches off with the spend, collapsing to about −$<span id="reCool"></span> per geo per day vs the concurrent control in the cooldown. No carryover annuity.</div>
     </div>
   </div>
 </section>
@@ -1266,7 +1268,10 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
       <div class="eqbox">
         \[ \text{pre-RMSE} = \$868 \;\;\gg\;\; \text{gate} = \$665 \]
       </div>
-      <ul style="margin:.25rem 0"><li><b>Why it fires: simplex weights can only average.</b> No convex combination of smaller metros can reach the largest one, which sits outside its donors' hull.</li></ul>
+      <ul style="margin:.25rem 0">
+        <li class="small"><b>Where $665 comes from:</b> the same rule as the simulation's gate — pre-RMSE must beat a third of the lift the fit itself claims. The 50-geo cell claimed ~$+107/geo/day, so its bar was $36 (and it passed); this geo's fit claims a daily lift of nearly $2,000 (3 × $665), and still cannot track the pre-period to a third of that.</li>
+        <li><b>Why it fires: simplex weights can only average.</b> No convex combination of smaller metros can reach the largest one, which sits outside its donors' hull.</li>
+      </ul>
       <p>Had the gate not fired, the shipped estimate would have implied an iROAS of <strong>5.1</strong>, where the randomized experiment says 2.94. The gate, not hindsight, is what keeps that number out of the memo.</p>
     </div>
     <div>
@@ -1289,14 +1294,14 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
     </div>
     <div>
       <table class="mini">
-        <thead><tr><th>Board number</th><th>Value</th></tr></thead>
+        <thead><tr><th>Board number</th><th>Value</th><th>Arm</th></tr></thead>
         <tbody>
-          <tr><td>Incremental sales (20 wk)</td><td>€260k [€195k, €335k]</td></tr>
-          <tr><td>iROAS vs break-even</td><td>3.47 vs 2.86</td></tr>
-          <tr><td>Gross profit vs price</td><td>€91k vs €75k</td></tr>
-          <tr class="hi"><td>P(profit &gt; cost)</td><td><b>0.78 → TEST FURTHER</b></td></tr>
-          <tr><td>Headroom price (P = 0.9)</td><td>€67k</td></tr>
-          <tr><td>Value of perfect information</td><td>≈ €2k (this buy) · ~4-market test vs rollout</td></tr>
+          <tr><td>Incremental sales (20 wk)</td><td>€260k [€195k, €335k]</td><td>classical, design-based</td></tr>
+          <tr><td>iROAS vs break-even</td><td>3.47 vs 2.86</td><td>P&amp;L on the point</td></tr>
+          <tr><td>Gross profit vs price</td><td>€91k vs €75k</td><td>P&amp;L on the point</td></tr>
+          <tr class="hi"><td>P(profit &gt; cost)</td><td><b>0.78 → TEST FURTHER</b></td><td>AR(1) posterior</td></tr>
+          <tr><td>Headroom price (P = 0.9)</td><td>€67k</td><td>AR(1) posterior</td></tr>
+          <tr><td>Value of perfect information</td><td>≈ €2k (this buy) · ~4-market test vs rollout</td><td>AR(1) posterior</td></tr>
         </tbody>
       </table>
     </div>
@@ -2142,7 +2147,7 @@ window.fitSlide=fitSlide;
     svg.appendChild(el('text',{x:Wp-mR-203,y:28,fill:c.blue,'font-size':11,'font-weight':700},'your blend'));
     svg.appendChild(el('line',{x1:mL,x2:Wp-mR,y1:H-mB,y2:H-mB,stroke:c.rule}));
     svg.appendChild(el('text',{x:mL,y:H-8,fill:c.faint,'font-size':10},'week 0'));
-    svg.appendChild(el('text',{x:Wp-mR,y:H-8,fill:c.faint,'font-size':10,'text-anchor':'end'},'week 60'));
+    svg.appendChild(el('text',{x:Wp-mR,y:H-8,fill:c.faint,'font-size':10,'text-anchor':'end'},'week 59'));
     const ld=0.8+0.8*w;
     let se=0;for(let i=DIV;i<W;i++)se+=(blend[i]-tr[i])**2;const oos=Math.sqrt(se/(W-DIV));
     const ok=Math.abs(ld-1.2)<0.021;
@@ -2174,7 +2179,7 @@ window.fitSlide=fitSlide;
       svg.appendChild(el('text',{x:xx+29,y:14,fill:col,'font-size':10.5,opacity:Math.max(op,.8)},lab));});
     svg.appendChild(el('line',{x1:mL,x2:Wp-mR,y1:H-mB,y2:H-mB,stroke:c.rule}));
     svg.appendChild(el('text',{x:mL,y:H-8,fill:c.faint,'font-size':10},'week 0'));
-    svg.appendChild(el('text',{x:Wp-mR,y:H-8,fill:c.faint,'font-size':10,'text-anchor':'end'},'week 60'));
+    svg.appendChild(el('text',{x:Wp-mR,y:H-8,fill:c.faint,'font-size':10,'text-anchor':'end'},'week 59'));
     svg.appendChild(el('text',{x:14,y:(mT+H-mB)/2,fill:c.faint,'font-size':10,'text-anchor':'middle',
       transform:`rotate(-90 14 ${(mT+H-mB)/2})`},'sales (€000)'));}
   draw();window.__redraw.push(draw);
@@ -2233,6 +2238,16 @@ window.fitSlide=fitSlide;
 (function(){
   const svg=document.getElementById('svgReal'); if(!svg)return;
   const tr=DATA.re_treat,ct=DATA.re_ctrl,L=DATA.re_launch,CE=DATA.re_coolend,W=tr.length;
+  /* the slide's stated numbers, computed from the very series the chart draws:
+     matched-arms DiD over the campaign window, % against the concurrent counterfactual */
+  {const avg=a=>a.reduce((s,v)=>s+v,0)/a.length;
+   const pre=avg(tr.slice(0,L)),preC=avg(ct.slice(0,L)),post=avg(tr.slice(L,CE)),postC=avg(ct.slice(L,CE));
+   const lift=(post-pre)-(postC-preC),cf=post-lift;
+   const cool=(avg(tr.slice(CE))-pre)-(avg(ct.slice(CE))-preC);
+   const put=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+   put('reBase',Math.round(pre));put('reDaily',Math.round(lift));
+   put('rePct',Math.round(100*lift/cf));put('rePctPre',Math.round(100*lift/pre));
+   put('reCool',Math.round(Math.abs(cool)));}
   function draw(){clr(svg);const c=COL();const Wp=720,H=235,mL=50,mR=14,mT=30,mB=26;
     let mn=1e9,mx=-1e9;[tr,ct].forEach(a=>a.forEach(v=>{if(v<mn)mn=v;if(v>mx)mx=v;}));
     const x=lin(0,W-1,mL,Wp-mR),y=lin(mn-15,mx+15,H-mB,mT);
