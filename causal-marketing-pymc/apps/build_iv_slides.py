@@ -73,6 +73,7 @@ def bake_bundle() -> dict:
         "beta_probit": sub(d["beta_probit"]),
         "beta_gauss": sub(d["beta_gauss"]),
         "rho_probit": sub(d["rho_probit"]),
+        "scaleknob": d["scaleknob"],   # error-scale-prior dose-response, from nb11's 5b-knob cell
         "true": float(d["true"]),
         "dgp": DGP,
         "scalars": scalars("nb11.json"),

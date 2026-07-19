@@ -14,9 +14,9 @@
 
 % Standalone-safe cross-chapter references (the did.tex \refgeo pattern): in the offprint the
 % other chapters' labels do not exist, so fall back to words instead of printing "??".
-\newcommand{\refiv}{\ifcsname r@ch:iv\endcsname\refiv{}\else the instrumental-variables chapter\fi}
-\newcommand{\refdid}{\ifcsname r@ch:did\endcsname\refdid{}\else the difference-in-differences chapter\fi}
-\newcommand{\reffound}{\ifcsname r@ch:foundations\endcsname\reffound{}\else the foundations chapter\fi}
+\newcommand{\refiv}{\ifcsname r@ch:iv\endcsname\cref{ch:iv}\else the instrumental-variables chapter\fi}
+\newcommand{\refdid}{\ifcsname r@ch:did\endcsname\cref{ch:did}\else the difference-in-differences chapter\fi}
+\newcommand{\reffound}{\ifcsname r@ch:foundations\endcsname\cref{ch:foundations}\else the foundations chapter\fi}
 
 \begin{quote}\small
 \emph{A television campaign costing \keur{\nbSevenCost} ran in one of \nbSevenNDmas{} markets, with

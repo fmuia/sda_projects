@@ -508,6 +508,29 @@ $[\eur{\nbElevenNaiveLo}, \eur{\nbElevenNaiveHi}]$. Two-stage least squares retu
 $[\eur{\nbElevenIvLo}, \eur{\nbElevenIvHi}]$. The gap between them (\eur{\nbElevenWedge} per
 exposure) \emph{is} the self-selection the instrument removed.
 
+That wedge has a per-unit price, and naming it now saves the Bayesian section a definition at
+its moment of maximum load. The control-function form of 2SLS (\cref{eq:iv:cf}, derived in
+\cref{app:iv:forensic}) regresses the outcome on the \emph{actual} exposure plus the
+first-stage residual $\hat v$; the residual's coefficient $\phi$ is the euro value of one
+unit of self-selected exposure. Because exposure decomposes as $X = \hat X + \hat v$ with the
+two pieces orthogonal, the naive slope decomposes too, exactly and in sample:
+%
+\begin{equation}
+  \hat\beta_{\text{OLS}} - \hat\beta_{\text{2SLS}}
+  \;=\; \phi\,\big(1 - R^{2}_{\text{first}}\big)
+  \;=\; \nbElevenPhiCf \times (1 - \nbElevenRTwoFirst)
+  \;=\; \eur{\nbElevenWedge}.
+  \label{eq:iv:wedgephi}
+\end{equation}
+%
+The notebook asserts the identity to $10^{-6}$ rather than narrating it. Two properties of
+$\phi$ matter for everything that follows. First, it is an ordinary, \emph{free} OLS
+coefficient: nothing in the classical machinery can shrink it. Second, it is exactly the
+object the Bayesian joint model of \cref{sec:iv:bayes} must assemble from parts --- there it
+will read $\phi = \rho\,\sigma_Y/\sigma_X$, a correlation times a ratio of scales, each part
+carrying a prior. Keep \cref{eq:iv:wedgephi} in view: the whole Bayesian story of this chapter
+is what happens to $\phi$ on the way through that assembly.
+
 One detail in that paragraph deserves to be pulled out and set in bold, because it is the single
 most useful thing in the classical arm. \textbf{The naive interval is the tightest in the chapter
 and it misses the truth entirely.} Its standard error is \eur{\nbElevenNaiveSe} (a half-width of
@@ -570,11 +593,31 @@ sample size \nbElevenGaussEss{} \citep{vehtari2021}, \nbElevenGaussDivergences{}
 transitions. The chains have converged. That, as this section is about to show, is a statement
 about the sampler and not about the model.
 
+Before reading the number, notice what this model has done to the classical machinery's most
+protected object. In 2SLS the self-selection price $\phi$ of \cref{eq:iv:wedgephi} is a free
+coefficient. Here it is a \emph{composite}: conditioning the outcome row on the exposure row
+reproduces the control function with $\phi = \rho\,\sigma_Y/\sigma_X$, so the bias correction
+is manufactured from a correlation and two scales, and every ingredient carries a prior. A
+prior on a nuisance parameter is therefore never only a prior on a nuisance parameter; it is a
+prior on the bias correction itself. That sentence is the entire mechanism of this section.
+
 The fit returns a posterior mean of \eur{\nbElevenGaussMean}, with a 90\,\% credible interval of
 $[\eur{\nbElevenGaussLo}, \eur{\nbElevenGaussHi}]$, against 2SLS's \eur{\nbElevenIvEst} and
 $[\eur{\nbElevenIvLo}, \eur{\nbElevenIvHi}]$. It sits \eur{\nbElevenGaussErr} above the planted
-truth, further out than the classical arm. The next two subsections rule out the obvious suspects
-by fitting the alternatives rather than arguing, and \cref{sec:iv:valid} names the one that remains.
+truth, further out than the classical arm. Placed on the OLS--2SLS axis, the position is a
+measurement rather than an adjective: writing
+$s = 1 - (\hat\beta - \hat\beta_{\text{2SLS}})/(\hat\beta_{\text{OLS}} -
+\hat\beta_{\text{2SLS}})$ for the fraction of the correction applied, this fit stopped at
+$s = \pc{\nbElevenGaussSPct}$ of the way. And \cref{eq:iv:wedgephi} says where the missing
+fraction went: the model's implied self-selection price is $\hat\phi = \eur{\nbElevenGaussPhi}$
+against the classical \eur{\nbElevenPhiCf} --- the bias correction itself shrunk by
+\pc{\nbElevenGaussPhiShrinkPct} --- and \eur{\nbElevenNaive} minus
+$\hat\phi\,(1 - R^{2}_{\text{first}})$ reproduces the biased posterior mean to
+\eur{\nbElevenGaussIdentityGap}. Something is shrinking $\phi$. The next subsection prices the
+prior everyone suspects first, and acquits it of the bias; the one after finds the culprit by
+sweeping the prior nobody inspects, and repairs the bias without touching the likelihood. The
+vivid defect --- a Gaussian density on a 0/1 treatment --- gets its own subsection after that,
+because it is real, it is just not the bias.
 
 \subsection*{The prior, priced rather than warned about}
 
@@ -602,9 +645,63 @@ fitted the alternative. This chapter fitted it.
 
 Notice, though, what the exercise did \emph{not} do. Widening the coefficient prior by a factor of
 fifty moved the posterior mean by well under a euro and left it above the truth. \textbf{The
-coefficient prior is not what biases $\beta$.} Two suspects remain: the Gaussian likelihood on a
-binary $X$, and the one prior this exercise never touched, on the scale of the errors, and
-\cref{sec:iv:valid} settles between them.
+coefficient prior is not what biases $\beta$.} The notebook states that cleanly by running the
+comparison once more with the error-scale prior held \emph{correct} in both arms, so the
+coefficient prior is the only mover: the two posterior means then agree to
+\eur{\nbElevenTightcoefMeanGap}, while the default's interval is
+\nbElevenTightcoefWidthRatio$\times$ narrower with \pc{\nbElevenTightcoefCovPct} coverage
+against a \nbElevenWeakcoefWidth-euro honest width. A prior that \emph{shifts} the estimate
+and a prior that \emph{shrinks} the interval are different diseases with different symptoms:
+you catch the first by checking the posterior's location against the classical anchor, the
+second by checking its width against the classical width. This subsection was the second
+disease. Two suspects remain for the first: the Gaussian likelihood on a binary $X$, and the
+one prior this exercise never touched, on the scale of the errors. The next subsection settles
+between them by experiment.
+
+\subsection*{The scale prior, swept rather than argued}
+
+The error-scale prior the fit above inherited is an Exponential on the two residual standard
+deviations with a prior mean of \texteuro 0.5 --- the unit-scale convention CausalPy's
+\texttt{sd\_dist} default shares (its shipped rate implies a mean of \texteuro 1) --- meeting a
+sales-error scale near \texteuro 13. \Cref{fig:iv:scaleknob} treats that rate as the one knob
+it is: the same \nbElevenNSeeds{} panels as \cref{tab:iv:likelihoods}, the same coefficient
+priors, the same sampler, and \nbElevenScNRates{} settings of the rate from the fitted value
+down to a prior mean of \texteuro 100. The result is monotone and boring in exactly the way a
+mechanism should be. At the fitted rate the posterior mean sits \eur{\nbElevenScaleShipBias}
+above 2SLS and the implied $\hat\phi$ is \pc{\nbElevenScaleShipShrinkPct} short of the
+classical $\phi$; as the prior mean approaches the true error scale the curve collapses onto
+2SLS and goes flat, and $\hat\phi/\phi_{cf}$ rises to one in lockstep. No cliff, no second
+mechanism, nothing to tune. The prior stops fighting the data, and the bias correction it was
+shrinking comes back.
+
+\input{build/floats/nb11_scaleknob}
+
+The same figure carries the two repairs a practitioner would actually ship, fitted on the same
+panels. \textbf{Standardise the outcome} (arm B): divide sales by its standard deviation
+before fitting, so that the unit-scale default is correct by construction, and multiply
+$\beta$ back afterwards. \textbf{Match the prior} (arm C): keep the euros and set the
+Exponential rate to $1/\mathrm{sd}(Y)$, touching nothing else. The two land together to
+\eur{\nbElevenScaleBcGap} --- standardising \emph{is} prior-matching, executed by moving the
+data instead of the prior --- and \cref{tab:iv:scalearms} re-measures all three arms at full
+sampler grade. Its sharpest column is not the coverage but the \emph{agreement}: the repaired
+arms cover or miss the truth on exactly the panels where the classical 2SLS interval itself
+covers or misses (\nbElevenScaleFullStdAgree{} of \nbElevenNSeeds{} panels in lockstep), which
+is Bernstein--von Mises rendered as a table --- the posterior has become the classical
+sampling distribution, panel for panel. The shipped arm's misses are its own, and all on the
+high side: the bias. One more column of that table deserves its own sentence. The posterior
+predictive share of impossible exposures is \pc{\nbElevenScalePpcAllPct} in \emph{every} arm,
+biased and repaired alike: the vivid defect never moves while the bias comes and goes, so the
+vivid defect cannot be the bias. It is a genuine misspecification with consequences of its
+own, and it gets its own diagnosis and repair below.
+
+\input{build/tables/nb11_scalearms}
+
+The workflow rule this buys is prophylactic rather than forensic, and it fits in one sentence:
+\textbf{give every scale prior the units of the thing it describes.} Standardising the
+variables before fitting is the mechanical way to guarantee that, which is why
+\texttt{rstanarm} rescales its default priors by the outcome's standard deviation
+\citep{goodrich2020rstanarm}. CausalPy 0.8.1 does not, and \cref{fig:iv:scaleknob} is what
+``does not'' costs on data measured in tens of euros.
 
 \subsection*{The row that cannot be true}
 
@@ -612,10 +709,16 @@ Look again at the top row of \cref{eq:iv:joint}. It is a Gaussian density over $
 either $0$ or $1$. A linear probability model in a Bayesian coat: the point estimate of such a first
 stage survives (2SLS, after all, is a ratio of two slopes and does not care what shape the first
 stage really has), but a \emph{posterior} inherits every claim in its likelihood, and this one claims
-that an exposure of $-0.3$ is a thing that can happen. \Cref{sec:iv:valid} photographs that claim,
-prices it in bias and in coverage, and the repair follows immediately.
+that an exposure of $-0.3$ is a thing that can happen. \Cref{sec:iv:valid} photographs that claim
+and prices what it costs in coverage; the bias, \cref{fig:iv:scaleknob} has just shown, was never
+this row's to cause. The repair follows immediately.
 
 \subsection*{The repair: a first stage that knows the treatment is binary}
+
+One expectation to set before the equations: after \cref{fig:iv:scaleknob}, this repair is
+\emph{not} being asked to remove the bias. The scale-prior correction already did that with the
+likelihood untouched. What the probit is asked to fix is the support --- a posterior that stops
+predicting impossible exposures and stops paying for that impossibility in coverage.
 
 The fix is not a different identification, a different instrument or a different estimand. It is one
 row of the likelihood, rewritten so that it describes the process a binary treatment actually comes
@@ -654,8 +757,12 @@ The priors are the same weakly-informative choices, transposed to the two scales
   \label{eq:iv:probit_priors}
 \end{equation}
 %
-None of them is centred on the 2SLS point, and none of them is doing any work: the exercise of the
-previous subsection (fit the alternative, print the band) is what licenses that sentence.
+None of them is centred on the 2SLS point, and none of them is doing any work: the
+prior-pricing exercise above is what licenses that sentence. One of them deserves a second
+glance, though: $\sigma \sim \text{Half-}\mathcal N(25)$ gives the outcome scale a prior
+denominated in euros, not in units --- the lesson of \cref{fig:iv:scaleknob}, applied rather
+than repeated. The respecification quietly carries the scale repair with it, which is exactly
+why \cref{sec:iv:valid} must (and does) disentangle what each change bought.
 
 One caveat, stated rather than buried: \cref{eq:iv:first} assigns exposure through a
 \emph{logistic} sigmoid, so \cref{eq:iv:probit} is an approximation to the data-generating link, not
@@ -744,16 +851,19 @@ The probit of \cref{eq:iv:probit} averages \eur{\nbElevenSeedMean} (a bias of
 samples: \pc{\nbElevenSeedCovPct}, which is nominal. \textbf{The binary-aware respecification bought
 the interval back.} It changed two things at once (the first stage's likelihood and, with it, the
 default scale prior on the errors) while the identification did not change by one comma. Which of
-those two repairs actually removed the bias is a forensic question; its answer is summarised next and
-established in full, by refitting each alternative in turn, in \cref{app:iv:forensic}.
+those two repairs removed the bias was settled by experiment in \cref{sec:iv:bayes}: the scale
+prior, swept in \cref{fig:iv:scaleknob}, with the likelihood untouched.
+\Cref{app:iv:forensic} re-establishes the same verdict by the complementary route --- eliminating
+each suspect in turn --- so the conviction rests on two independent arguments.
 
 \subsection*{Whose mistake it was, and why it changes the workflow}
 
 The coverage study settles what the decision needs: the off-the-shelf default \emph{ships biased and
 under-covering} here, and the binary-aware model fixes it. The diagnostic question of \emph{which}
 component of the default model tilted the estimate is worth answering too, because the answer decides
-what an analyst must routinely check. Stated forward, and established piece by piece in
-\cref{app:iv:forensic}: the linear-probability likelihood is innocent (its own maximiser is 2SLS,
+what an analyst must routinely check. Stated forward, established by direct experiment in
+\cref{fig:iv:scaleknob} and piece by piece in \cref{app:iv:forensic}: the linear-probability
+likelihood is innocent (its own maximiser is 2SLS,
 exactly, so it adds no bias to $\beta$), and so is the mild prior on the endogeneity correlation,
 which can be flattened to a uniform law without moving the mean (\eur{\nbElevenGaussFlatMean} against
 \eur{\nbElevenGaussMean}). The culprit is the one nuisance nobody inspects: a silent, mis-scaled
@@ -1330,8 +1440,11 @@ gordon2019}.
         exactly, so it contributes no bias to $\beta$. The mild prior on the endogeneity correlation
         is innocent too (flatten it and the estimate does not move, \eur{\nbElevenGaussFlatMean} against
         \eur{\nbElevenGaussMean}). The guilty component is the default prior on the error
-        \emph{scales}, calibrated for a unit-scale variable and left to meet sales in the tens; diffuse
-        it and the posterior mean collapses onto 2SLS (\cref{app:iv:forensic}). Respecifying the model
+        \emph{scales}, calibrated for a unit-scale variable and left to meet sales in the tens: sweep
+        that one rate and the posterior slides monotonically onto 2SLS (\cref{fig:iv:scaleknob});
+        standardise the outcome, or match the rate to $\mathrm{sd}(Y)$, and the bias is gone with the
+        likelihood untouched (\cref{tab:iv:scalearms}). The prophylaxis is one sentence: \emph{give
+        every scale prior the units of the thing it describes}. Respecifying the model
         (the probit repair of \cref{eq:iv:probit}) brings the bias to \eur{\nbElevenSeedBias} and
         coverage to \pc{\nbElevenSeedCovPct}. A mis-scaled default prior is a specification error in
         exactly the sense a misspecified likelihood is: the analyst's mistake, not Bayes's, and the
@@ -1353,6 +1466,20 @@ gordon2019}.
         \nbElevenBReduced{} pp one on Criteo. Defend it on design, not on data: a content-free
         serving lottery is an instrument, and an encouragement email that shows the product is not.
 \end{enumerate}
+
+\subsection*{Homework: convict the prior yourself}
+
+Chapter 13's forensic makes a better exercise than a spectacle, so here it is as one. You are
+handed the biased fit of \cref{eq:iv:joint}: posterior mean \eur{\nbElevenGaussMean} against a
+2SLS anchor of \eur{\nbElevenIvEst}, chains converged. Three components carry priors: the
+coefficients ($\mathcal N(0, 50^2)$), the endogeneity correlation (LKJ, $\eta = 2$), and the
+two error scales (Exponential, unit-scale rate). (a)~Design the \emph{smallest} set of refits
+that convicts exactly one component, changing one thing per refit. (b)~Predict, before running
+them, what each refit does to the posterior mean if your suspect is guilty, and if it is
+innocent. (c)~Run them (\code{notebooks/11}, cells 5b-flat and onward, will check your answer).
+(d)~State the general workflow rule your conviction implies, and say what \cref{eq:iv:wedgephi}
+contributes to the argument that the likelihood could not have been the culprit. A complete
+answer is four refits and one sentence; the sentence is the point.
 
 \notebooknote{%
   \Crefrange{sec:iv:dgm}{sec:iv:wrong} are \code{notebooks/11\_endogenous\_exposure\_iv.ipynb}
@@ -1608,8 +1735,11 @@ tens; it pulls the outcome-error scale toward a value the data would never choos
 joint model that mis-scaling tilts $\beta$ upward. Diffuse that one prior, holding everything else
 fixed, and the posterior mean falls from \eur{\nbElevenGaussMean} to
 \eur{\nbElevenGaussScalediffuseMean}, collapsing onto the 2SLS answer of \eur{\nbElevenIvEst}
-(\cref{fig:iv:ablation}). That is the whole of it: not the likelihood, not the correlation prior, but
-a default scale prior meeting data it was never calibrated for.
+(\cref{fig:iv:ablation}). \Cref{fig:iv:scaleknob} in the body then promotes this single refit to a
+dose-response --- the same conviction, established as a monotone curve rather than an endpoint,
+with the two practitioner repairs (standardise, or match the rate) landing on 2SLS together.
+That is the whole of it: not the likelihood, not the correlation prior, but a default scale
+prior meeting data it was never calibrated for.
 
 \begin{intuition}{This is the spine, not a counterexample to it}
 The book's claim is that in these problems the prior does almost nothing and the likelihood is the
