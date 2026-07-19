@@ -125,6 +125,14 @@ def main() -> None:
     bundle_meta["rho_meas"] = bundle_meta["acf"]["measured"]
     bundle_meta["real_tot"] = bundle_meta["scalars"]["cl_total"]
 
+    # the real-data bundle (nb07b's lecture cell): the Act VI chart series
+    bundle_b_path = HERE / "geo_lecture_data_b.json"
+    if bundle_b_path.exists():
+        bundle_b = json.loads(bundle_b_path.read_text())
+        if bundle_b.pop("_fast", False):
+            sys.exit("FAIL: geo_lecture_data_b.json was written by a FAST run; re-execute nb07b FULL.")
+        bundle_meta.update(bundle_b)
+
     # INTERIM: keys the deck's live charts need but the nb07 lecture-bundle cell does not yet
     # emit, frozen at the deck's last consistent state (see the file's _note). Merged LAST, so
     # anything listed here silently wins over the bundle — hence the loud print. Phase 2 of the

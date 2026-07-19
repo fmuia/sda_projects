@@ -456,16 +456,19 @@
   tol: 0
 
 # Slide 38's stated numbers are JS-filled spans (reBase/reDaily/rePct/rePctPre/reCool),
-# computed in the deck from the SAME re_treat/re_ctrl series its chart draws:
-# matched-arms DiD over the campaign window [42,70), % against the concurrent
-# counterfactual (post - lift). The exprs below mirror the deck's JS exactly.
-# (nb07b's tokens pre_level=471.6 / post_gap=+106.5 / cool_gap=-2.5 are the AR(1)-
-# posterior versions from the newer notebook run; Phase 2 refreshes DATA.re_* to it.)
+# computed in the deck from the SAME re_treat/re_ctrl series its chart draws
+# (emitted by nb07b's lecture-bundle cell since the Phase-2 refresh): matched-arms
+# DiD over the campaign window [42,70), % against the concurrent counterfactual.
+# nb07b's post_gap/cool_gap tokens are the AR(1)-posterior versions of the same
+# quantities (+106.5 / -2.5); the DiD reads are 105.2 / -3.9 — both round to the
+# same headline story and each is checked against its own definition.
 - id: real_baseline
   slides: ["The real experiment (live)"]
   expr: "mean(re_treat[:42])"
-  value: 475.5
+  value: 471.6
   tol: 0.5
+  shard: nb07b.pre_level
+  tol_shard: 0.5
 
 - id: real_lift_pct_concurrent
   slides: ["The real experiment (live)"]
@@ -485,7 +488,7 @@
   slides: ["The real experiment (live)"]
   text: "per geo per day vs the concurrent control in the cooldown"
   expr: "(mean(re_treat[70:]) - mean(re_treat[:42])) - (mean(re_ctrl[70:]) - mean(re_ctrl[:42]))"
-  value: -4.4
+  value: -3.9
   tol: 0.3
 
 - id: referee_total
