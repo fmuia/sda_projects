@@ -507,6 +507,33 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
   </div>
 </section>
 
+<!-- ================= Why not just forecast it? ================= -->
+<section class="slide" data-t="Why not just forecast it?" data-sec="Act II · The counterfactual">
+  <div class="kicker">Act II · The counterfactual problem, versus machine learning</div>
+  <h2>"Why not gradient boosting / Prophet / an LSTM?"</h2>
+  <div class="sub">The obvious modern move: treat \(Y(0)\) as a forecasting problem — donors and time features in, next week's sales out. Here is that model, fitted for real on this panel.</div>
+  <div class="sbody"><div class="cols">
+    <div>
+      <div class="fig"><div class="fh"><span class="badge">▶ LIVE</span> A kitchen-sink forecaster (donors + trend + seasonality, fit pre-launch only)</div>
+        <div class="canvas"><svg viewBox="0 0 720 240" id="svgMl"></svg></div>
+        <div class="cap">Solid: treated sales. Dashed blue: the forecaster. Dashed grey: the simplex twin. Both fit only the 40 pre-launch weeks.</div>
+      </div>
+      <ul>
+        <li><b>In-sample it wins, honestly:</b> pre-fit RMSE <span class="num" id="mlPre"></span> vs the simplex's <span class="num" id="mlScPre"></span>. Flexibility buys fit — it always does.</li>
+        <li><b>On this one world the implied effects are a wash</b> (<span id="mlEff"></span> vs <span id="mlScEff"></span> against a truth of €284k) — one draw proves nothing either way. The systematic result is the sweep: across <b>24 fresh worlds</b>, the flexible unconstrained fit is <b>{{nb07.hull_oos_ratio}}× worse out of sample</b> than the simplex — the same pathology as slide 11's OLS panel, with no weight vector left to inspect.</li>
+      </ul>
+    </div>
+    <div>
+      <div class="callout watch"><div class="ct">The interval is the real disagreement</div>
+      A forecaster's prediction interval prices <b>forecast error under the training distribution</b>: "how wrong am I in weeks that look like the weeks I saw?" The question the campaign asks is different: <b>"is my reconstruction of a world that never happened right?"</b> Cross-validation, held-out weeks, backtesting — all of them score the first question. On <b>one treated unit</b> the second question is the entire game, and no amount of validation reaches it.</div>
+      <ul>
+        <li><b>What the simplex trades away, and for what.</b> It fits worse in-sample <em>on purpose</em>: the convex-hull constraint forbids the extrapolation that lets flexible models chase noise. Its weights are an inspectable claim (slide 9's loadings; the n_eff you will meet on the model slide); a boosted tree's counterfactual is a claim you cannot audit.</li>
+        <li class="q-biz"><b>The forecaster is better at prediction. The simplex is better at the job.</b></li>
+      </ul>
+    </div>
+  </div></div>
+</section>
+
 <!-- ================= 12 · Fit the blend (live) ================= -->
 <section class="slide" data-t="Fit the blend (live)" data-sec="Act II · The counterfactual">
   <div class="kicker">Act II · The counterfactual problem</div>
@@ -1379,7 +1406,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
 <!-- ================= 42 · Endnote poll: trust the interval? ================= -->
 <section class="slide" data-t="Endnote poll: trust the interval?" data-depth="deep" data-sec="Endnote · for the modellers">
   <div class="kicker">Endnote · For the modellers</div>
-  <div><span class="endnote-flag">Advanced note: the verdict above does not depend on this</span></div>
+  <div><span class="endnote-flag">Advanced note: the <b>action</b> does not change — Act IV banked it without a posterior. The <b>0.78 does</b>, and here is what it would have been worth from the first model.</span></div>
   <h2>One question before you reuse that posterior elsewhere</h2>
   <div class="sbody">
     <p>The 0.78 was integrated off a posterior. Its honesty depends entirely on the posterior's <em>width</em>. Because this is a simulation, we can do something impossible with real data: re-run the world 24 times and grade the interval.</p>
@@ -1414,7 +1441,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
         <div class="eqbox">
           \[ e_t = \rho\, e_{t-1} + \varepsilon_t, \qquad \hat\rho = 0.54\ [0.21,\,0.87] \]
         </div>
-        <ul style="margin:.25rem 0"><li><b>An AR(1) likelihood ≡ GLS re-weighting of the pre-period.</b> It moves the estimate (€229k → €262k, beside the classical €260k), re-prices the width (2.5×), and lifts <b>coverage 50% → 88%</b>, level with the referee's 83%.</li></ul>
+        <ul style="margin:.25rem 0"><li><b>An AR(1) likelihood ≡ GLS re-weighting of the pre-period.</b> It moves the estimate (€229k → €262k, beside the classical €260k), re-prices the width (2.5×), and lifts <b>coverage 50% → 88%</b>, level with the referee's 83%.</li><li><b>How bad was the first model, concretely?</b> Its 90% interval is <b>[€{{nb07.iid_lo}}k, €{{nb07.iid_hi}}k]</b> — it <b>excludes the planted truth of €{{nb07.true_total}}k</b>. On one dataset it would have looked perfectly well-behaved: clean fit, tight interval, wrong.</li></ul>
       </div>
       <div>
         <div class="fig">
@@ -2330,6 +2357,43 @@ window.fitSlide=fitSlide;
   draw();window.__redraw.push(draw);
 })();
 
+
+
+/* ==== the ML contrast: kitchen-sink forecaster vs the simplex ==== */
+(function(){
+  const svg=document.getElementById('svgMl'); if(!svg)return;
+  const y=DATA.treated, sc=DATA.synth_cl, X=DATA.donor_series_top, T=60, PRE=40;
+  /* features: 12 donors + t + two harmonic pairs + intercept; OLS on the pre-period */
+  const F=[]; for(let t=0;t<T;t++){const r=X.map(d=>d[t]);
+    r.push(t, Math.sin(2*Math.PI*t/26), Math.cos(2*Math.PI*t/26), Math.sin(2*Math.PI*t/13), Math.cos(2*Math.PI*t/13), 1);
+    F.push(r);}
+  const k=F[0].length;
+  const A=Array.from({length:k},()=>new Array(k+1).fill(0));
+  for(let t=0;t<PRE;t++)for(let i=0;i<k;i++){for(let j=0;j<k;j++)A[i][j]+=F[t][i]*F[t][j];A[i][k]+=F[t][i]*y[t];}
+  for(let i=0;i<k;i++){let p=i;for(let r=i+1;r<k;r++)if(Math.abs(A[r][i])>Math.abs(A[p][i]))p=r;
+    [A[i],A[p]]=[A[p],A[i]];const d=A[i][i]||1e-12;
+    for(let r=0;r<k;r++){if(r===i)continue;const f=A[r][i]/d;for(let c=i;c<=k;c++)A[r][c]-=f*A[i][c];}}
+  const beta=A.map((row,i)=>row[k]/(row[i]||1e-12));
+  const pred=F.map(r=>r.reduce((s2,v,i)=>s2+v*beta[i],0));
+  const rm=(a,b,lo,hi)=>{let s2=0;for(let t=lo;t<hi;t++)s2+=(a[t]-b[t])**2;return Math.sqrt(s2/(hi-lo));};
+  const mlPre=rm(pred,y,0,PRE), scPre=rm(sc,y,0,PRE);
+  let mlEff=0, scEff=0; for(let t=PRE;t<T;t++){mlEff+=y[t]-pred[t];scEff+=y[t]-sc[t];}
+  const put=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  put('mlPre',mlPre.toFixed(2)); put('mlScPre',scPre.toFixed(2));
+  put('mlEff','€'+Math.round(mlEff)+'k'); put('mlScEff','€'+Math.round(scEff)+'k');
+  function draw(){clr(svg);const c=COL();const Wp=720,H=240,mL=46,mR=12,mT=14,mB=24;
+    let mn=1e9,mx=-1e9;[y,pred,sc].forEach(a=>a.forEach(v=>{if(v<mn)mn=v;if(v>mx)mx=v;}));
+    const x=lin(0,T-1,mL,Wp-mR),yy=lin(mn-4,mx+4,H-mB,mT);
+    svg.appendChild(el('rect',{x:x(PRE),y:mT,width:x(T-1)-x(PRE),height:H-mB-mT,fill:c.orange,opacity:.07}));
+    svg.appendChild(el('line',{x1:x(PRE),x2:x(PRE),y1:mT,y2:H-mB,stroke:c.orange,'stroke-width':1.2}));
+    svg.appendChild(el('path',{d:path(sc.map((v,i)=>[x(i),yy(v)])),fill:'none',stroke:c.grey,'stroke-width':1.6,'stroke-dasharray':'5 4'}));
+    svg.appendChild(el('path',{d:path(pred.map((v,i)=>[x(i),yy(v)])),fill:'none',stroke:c.blue,'stroke-width':1.8,'stroke-dasharray':'2 3'}));
+    svg.appendChild(el('path',{d:path(y.map((v,i)=>[x(i),yy(v)])),fill:'none',stroke:c.ink,'stroke-width':2}));
+    svg.appendChild(el('line',{x1:mL,x2:Wp-mR,y1:H-mB,y2:H-mB,stroke:c.rule}));
+    svg.appendChild(el('text',{x:x(20),y:H-8,fill:c.faint,'font-size':10,'text-anchor':'middle'},'pre-launch (fit window)'));
+    svg.appendChild(el('text',{x:x(50),y:H-8,fill:c.orange,'font-size':10,'text-anchor':'middle'},'campaign (extrapolation)'));}
+  draw();window.__redraw.push(draw);
+})();
 
 /* ==== the €4M rollout ledger ==== */
 (function(){

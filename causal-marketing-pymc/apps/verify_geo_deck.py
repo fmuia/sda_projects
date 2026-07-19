@@ -88,6 +88,22 @@ def skew(x):
     return float((m**3).mean() / (m**2).mean() ** 1.5)
 
 
+def ml_forecaster(data):
+    """The ML-contrast slide's kitchen-sink forecaster, replicated exactly:
+    top-12 donors + trend + two harmonic pairs + intercept, OLS on the pre-period."""
+    y = np.asarray(data["treated"], float)
+    X = np.asarray(data["donor_series_top"], float)
+    t = np.arange(60.0)
+    F = np.vstack([X, t, np.sin(2*np.pi*t/26), np.cos(2*np.pi*t/26),
+                   np.sin(2*np.pi*t/13), np.cos(2*np.pi*t/13), np.ones(60)])
+    beta, *_ = np.linalg.lstsq(F[:, :40].T, y[:40], rcond=None)
+    pred = F.T @ beta
+    return {
+        "pre_rmse": float(np.sqrt(np.mean((pred[:40] - y[:40]) ** 2))),
+        "effect": float((y[40:] - pred[40:]).sum()),
+    }
+
+
 def make_env(data):
     env = {
         "np": np, "sum": np.sum, "mean": np.mean, "std": np.std, "abs": np.abs,
@@ -98,6 +114,7 @@ def make_env(data):
         "skew": skew,
         "norm_q90": 1.2815515655446004,
         "norm_cdf": lambda z: 0.5 * (1 + __import__("math").erf(z / 2**0.5)),
+        "ml": lambda: ml_forecaster(data),
     }
     for k, v in data.items():
         if isinstance(v, list):

@@ -699,3 +699,45 @@
   expr: "norm_cdf(-5 / 30)"
   value: 0.43
   tol: 0.005
+
+# ---- Phase 5: the ML contrast and the endnote sharpening ----------------------------
+- id: ml_beats_simplex_insample
+  slides: ["Why not just forecast it?"]
+  # spans mlPre/mlScPre are JS-computed by the same fit ml() replicates
+  expr: "ml()['pre_rmse']"
+  value: 2.51
+  tol: 0.02
+
+- id: ml_effect_wash
+  slides: ["Why not just forecast it?"]
+  texts: ["€284k", "24 fresh worlds"]
+  expr: "ml()['effect']"
+  value: 253.3
+  tol: 0.5
+
+- id: ml_oos_sweep
+  slides: ["Why not just forecast it?"]
+  text: "× worse out of sample"
+  shard: nb07.hull_oos_ratio
+  shard_text: "1.6"
+
+- id: endnote_caption_banked_action
+  slides: ["Endnote poll: trust the interval?"]
+  text: "Act IV banked it without a posterior"
+
+- id: iid_interval_excludes_truth_prose
+  slides: ["Endnote: the diagnosis and the fix"]
+  text: "[€186k, €273k]"
+  expr: "pctl(tot_iid, 95)"
+  value: 273.4
+  tol: 1.0
+  shard: nb07.iid_hi
+  tol_shard: 1.0
+
+- id: iid_interval_lo
+  slides: []
+  expr: "pctl(tot_iid, 5)"
+  value: 186
+  tol: 1.0
+  shard: nb07.iid_lo
+  tol_shard: 1.0
