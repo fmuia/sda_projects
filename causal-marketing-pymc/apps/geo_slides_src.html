@@ -2275,7 +2275,10 @@ window.fitSlide=fitSlide;
 /* ==== weight profiles: OLS vs simplex ==== */
 (function(){
   const svg=document.getElementById('svgNeff'); if(!svg)return;
-  const wo=DATA.ols_w_all, wc=DATA.w_cl_all;
+  /* sort each method's profile largest-to-smallest, as the axis label says —
+     the bundle stores weights in donor order */
+  const desc=a=>[...a].sort((x,y)=>y-x);
+  const wo=desc(DATA.ols_w_all), wc=desc(DATA.w_cl_all);
   function draw(){clr(svg);const c=COL();const W=720,H=170,mL=46,mR=14,mT=18,mB=24;
     const n=wo.length;const x=lin(0,n,mL,W-mR),y=lin(-0.9,1.0,H-mB,mT);
     svg.appendChild(el('line',{x1:mL,x2:W-mR,y1:y(0),y2:y(0),stroke:c.rule,'stroke-width':1.2}));

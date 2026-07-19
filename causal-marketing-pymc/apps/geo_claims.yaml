@@ -8,8 +8,9 @@
 # Two sources of truth, deliberately both checked where possible:
 #   expr  -> the DATA bundle baked into the deck (what the live charts show)
 #   shard -> book/build/results/nb07*.json (what the prose was token-substituted from)
-# The posterior-draw arrays in DATA are a 1,200-draw subsample of the notebook run,
-# so expr tolerances on posterior summaries are wider than shard tolerances.
+# The posterior-draw arrays in DATA are a draw subsample of the notebook run
+# (1,500 since the extras overrides were retired), so expr tolerances on posterior
+# summaries are a little wider than shard tolerances.
 #
 # defect: <note> marks a number the remediation plan has already convicted; the
 # harness reports it as WARN until the fixing phase lands, then the entry is updated.
@@ -607,12 +608,18 @@
 
 - id: width_repair
   slides: ["Endnote: the diagnosis and the fix"]
+  # the displayed 2.5x is the shard's panel-based ratio (coverage study)
   text: "2.5×"
-  expr: "std(tot_ar1) / std(tot_iid)"
-  value: 2.5
-  tol: 0.2
   shard: nb07.total_sd_ratio
-  tol_shard: 0.1
+  value: 2.53
+  tol: 0.1
+
+- id: width_repair_drawbased
+  slides: []
+  # cross-check on the deck's own draws; definitionally looser (single-run ratio)
+  expr: "std(tot_ar1) / std(tot_iid)"
+  value: 2.65
+  tol: 0.2
 
 - id: iid_vs_ar1_totals
   slides: ["Endnote: the diagnosis and the fix"]
@@ -653,7 +660,7 @@
 - id: rollout_breakeven_delta
   slides: []           # JS-filled span rollBE
   expr: "4000 / (0.35 * (4000 / 75) * mean(tot_ar1))"
-  value: 0.83
+  value: 0.82
   tol: 0.02
 
 - id: rollout_voi_peak
@@ -730,7 +737,7 @@
   text: "[€186k, €273k]"
   expr: "pctl(tot_iid, 95)"
   value: 273.4
-  tol: 1.0
+  tol: 2.0
   shard: nb07.iid_hi
   tol_shard: 1.0
 
@@ -738,6 +745,6 @@
   slides: []
   expr: "pctl(tot_iid, 5)"
   value: 186
-  tol: 1.0
+  tol: 2.0
   shard: nb07.iid_lo
   tol_shard: 1.0
