@@ -115,3 +115,26 @@ def test_unpicklable_result_fails_loudly_with_a_useful_message():
 
     with pytest.raises(TypeError, match="not picklable"):
         cache.load_or_run("bad", Unpicklable, inputs=None, verbose=False)
+
+
+def test_code_fingerprint_is_stable_across_interpreters():
+    """The fingerprint must be identical in a FRESH interpreter (new hash seed). It used to
+    walk an unsorted set of co_names, so per-process hash randomization reordered the source
+    chunks and the SAME function hashed differently in every new kernel or driver script —
+    every cross-session cache lookup then silently refit hours of MCMC. Spawn subprocesses
+    with different PYTHONHASHSEED values and demand one fingerprint."""
+    import subprocess
+    import sys
+
+    prog = (
+        "from cmp.cache import _code_fingerprint\n"
+        "from cmp import estimators as est\n"
+        "print(_code_fingerprint(lambda: est.first_stage_F(None, None)))\n"
+    )
+    prints = {
+        subprocess.run([sys.executable, "-c", prog], capture_output=True, text=True,
+                       env={**__import__("os").environ, "PYTHONHASHSEED": seed},
+                       check=True).stdout.strip()
+        for seed in ("1", "2", "3")
+    }
+    assert len(prints) == 1, f"fingerprint differs across interpreters: {prints}"

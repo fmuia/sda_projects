@@ -120,7 +120,12 @@ def _code_fingerprint(fn: Callable) -> str:
             pass
 
         g = getattr(f, "__globals__", {}) or {}
-        names = set(getattr(getattr(f, "__code__", None), "co_names", ()) or ())
+        # SORTED, not a bare set: set iteration order depends on per-process hash randomization,
+        # so an unsorted walk appended the source chunks in a process-dependent order and the
+        # SAME function hashed to a DIFFERENT fingerprint in every fresh interpreter. Every new
+        # kernel or driver script then silently refit work that was already cached — the exact
+        # failure this fingerprint exists to prevent, inverted. Deterministic order fixes it.
+        names = sorted(set(getattr(getattr(f, "__code__", None), "co_names", ()) or ()))
         # free variables too: a lambda closing over a locally-defined model function
         for cell, name in zip(getattr(f, "__closure__", None) or (),
                               getattr(getattr(f, "__code__", None), "co_freevars", ()) or ()):

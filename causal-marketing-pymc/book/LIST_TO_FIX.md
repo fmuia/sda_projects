@@ -8,6 +8,53 @@ Status legend: `open` · `in-progress` · `done` · `wontfix`
 
 ---
 
+## 2026-07-19 — Ch. 13 IV deck: classical part deepened to derivation level (45 → 48 slides)
+
+Francesco supplied a full A1–A8 classical treatment as the target register ("this is the level of
+clarity and detail I want... use the case as the backbone... don't use concepts before defining
+them"). Parts 1–3 rebuilt to it. **Status: done.**
+
+- 3 new slides: **the cast of four** (Y/X/Z/U table, observed/never-observed, who assigns what,
+  the €{{nb11.ppc_obs_sd}} sales spread); **endogeneity precisely** (v = κU + ε, Cov(X,v) =
+  κ·Cov(X,U) > 0 as "the disease", *endogenous* defined); **why adjustment cannot save it**
+  (all adjustment needs Cov(X,v|W)=0 for a recorded W; "you cannot adjust for what you did not
+  record").
+- Upgrades: OVB slide now the derived plim formula + the precision trap (naive band
+  {{nb11.naive_lo}}–{{nb11.naive_hi}} misses 15); instrument slide lists FOUR conditions
+  (monotonicity added) + what-each-buys; relevance adds the regression form X = b0 + πZ + u;
+  reduced form derives δ = βπ by substitution and names the ITT; svgFit slide adds the covariance
+  form with the per-condition reading; 2SLS adds purified-X̂ logic, "just-identified", and the
+  **corrected** hand-rolled-SE warning: too WIDE ({{nb11.se_hand}} vs {{nb11.se_correct}}, factor
+  {{nb11.se_hand_ratio}}); the earlier "too small" claim contradicted the notebook and is gone.
+- 69 tokens; verified: 48 slides, 0 mjx-merror, 0 JS errors, 0 em-dashes, changed slides
+  screenshotted. HTML-only edits (no figure JS touched).
+
+## 2026-07-18 — Ch. 13 IV slide deck REBUILT on the textbook spine (`apps/iv_slides.html`, `make html-iv-slides`)
+
+Francesco rejected the 2026-07-17 v1 deck outright ("a student hearing about IV for the first time
+learns 0") and pointed at the online books. Diagnosis he confirmed: v1 was a business drama using
+concepts as plot devices; the canonical teaching order (confounding → OVB formula → borrowed
+randomness → instrument → first stage → reduced form → divide → 2SLS → weak IV → LATE) was
+scrambled; slides carried 3–4 concepts stated by metaphor; Bayes+endnotes outweighed the core
+mechanics. **Rebuilt end to end, 41 → 45 slides. Status: done.**
+
+- New spine per Facure (*Brave and True* ch. 8–9) and Huntington-Klein (*The Effect* ch. 19), the
+  case kept as the running example. His three amendments honoured: careful plain prose with
+  business jargon defined inline; Bayes kept a 6-slide arc inside Part 5 (not one slide, not the
+  headline); real data EXPANDED to a 6-slide Part 6 (Criteo intro + cast-mapping table and a
+  synthesis slide are new).
+- New teaching slides: the omitted-variable-bias formula (predicted {{nb11.ovb}} vs observed
+  naive); first stage alone (svgFS); reduced form alone (svgRF, drawn δ pinned to the shard
+  scalar); divide-by-hand ({{nb11.reduced}}/{{nb11.first}} = {{nb11.wald}}); ideal-experiment;
+  instruments-in-the-wild (quarter of birth, draft lottery); poll "what can the data check".
+  LATE moved after the estimator. svgSim labels de-jargonised ("the dashboard"/"the coin method").
+  Margin-trap slide and endnote poll killed; forensic + routes-not-taken now explicit Backup.
+- Verified: 45 slides, 0 mjx-merror, 0 JS errors, node --check OK, 0 em-dashes, 63 tokens all
+  resolved, all 45 slides screenshotted. Authoritative detail + do-not-undo list:
+  `apps/iv_slides_REVISION_PLAN.md`.
+
+---
+
 ## 2026-07-16 — Ch. 9 HTML slide deck REBUILT to the IV-lecture bar (`apps/geo_lift_slides.html`, `make html-geo`)
 
 Francesco dropped the marimo route for Ch. 9 and pointed at his WIP deck ("too little data science,
@@ -1273,3 +1320,17 @@ the business case").
 - **Status:** open
 
 -->
+
+## 2026-07-19 — ✅ CACHE: `_code_fingerprint` was nondeterministic across interpreters — FIXED
+
+- **Location:** `src/cmp/cache.py` (`_code_fingerprint`).
+- **What.** The walk iterated an **unsorted `set` of `co_names`**; under per-process hash
+  randomization the source chunks concatenated in a different order in every fresh interpreter, so
+  the same function produced a different fingerprint per kernel/script and every new process
+  silently re-fit already-cached work. Exposed when nb11's new sweep cell re-sampled 220 fits a
+  driver had just cached. **Fixed** by sorting the names; regression guard
+  `tests/test_cache.py::test_code_fingerprint_is_stable_across_interpreters` (subprocesses with
+  different `PYTHONHASHSEED`s must agree).
+- **Consequence:** entries written before the fix under random-order fingerprints are orphaned
+  (they were unreachable across sessions anyway). nb11 was re-warmed the same day; other notebooks
+  refit once on their next FULL run.
