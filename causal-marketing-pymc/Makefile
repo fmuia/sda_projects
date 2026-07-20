@@ -85,6 +85,13 @@ html-geo:  ## build the standalone Ch.9 slide deck (apps/geo_lift_slides.html) �
 	# the nb07 lecture bundle for the live charts, book figures inlined as PNGs, MathJax vendored.
 	$(CORE)/python apps/build_geo_slides.py
 
+html-labs:  ## build the business-applications closer deck (apps/labs_slides.html) — one offline file
+	# Token-substitutes {{labs.*}} from apps/labs_deck_data.json (blog-pinned numbers carrying
+	# source URLs — this deck's "shards"; no notebook results needed), injects the chart bundle,
+	# inlines MathJax, then verifies every claim. Edit apps/labs_slides_src.html, then rebuild.
+	$(CORE)/python apps/build_labs_slides.py
+	$(CORE)/python apps/verify_labs_deck.py
+
 site:  ## export the WASM-safe apps to static, in-browser pages under site/
 	$(CORE)/marimo export html-wasm apps/experiment_design.py -o site/experiment_design --mode run
 	$(CORE)/marimo export html-wasm apps/iv_lecture.py -o site/iv_lecture --mode run

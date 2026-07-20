@@ -1,0 +1,128 @@
+# Claims registry for apps/labs_slides.html — read by apps/verify_labs_deck.py.
+#
+# Every fact the deck states maps to: the slide(s) that state it (anchored by the
+# section's data-t, never by position), the exact rendered string, and the key in
+# apps/labs_deck_data.json that pins it to a public source URL + retrieval date.
+# No new number enters the deck without an entry here.
+#
+# Unlike geo_claims.yaml there is no shard cross-check: this deck's source of truth
+# IS the pinned data file (blog posts + the Criteo dataset page). Where a number is
+# also baked into the chart bundle, an expr/value pair re-checks the DATA copy.
+#
+# source: <key> — the labs_deck_data.json entry whose source_url covers this claim;
+# the verifier fails if the key is missing there, so provenance cannot silently rot.
+
+# ---- Act I · The claim ---------------------------------------------------------------
+- id: cast_of_clients
+  slides: ["Every question was a purchase order"]
+  texts: ["Colgate-Palmolive", "Nürnberger Versicherung", "HelloFresh"]
+  source: labs.cpl
+
+# ---- Act II · The counterfactual, sold ----------------------------------------------
+- id: colgate_engagement
+  slides: ["Colgate: incremental or cannibalistic"]
+  texts: ["2023", "$20.8 billion in 2023"]
+  source: labs.market
+
+- id: colgate_brief_quote
+  slides: ["Colgate: incremental or cannibalistic"]
+  text: "estimate the counterfactual sales of all products would have been if the new product had not been introduced"
+  source: labs.colgate_counterfactual_quote
+
+- id: colgate_method
+  slides: ["Colgate: incremental or cannibalistic"]
+  text: "multivariate Bayesian interrupted time series"
+  source: labs.colgate_counterfactual_quote
+
+- id: colgate_recovery
+  slides: ["Colgate: incremental or cannibalistic"]
+  texts: ["50%", "94%", "49-59%"]
+  source: labs.colgate_ci
+
+- id: colgate_failure_mode
+  slides: ["What would break it?"]
+  texts: ["64-76%", "100%"]
+  source: labs.fail_range
+
+# ---- Act III · The loop --------------------------------------------------------------
+- id: roas_truth_prose
+  slides: ["When the observational model lies"]
+  texts: ["93.39", "171.41", "nearly twice as effective", "the direct opposite of the truth", "two lift tests"]
+  source: labs.roas_x1
+
+- id: roas_truth_data_x1
+  slides: ["When the observational model lies"]
+  expr: "float(roas['x1'])"
+  value: 93.39
+  tol: 0.005
+  source: labs.roas_x1
+
+- id: roas_truth_data_x2
+  slides: ["When the observational model lies"]
+  expr: "float(roas['x2'])"
+  value: 171.41
+  tol: 0.005
+  source: labs.roas_x2
+
+- id: hellofresh_mmm
+  slides: ["HelloFresh and Bolt run the loop"]
+  texts: ["60%", "from 20 minutes to 2", "lift or incrementality tests", "calibrated to ensure consistency with incrementality measurements", "one of their best"]
+  source: labs.hf_var
+
+- id: bolt_loop
+  slides: ["HelloFresh and Bolt run the loop"]
+  texts: ["validated against experiments and quasi-experiments", "CausalImpact"]
+  source: labs.bolt_validation
+
+- id: honesty_quote
+  slides: ["HelloFresh and Bolt run the loop"]
+  text: "Bayesian methods bring more honesty to the results, you see the uncertainty"
+  source: labs.honesty_quote
+
+# ---- Act IV · What it earns ----------------------------------------------------------
+- id: nurnberger_cpl
+  slides: ["Poll: price the engagement"]
+  texts: ["more than 27%", "June through November", "full production for 2026"]
+  source: labs.cpl
+
+- id: nurnberger_mechanism
+  slides: ["Poll: price the engagement"]
+  texts: ["customer journeys appeared artificially shortened", "attribution mechanics instead of incremental business impact"]
+  source: labs.gdpr_sentence
+
+- id: nurnberger_trust_quote
+  slides: ["Poll: price the engagement"]
+  text: "Trust is not created by R² values. It is created when business reality matches model expectations."
+  source: labs.trust_quote
+
+# ---- Act V · The IV side -------------------------------------------------------------
+- id: do_operator_null
+  slides: ["The wedge, in the wild"]
+  texts: ["a large apparent difference", "zero", "6.2%", "-4.1% to 16.5%"]
+  source: labs.do_est
+
+- id: scale_cards
+  slides: ["Your instrument supply is industrial"]
+  texts: ["thousands of concurrent tests", "A/B, ABC, and ABCD", "5–6 hours to 5–6 minutes", "1 to 10 million", "22 seconds", "13,979,592"]
+  source: labs.criteo_rows
+
+# ---- Act VI · Provenance -------------------------------------------------------------
+- id: causalpy_provenance
+  slides: ["The tools were the product too"]
+  texts: ["synthetic control, interrupted time series, difference in differences, and regression discontinuity", "cannot be randomised"]
+  source: labs.causalpy_methods
+
+- id: pymc_marketing_pr
+  slides: ["The tools were the product too"]
+  text: "budget allocation approach to PyMC-Marketing"
+  source: labs.bolt_pr
+
+- id: webinar_agenda
+  slides: ["The tools were the product too"]
+  text: "Instrumental Variables"
+  source: labs.webinar_agenda
+
+- id: decision_lab_gag
+  slides: ["The pattern on every invoice"]
+  texts: ["Confidently wrong.", "Explored 11 approaches, 0 converged.", "No valid model found. Run a geo-holdout experiment."]
+  source: labs.dl_verdict
