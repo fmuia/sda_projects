@@ -51,6 +51,17 @@ standards (adapted arc; see "Genre" below).
 - Re-verified: 90 checks 0 failures; node --check OK; 11 slides / 0 mjx-merror / 0 JS errors;
   0 em-dashes; slides 4 (both widget states) and 5 screenshotted and read.
 
+## 2026-07-21 round 2b: lift tests + incrementality defined — DONE, verified
+- **Incrementality** defined at first use, as the Colgate slide's sub (its title uses the words):
+  "Incremental: sales won from competitors or category growth. Cannibalistic: sales taken from
+  your own products. The launch verdict is the split."
+- **Lift test** defined at first use on the calibration warm-up, as a new "The experiment"
+  bullet: nudge one channel's spend by a known amount, measure the sales change it causes:
+  a small randomized ground-truth reading for that channel.
+- ROAS figure compressed (viewBox 200 -> 172) so the 4-bullet slide still ends with the
+  inversion callout above the fold. Re-verified: 90 checks 0 failures, 11 slides, 0 errors;
+  slides 3 and 5 screenshotted and read.
+
 ## 2026-07-21 addendum: second interactive (the "break it yourself" widget) — DONE, verified
 - The probe slide (4) now carries a live figure (svgBreak): a checkbox + month slider inject a
   second product launch into the schematic world; the analyst's counterfactual is a pre-period

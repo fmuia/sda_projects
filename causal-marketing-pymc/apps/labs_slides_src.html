@@ -234,6 +234,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
 <section class="slide" data-t="Colgate: incremental or cannibalistic" data-sec="Case 1 · Colgate-Palmolive">
   <div class="kicker">Case 1 · Colgate-Palmolive</div>
   <h2>Colgate-Palmolive: incremental, or cannibalistic?</h2>
+  <div class="sub"><b>Incremental</b>: sales won from competitors or category growth. <b>Cannibalistic</b>: sales taken from your own products. The launch verdict is the split.</div>
   <div class="sbody"><div class="cols c32">
     <div>
       <div class="fig">
@@ -290,11 +291,12 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
     <ul>
       <li><b>The tool:</b> a marketing-mix model (MMM) explains total sales as the sum of per-channel contributions, fit on observational spend data: no experiment anywhere in it.</li>
       <li><b>The grading:</b> the tutorial plants a truth: return on ad spend (ROAS, sales per unit of spend) of {{labs.roas_x1}} for channel x1 against {{labs.roas_x2}} for x2, so x2 is {{labs.roas_gap_words}}.</li>
+      <li><b>The experiment:</b> a lift test nudges one channel's spend by a known amount and measures the sales change it causes: a small randomized ground-truth reading for that channel.</li>
       <li><b>The repair:</b> {{labs.lift_tests_n}} per channel, entered into the likelihood, recover both values: the experiment is the model's anchor, exactly Ch 9's role.</li>
     </ul>
     <div class="fig">
       <div class="fh">One MMM on observational spend alone, one planted truth, one inversion <span class="badge">baked from the tutorial</span></div>
-      <div class="canvas"><svg id="svgRoas" viewBox="0 0 720 200"></svg></div>
+      <div class="canvas"><svg id="svgRoas" viewBox="0 0 720 172"></svg></div>
       <div class="controls"><label><input type="checkbox" id="roasCal"> add {{labs.lift_tests_n}} per channel</label><span id="roasRead"></span></div>
       <div class="cap">Left: the ranking the uncalibrated model reported. Right: the planted truth the experiments recover.</div>
     </div>
@@ -504,14 +506,14 @@ window.fitSlide=fitSlide;
   const cb=document.getElementById('roasCal'), rd=document.getElementById('roasRead');
   function draw(){
     clr(svg); const c=COL();
-    const W=720, H=200, mB=30, mT=22;
+    const W=720, H=172, mB=28, mT=20;
     const R=DATA.roas, cal=cb&&cb.checked;
     // left panel: the baseline model's claim (ordering only; the post prints no baseline ROAS values)
     svg.appendChild(el('text',{x:180,y:mT,'text-anchor':'middle','font-size':12,'font-weight':'700',fill:c.navy},'uncalibrated model: the ranking'));
-    svg.appendChild(el('rect',{x:60,y:58,width:240,height:32,rx:8,fill:'none',stroke:c.red,'stroke-width':1.6}));
-    svg.appendChild(el('text',{x:180,y:79,'text-anchor':'middle','font-size':13,fill:c.red,'font-weight':'700'},'x1 ranked above x2'));
-    svg.appendChild(el('text',{x:180,y:112,'text-anchor':'middle','font-size':11,fill:c.muted},'no experiment in the model'));
-    svg.appendChild(el('text',{x:180,y:130,'text-anchor':'middle','font-size':11,fill:c.muted},'the direct opposite of the truth'));
+    svg.appendChild(el('rect',{x:60,y:48,width:240,height:32,rx:8,fill:'none',stroke:c.red,'stroke-width':1.6}));
+    svg.appendChild(el('text',{x:180,y:69,'text-anchor':'middle','font-size':13,fill:c.red,'font-weight':'700'},'x1 ranked above x2'));
+    svg.appendChild(el('text',{x:180,y:100,'text-anchor':'middle','font-size':11,fill:c.muted},'no experiment in the model'));
+    svg.appendChild(el('text',{x:180,y:117,'text-anchor':'middle','font-size':11,fill:c.muted},'the direct opposite of the truth'));
     // right panel: true ROAS bars, revealed by calibration
     svg.appendChild(el('text',{x:530,y:mT,'text-anchor':'middle','font-size':12,'font-weight':'700',fill:c.navy},
       cal?'calibrated with the lift tests: the truth':'planted truth (check the box)'));
