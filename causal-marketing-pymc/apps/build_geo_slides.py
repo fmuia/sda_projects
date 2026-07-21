@@ -126,6 +126,54 @@ def naive_grid() -> dict:
                        "diff-in-differences", "synthetic control"]}
 
 
+def dgp_parts(labels_top: list, treated: list, donors_top: list) -> dict:
+    """Bake the seed-5 STANDARDIZED draws behind cmp.dgp.geo_panel so the DGP-sandbox
+    slide can re-assemble the SAME world at any dial setting.
+
+    geo_panel is exactly linear in every dial the slide exposes — normal(0, sd) = sd*z,
+    uniform(1-s, 1+s) = 1 + s*u, and the lift enters as lift*(level + g.F) — so shipping
+    the unit variates (z, u, e) plus the levels lets the browser rebuild
+    Y_jt = a_j + (1+s*u_j).F_t(sigma_eta) + sigma_eps*e_jt for arbitrary dials. At the case
+    dials that reconstruction IS the seed-5 panel (asserted below), so the picture deforms
+    continuously from the case instead of jumping to a different-seed toy world.
+    Only the markets the deck draws are shipped: treated first, then the top donors in
+    the bundle's own donor_labels_top order.
+    """
+    import numpy as np
+    from cmp import dgp
+
+    n_weeks, n_dmas, launch = 60, 30, 40
+    # replicate geo_panel(seed=5)'s draw stream call-for-call, recording unit variates
+    rng = np.random.default_rng(5)
+    z = rng.normal(0, 1.2, n_weeks) / 1.2                    # unit macro increments
+    levels = rng.uniform(80, 140, n_dmas)
+    u = (rng.uniform(0.6, 1.4, (n_dmas, 3)) - 1.0) / 0.4     # unit loading deviations
+    e = rng.normal(0, 3, (n_dmas, n_weeks)) / 3.0            # unit noise
+    zc = np.cumsum(z)
+
+    # the reconstruction at the case dials must equal geo_panel(seed=5) to float precision
+    t = np.arange(n_weeks)
+    trend = 0.4 * t
+    season = 8 * np.sin(2 * np.pi * t / 26) + 4 * np.sin(2 * np.pi * t / 13)
+    F = np.column_stack([trend, season, 1.2 * zc])
+    loads = 1.0 + 0.4 * u
+    sales = levels[:, None] + loads @ F.T + 3.0 * e
+    eff = 0.12 * (levels[0] + loads[0] @ F.T) * (t >= launch)
+    df, eff_ref, launch_ref, lab = dgp.geo_panel(seed=5)
+    assert launch_ref == launch and np.allclose(eff, eff_ref, atol=1e-9)
+    assert np.allclose(sales[0] + eff, df[lab].values, atol=1e-9)
+    assert np.allclose(sales[1:], df.values.T[1:], atol=1e-9)
+
+    # and match the bundle's (rounded-to-0.1) shipped series within rounding
+    idx = [0] + [int(l.split("_")[1]) for l in labels_top]
+    assert np.abs(sales[0] + eff - np.asarray(treated)).max() < 0.051
+    for k, l_idx in enumerate(idx[1:]):
+        assert np.abs(sales[l_idx] - np.asarray(donors_top[k])).max() < 0.051
+
+    r = lambda a: np.round(np.asarray(a), 5).tolist()
+    return {"levels": r(levels[idx]), "u": r(u[idx]), "e": r(e[idx]), "zc": r(zc)}
+
+
 def build_bundle() -> dict:
     """Assemble the full DATA bundle (nb07 lecture bundle + shard scalars + aliases +
     real-data bundle + extras + the naive grid). Shared with build_unified_slides.py."""
@@ -180,6 +228,13 @@ def build_bundle() -> dict:
     bundle_meta["naive_grid"] = naive_grid()
     print(f"naive grid: {len(bundle_meta['naive_grid']['s'])}×"
           f"{len(bundle_meta['naive_grid']['sd'])} cells from cmp.dgp.geo_panel")
+
+    # the DGP-sandbox slide: the seed-5 unit draws, so the live figure re-assembles the
+    # SAME world at off-case dials instead of re-simulating a different-seed toy world.
+    bundle_meta["dgp_parts"] = dgp_parts(bundle_meta["donor_labels_top"],
+                                         bundle_meta["treated"],
+                                         bundle_meta["donor_series_top"])
+    print(f"dgp parts: {len(bundle_meta['dgp_parts']['levels'])} markets' seed-5 unit draws")
     return bundle_meta
 
 
