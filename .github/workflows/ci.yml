@@ -34,7 +34,10 @@ jobs:
         run: uv run --python 3.12 pytest tests/test_package.py tests/test_notebooks.py::test_notebook_kernelspec -q
 
   # Full lane: execute every notebook headless in FAST mode, across both envs.
+  # Deactivated on push/PR (too slow to gate every change); run on demand via the
+  # "Run workflow" button (workflow_dispatch). Drop this `if:` to re-enable.
   notebook-tests:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
