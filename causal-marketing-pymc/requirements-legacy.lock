@@ -29,7 +29,6 @@ better-optimize==0.4.2
 bleach==6.4.0
 cachetools==6.2.6
 causal-learn==0.1.4.7
--e file:///Users/fmuia/Library/CloudStorage/Dropbox/02-Data-Science/github-projects/sda_projects/causal-marketing-pymc
 causalpy==0.8.1
 certifi==2026.6.17
 cffi==2.0.0
