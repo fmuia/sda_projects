@@ -92,6 +92,12 @@ html-labs:  ## build the business-applications closer deck (apps/labs_slides.htm
 	$(CORE)/python apps/build_labs_slides.py
 	$(CORE)/python apps/verify_labs_deck.py
 
+html-geo-sh:  ## build the SHORT Ch.9 deck (apps/geo_lift_sh.html) — classical arc only, math folded
+	# Same pipeline, from apps/geo_slides_sh_src.html: Title -> "Measure it, don't guess it"
+	# (frequentist recommendation), business-concept-first with the algebra in fold-outs.
+	$(CORE)/python apps/build_geo_slides.py --src apps/geo_slides_sh_src.html --out apps/geo_lift_sh.html
+	$(CORE)/python apps/verify_geo_deck.py --deck apps/geo_lift_sh.html --allow-missing-slides
+
 site:  ## export the WASM-safe apps to static, in-browser pages under site/
 	$(CORE)/marimo export html-wasm apps/experiment_design.py -o site/experiment_design --mode run
 	$(CORE)/marimo export html-wasm apps/iv_lecture.py -o site/iv_lecture --mode run

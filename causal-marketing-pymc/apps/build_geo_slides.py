@@ -82,8 +82,52 @@ def fig_data_uri(name: str) -> str:
     return "data:image/png;base64," + b64encode(png).decode()
 
 
-def main() -> None:
-    html = SRC.read_text()
+def naive_grid() -> dict:
+    """Precompute the "four estimators, one truth" figure over the deck's two dials.
+
+    The slide-14 figure lets the audience sweep the loading spread s and the macro-shock sd
+    sigma_eta. Rather than re-simulate a *toy* world in the browser (a different seed and solver
+    from the case, which made the figure jump discontinuously the instant a dial left the case
+    dials), we grade the REAL DGP here: for every (s, sigma_eta) cell we draw the seed-5 panel
+    from cmp.dgp.geo_panel — the identical generator behind the whole chapter — and score the four
+    estimators the notebook scores (before/after, treated-avg control, DiD, and the classical
+    SLSQP synthetic control, cmp.estimators), against the planted truth. At the case dials
+    (s=0.4, sigma_eta=1.2) the cell reproduces nb07's published numbers exactly (SC is the
+    classical refit, ~0.1 off the shipped AR(1) bar), and neighbouring cells are now continuous
+    with it. Deterministic, no notebook re-execution, nothing hand-typed.
+    """
+    import numpy as np
+    from cmp import dgp, estimators as est
+
+    S = [round(0.1 * i, 1) for i in range(9)]     # loading spread 0.0 .. 0.8  (slider value/10)
+    SD = [round(0.3 * i, 1) for i in range(11)]   # macro-shock sd 0.0 .. 3.0  (slider value/10)
+    cells = []
+    for s in S:
+        row = []
+        for sd in SD:
+            df, eff, launch, lab = dgp.geo_panel(seed=5, load_spread=s, macro_sd=sd)
+            sales = df.values.T
+            ti = list(df.columns).index(lab)
+            y = sales[ti]
+            donors = np.delete(sales, ti, axis=0)
+            W = sales.shape[1]
+            pre, post = slice(0, launch), slice(launch, W)
+            dpost, dpre = donors[:, post].mean(0), donors[:, pre].mean(0)
+            ba = float(y[post].mean() - y[pre].mean())
+            tc = float((y[post] - dpost).mean())
+            did = float(tc - (y[pre] - dpre).mean())
+            gap, _ = est.sc_effect_slsqp(y, donors, pre, post)
+            sc = float(gap[post].mean())
+            truth = float(eff[post].mean())
+            row.append([round(v, 2) for v in (ba, tc, did, sc, truth)])
+        cells.append(row)
+    return {"s": S, "sd": SD, "cells": cells,
+            "labels": ["before / after", "treated − avg control",
+                       "diff-in-differences", "synthetic control"]}
+
+
+def main(src: Path = SRC, out: Path = OUT) -> None:
+    html = src.read_text()
     tokens = load_tokens()
 
     # 1 · scalar tokens ------------------------------------------------------------------
@@ -146,6 +190,12 @@ def main() -> None:
         bundle_meta.update(extras)
         print(f"extras: +{len(added)} keys, OVERRIDING {len(overridden)}: {', '.join(overridden)}")
 
+    # the slide-14 "four estimators, one truth" grid: the real DGP swept across the two dials,
+    # so the live figure reads a precomputed cell instead of re-simulating a toy world.
+    bundle_meta["naive_grid"] = naive_grid()
+    print(f"naive grid: {len(bundle_meta['naive_grid']['s'])}×"
+          f"{len(bundle_meta['naive_grid']['sd'])} cells from cmp.dgp.geo_panel")
+
     if "/*__DATA__*/" not in html:
         sys.exit("FAIL: template has no /*__DATA__*/ marker.")
     j = html.index("{", html.index("/*__DATA__*/"))
@@ -177,11 +227,17 @@ def main() -> None:
         sys.exit("FAIL: template has no /*__MATHJAX__*/ marker.")
     html = html.replace("/*__MATHJAX__*/", mathjax_js(), 1)
 
-    OUT.write_text(html)
-    size = OUT.stat().st_size / 1e6
-    print(f"wrote {OUT.relative_to(REPO)}  ({size:.1f} MB, {len(used)} shard tokens, "
+    out.write_text(html)
+    size = out.stat().st_size / 1e6
+    print(f"wrote {out.relative_to(REPO)}  ({size:.1f} MB, {len(used)} shard tokens, "
           f"{len(fig_names)} book figures, MathJax inlined)")
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+
+    ap = argparse.ArgumentParser(description="Build a geo-lift slide deck from a source template.")
+    ap.add_argument("--src", type=Path, default=SRC, help="source template (default: geo_slides_src.html)")
+    ap.add_argument("--out", type=Path, default=OUT, help="output deck (default: geo_lift_slides.html)")
+    args = ap.parse_args()
+    main(args.src.resolve(), args.out.resolve())

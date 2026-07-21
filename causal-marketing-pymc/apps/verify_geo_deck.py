@@ -46,8 +46,8 @@ CHAR_BUDGET = 2600          # visible chars per slide (fold-out bodies excluded)
 CHAR_BUDGET_HARD = True
 
 
-def load_deck():
-    html = DECK.read_text()
+def load_deck(deck: Path = DECK):
+    html = deck.read_text()
     i = html.index("/*__DATA__*/")
     j = html.index("{", i)
     data, _ = json.JSONDecoder().raw_decode(html, j)
@@ -131,8 +131,8 @@ def norm(s):
     return re.sub(r"[\s   ]+", " ", s)
 
 
-def main() -> int:
-    data, nmap, slides, slides_visible = load_deck()
+def main(deck: Path = DECK, allow_missing_slides: bool = False) -> int:
+    data, nmap, slides, slides_visible = load_deck(deck)
     shards = load_shards()
     env = make_env(data)
     claims = yaml.safe_load(CLAIMS.read_text())
@@ -160,6 +160,8 @@ def main() -> int:
         for t in texts:
             for st in c.get("slides", []):
                 if st not in slides:
+                    if allow_missing_slides:
+                        continue  # slide not in this (subset) deck — claim does not apply
                     report(cid, False, f"slide anchor {st!r} not found in deck", defect)
                 elif norm(t) not in slides[st]:
                     report(cid, False, f"text {t!r} missing on slide {st!r}", defect)
@@ -216,4 +218,11 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    import argparse
+
+    ap = argparse.ArgumentParser(description="Verify a geo-lift slide deck against apps/geo_claims.yaml.")
+    ap.add_argument("--deck", type=Path, default=DECK, help="deck to verify (default: geo_lift_slides.html)")
+    ap.add_argument("--allow-missing-slides", action="store_true",
+                    help="skip (not fail) claims anchored to slides absent from a subset deck")
+    a = ap.parse_args()
+    sys.exit(main(a.deck.resolve(), a.allow_missing_slides))
