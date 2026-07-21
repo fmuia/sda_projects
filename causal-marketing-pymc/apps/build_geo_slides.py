@@ -126,24 +126,57 @@ def naive_grid() -> dict:
                        "diff-in-differences", "synthetic control"]}
 
 
-def main(src: Path = SRC, out: Path = OUT) -> None:
-    html = src.read_text()
-    tokens = load_tokens()
+def dgp_parts(labels_top: list, treated: list, donors_top: list) -> dict:
+    """Bake the seed-5 STANDARDIZED draws behind cmp.dgp.geo_panel so the DGP-sandbox
+    slide can re-assemble the SAME world at any dial setting.
 
-    # 1 · scalar tokens ------------------------------------------------------------------
-    used, missing = set(), []
-    def sub_token(m: re.Match) -> str:
-        key = m.group(1).strip()
-        if key not in tokens:
-            missing.append(key)
-            return m.group(0)
-        used.add(key)
-        return tokens[key]
-    html = re.sub(r"\{\{([a-z0-9_.]+)\}\}", sub_token, html)
-    if missing:
-        sys.exit("FAIL: unknown tokens (not in the shards): " + ", ".join(sorted(set(missing))))
+    geo_panel is exactly linear in every dial the slide exposes — normal(0, sd) = sd*z,
+    uniform(1-s, 1+s) = 1 + s*u, and the lift enters as lift*(level + g.F) — so shipping
+    the unit variates (z, u, e) plus the levels lets the browser rebuild
+    Y_jt = a_j + (1+s*u_j).F_t(sigma_eta) + sigma_eps*e_jt for arbitrary dials. At the case
+    dials that reconstruction IS the seed-5 panel (asserted below), so the picture deforms
+    continuously from the case instead of jumping to a different-seed toy world.
+    Only the markets the deck draws are shipped: treated first, then the top donors in
+    the bundle's own donor_labels_top order.
+    """
+    import numpy as np
+    from cmp import dgp
 
-    # 2 · the data bundle ----------------------------------------------------------------
+    n_weeks, n_dmas, launch = 60, 30, 40
+    # replicate geo_panel(seed=5)'s draw stream call-for-call, recording unit variates
+    rng = np.random.default_rng(5)
+    z = rng.normal(0, 1.2, n_weeks) / 1.2                    # unit macro increments
+    levels = rng.uniform(80, 140, n_dmas)
+    u = (rng.uniform(0.6, 1.4, (n_dmas, 3)) - 1.0) / 0.4     # unit loading deviations
+    e = rng.normal(0, 3, (n_dmas, n_weeks)) / 3.0            # unit noise
+    zc = np.cumsum(z)
+
+    # the reconstruction at the case dials must equal geo_panel(seed=5) to float precision
+    t = np.arange(n_weeks)
+    trend = 0.4 * t
+    season = 8 * np.sin(2 * np.pi * t / 26) + 4 * np.sin(2 * np.pi * t / 13)
+    F = np.column_stack([trend, season, 1.2 * zc])
+    loads = 1.0 + 0.4 * u
+    sales = levels[:, None] + loads @ F.T + 3.0 * e
+    eff = 0.12 * (levels[0] + loads[0] @ F.T) * (t >= launch)
+    df, eff_ref, launch_ref, lab = dgp.geo_panel(seed=5)
+    assert launch_ref == launch and np.allclose(eff, eff_ref, atol=1e-9)
+    assert np.allclose(sales[0] + eff, df[lab].values, atol=1e-9)
+    assert np.allclose(sales[1:], df.values.T[1:], atol=1e-9)
+
+    # and match the bundle's (rounded-to-0.1) shipped series within rounding
+    idx = [0] + [int(l.split("_")[1]) for l in labels_top]
+    assert np.abs(sales[0] + eff - np.asarray(treated)).max() < 0.051
+    for k, l_idx in enumerate(idx[1:]):
+        assert np.abs(sales[l_idx] - np.asarray(donors_top[k])).max() < 0.051
+
+    r = lambda a: np.round(np.asarray(a), 5).tolist()
+    return {"levels": r(levels[idx]), "u": r(u[idx]), "e": r(e[idx]), "zc": r(zc)}
+
+
+def build_bundle() -> dict:
+    """Assemble the full DATA bundle (nb07 lecture bundle + shard scalars + aliases +
+    real-data bundle + extras + the naive grid). Shared with build_unified_slides.py."""
     if not BUNDLE.exists():
         sys.exit(f"FAIL: {BUNDLE} missing — re-execute nb07 (its lecture-bundle cell writes it).")
     bundle_meta = json.loads(BUNDLE.read_text())
@@ -196,25 +229,62 @@ def main(src: Path = SRC, out: Path = OUT) -> None:
     print(f"naive grid: {len(bundle_meta['naive_grid']['s'])}×"
           f"{len(bundle_meta['naive_grid']['sd'])} cells from cmp.dgp.geo_panel")
 
+    # the DGP-sandbox slide: the seed-5 unit draws, so the live figure re-assembles the
+    # SAME world at off-case dials instead of re-simulating a different-seed toy world.
+    bundle_meta["dgp_parts"] = dgp_parts(bundle_meta["donor_labels_top"],
+                                         bundle_meta["treated"],
+                                         bundle_meta["donor_series_top"])
+    print(f"dgp parts: {len(bundle_meta['dgp_parts']['levels'])} markets' seed-5 unit draws")
+    return bundle_meta
+
+
+def inject_data(html: str, bundle_meta: dict) -> str:
+    """Replace the JSON object after the /*__DATA__*/ marker with the baked bundle."""
     if "/*__DATA__*/" not in html:
         sys.exit("FAIL: template has no /*__DATA__*/ marker.")
     j = html.index("{", html.index("/*__DATA__*/"))
     _, end = json.JSONDecoder().raw_decode(html, j)
-    html = html[:j] + json.dumps(bundle_meta, separators=(",", ":")) + html[end:]
+    return html[:j] + json.dumps(bundle_meta, separators=(",", ":")) + html[end:]
 
-    # 2b · the N map: formatted number strings the deck's JS writes into prose spans.
-    # The template's /*__NUMS__*/{...}/*__ENDNUMS__*/ map supplies the KEYS; every value is
-    # re-derived from the shards (nb07.<key>), so a number can no more go stale here than in
-    # the {{token}} prose layer. A key missing from the shards is a build error.
+
+def inject_nums(html: str, tokens: dict[str, str]) -> str:
+    """The N map: formatted number strings the deck's JS writes into prose spans.
+    The template's /*__NUMS__*/{...}/*__ENDNUMS__*/ map supplies the KEYS; every value is
+    re-derived from the shards (nb07.<key>), so a number can no more go stale here than in
+    the {{token}} prose layer. A key missing from the shards is a build error."""
     nm = re.search(r"/\*__NUMS__\*/(\{.*?\})/\*__ENDNUMS__\*/", html, re.S)
-    if nm:
-        n_keys = list(json.loads(nm.group(1)))
-        missing_n = [k for k in n_keys if f"nb07.{k}" not in tokens and f"nb07b.{k}" not in tokens]
-        if missing_n:
-            sys.exit("FAIL: N-map keys not in the shards: " + ", ".join(missing_n))
-        nmap = {k: tokens.get(f"nb07.{k}", tokens.get(f"nb07b.{k}")) for k in n_keys}
-        html = html[:nm.start(1)] + json.dumps(nmap, separators=(",", ":")) + html[nm.end(1):]
-        print(f"N map: {len(nmap)} formatted numbers injected from shards")
+    if not nm:
+        return html
+    n_keys = list(json.loads(nm.group(1)))
+    missing_n = [k for k in n_keys if f"nb07.{k}" not in tokens and f"nb07b.{k}" not in tokens]
+    if missing_n:
+        sys.exit("FAIL: N-map keys not in the shards: " + ", ".join(missing_n))
+    nmap = {k: tokens.get(f"nb07.{k}", tokens.get(f"nb07b.{k}")) for k in n_keys}
+    html = html[:nm.start(1)] + json.dumps(nmap, separators=(",", ":")) + html[nm.end(1):]
+    print(f"N map: {len(nmap)} formatted numbers injected from shards")
+    return html
+
+
+def main(src: Path = SRC, out: Path = OUT) -> None:
+    html = src.read_text()
+    tokens = load_tokens()
+
+    # 1 · scalar tokens ------------------------------------------------------------------
+    used, missing = set(), []
+    def sub_token(m: re.Match) -> str:
+        key = m.group(1).strip()
+        if key not in tokens:
+            missing.append(key)
+            return m.group(0)
+        used.add(key)
+        return tokens[key]
+    html = re.sub(r"\{\{([a-z0-9_.]+)\}\}", sub_token, html)
+    if missing:
+        sys.exit("FAIL: unknown tokens (not in the shards): " + ", ".join(sorted(set(missing))))
+
+    # 2 · the data bundle, 2b · the N map -----------------------------------------------
+    html = inject_data(html, build_bundle())
+    html = inject_nums(html, tokens)
 
     # 3 · book figures -------------------------------------------------------------------
     fig_names = sorted(set(re.findall(r"<!--FIG:([a-z0-9_]+)-->", html)))

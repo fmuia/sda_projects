@@ -80,6 +80,10 @@ html-iv-slides:  ## build the Ch.13 interactive slide deck (apps/iv_slides.html)
 	# /*__DATA__*/, inlines MathJax. Edit apps/iv_slides_src.html, then rebuild.
 	$(CORE)/python apps/build_iv_slides.py
 
+html-iv-slides-sh:  ## build the management-first rework of the Ch.13 deck (apps/iv_slides_sh.html)
+	# Same pipeline as html-iv-slides, different template/output. Edit apps/iv_slides_sh_src.html.
+	$(CORE)/python apps/build_iv_slides_sh.py
+
 html-geo:  ## build the standalone Ch.9 slide deck (apps/geo_lift_slides.html) — one offline file
 	# Assembles apps/geo_slides_src.html: shard-token substitution (numbers never retyped),
 	# the nb07 lecture bundle for the live charts, book figures inlined as PNGs, MathJax vendored.
@@ -97,6 +101,13 @@ html-geo-sh:  ## build the SHORT Ch.9 deck (apps/geo_lift_sh.html) — classical
 	# (frequentist recommendation), business-concept-first with the algebra in fold-outs.
 	$(CORE)/python apps/build_geo_slides.py --src apps/geo_slides_sh_src.html --out apps/geo_lift_sh.html
 	$(CORE)/python apps/verify_geo_deck.py --deck apps/geo_lift_sh.html --allow-missing-slides
+
+html-unified:  ## build the UNIFIED session deck (apps/unified_slides.html) — labs hook + short geo arc
+	# Part 1 (real PyMC Labs engagements) in front of the short classical geo deck, one file.
+	# Tokens from BOTH sources ({{labs.*}} pins + {{nb07*.*}} shards), one merged DATA bundle.
+	# Edit apps/unified_slides_src.html, then rebuild. Narrative: apps/geo_lift_lecture_emphasis.md.
+	$(CORE)/python apps/build_unified_slides.py
+	$(CORE)/python apps/verify_unified_deck.py
 
 site:  ## export the WASM-safe apps to static, in-browser pages under site/
 	$(CORE)/marimo export html-wasm apps/experiment_design.py -o site/experiment_design --mode run

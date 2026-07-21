@@ -12,6 +12,131 @@ Approved directives (2026-07-18):
 2. Bayes is not the focus but must NOT be over-compressed (kept a 6-slide arc inside Part 5);
 3. real data must be emphasized, not compressed (Part 6 expanded to 6 slides).
 
+## 2026-07-21 (latest) · `iv_slides_sh` live polish round (Francesco reviewing slide by slide)
+Applied to `iv_slides_sh_src.html` only; 26 slides after the pass (the earlier "27" count was off by one). Do not undo:
+- **Slide 4**: backdoor-path definition moved to the LEFT column under the confounder definition (visual balance); U node in svgFork (and both svgDag DAGs) recolored grey → RED with white text, matching the later DAGs; U is red in every diagram now.
+- **Slide 5**: the Y-vs-U scatter REPLACED by a two-panel bar figure: left = the two sales averages with a dashed baseline + orange bracket ("gap €23.7"), right = average intent per group, hidden behind a dashed "U is in no log file" placeholder until the checkbox reveals it (−0.46 vs +0.23). Gap label sits RIGHT of the bracket (overlap fixed).
+- **Slide 7**: the decomposition's first underbrace is the REAL math, E[Y(1)|X=1] − E[Y(0)|X=1], labeled "effect of the ad on the exposed"; new first bullet ties its second entry to the PO table's N/A cell.
+- **Slide 11**: "Graded in the simulated world" bullet DELETED (claim verified true anyway: Y~X+Z gives 24.1 vs naive 23.7; only Y~X+U recovers 15.3); "Why the engine stalls here" box now closes the LEFT column.
+- **Slide 13**: the randomizer DELETES the U→X arrow (structural removal, vs conditioning which only blocks): ghost is now a dashed no-arrowhead stub + ✕ + "removed" label, caption says "removed, not merely blocked"; ✕ recentred on the arrow.
+- **Slide 15**: 4 condition cards + orphan "what they buy" bullet consolidated into ONE 4-row table (condition | claim | checkable? | what it buys).
+- **Slide 16**: NEW "Definition · first stage" key box (the name no longer lives only in eqbox subtext); hierarchy = model → measured π (with gloss line) → 2 bullets; the F-test extracted into a "The gate" callout under the svgFS bars (right column). Slide 18 got the matching "Definition · reduced form" box.
+- **Deck-wide**: "in words" phrasing BANNED → "Interpretation of \(\pi\):" etc. (5 occurrences replaced; rule added to the slide-grammar memory).
+- **Slide 17**: the 3 bullets (tiny leak / defence / counterexample) moved under the live leak slider; left = 2 condition boxes + formula + "No test will catch it".
+- **Slide 20**: message sharpened ("The division is not a modelling choice. It is the only effect size the two measurements allow."); right column leads with "Forget the formula and grade any candidate..."; verdict bullet: "the division is the only survivor, not a choice".
+- **Slide 25**: the "Unit check" bullet (a late rules-change, rejected) REPLACED by the computed net: β̂_IV − c = €16.5 − €10 = €6.5 via the {{nb11.net}} token, plus the interval-floor read (€12.7 still pays); the price-map dot now carries a live "net €+6.5" label (the plot always WAS the net: blue line = β̂ − c).
+- **AR slide FOLDED into Weak instruments** (deck 26 → 25 slides): the whole Anderson–Rubin block (svgAR fig + slider + interrogation eqbox + bullets, "when it earns its keep" merged into the last bullet) now lives in a collapsed `details.mathfold` "Deep dive" at the bottom of the weak-instruments slide; the F callout points to "the deep dive below".
+- **SVG TEXT COLOR BUG (root cause of "colors suck")**: the stylesheet rule `svg text{fill:var(--muted)}` overrides fill ATTRIBUTES (CSS beats presentation attributes), so every figure's text labels rendered muted grey since day one. Fixed in `el()`: text elements get `fill` as an INLINE STYLE. Probe-verified (computed fills now match the code). The same latent bug lives in `iv_slides_src.html` and the geo deck: port the one-line el() fix when next touched.
+- **CI fold added to "The IV estimate"** (Francesco: "no mention of intervals... can't we build CIs with frequentist techniques?" then "add it as a foldable appendix"): mathfold "Deep dive · the confidence interval around €16.5" with the eqbox β̂ ± 1.645·SE = 16.5 ± 1.645·2.31 = [12.7, 20.4] (NEW token {{nb11.iv_se}}), interpretation + wider-than-naive bullets, and NEW static fig svgCI grading both 90% intervals against the planted truth (naive [22.9, 24.5] misses, IV [12.7, 20.4] contains it). This finally introduces the interval the price map, negotiation poll, and weak-instruments slide all rely on.
+- **Compliers/LATE slide REBUILT** (Francesco: most important, message unclear, ugly colors): sub is now the message ("Whom does the €16.5 describe? Only the users the lottery could move."); NEW "Definition · LATE" key box + explicit eqbox β̂_IV = δ/π estimates E[Y(1)−Y(0) | complier] with a gloss tying it to the naive slide's untouchable contrast; bullets = 3 groups (handles colored to match slices) + monotonicity caveat; manager callout kept. svgStrata recolored navy/orange/grey (compliers = orange protagonist), slice text white (ink on grey), sub-labels were using nonexistent `c.muted` (undefined fill bug) → c.ink, readout green → orange.
+
+## 2026-07-21 (later) · NEW DECK `iv_slides_sh` — management-first, plot-heavy rework
+Second comment pass. Rather than editing `iv_slides.html` again, a NEW deck was forked:
+- `apps/iv_slides_sh_src.html` (template) → `apps/iv_slides_sh.html` via `apps/build_iv_slides_sh.py`
+  (`make html-iv-slides-sh`); same token/DATA/MathJax pipeline, same shards. 51 slides, 6 polls,
+  verified (node --check OK, headless 51/51, 0 mjx-merror, 0 unresolved tokens, all new figs draw).
+The original `iv_slides.html` is left as-is.
+
+### 2026-07-21 · Part 1-2 restructure (Francesco's follow-up comments) — 27 slides
+Approved discussion outcome, applied:
+- **"The data" slide DELETED** (histogram removed with it). Its surviving facts (n, who assigns
+  what, U never observed, sd €17.1, the contribution definition of Y) live as bullets on the
+  new slide 4.
+- **New Part 1 order:** case → pitch poll → "The variables and the confounder" (X/Y/U defined
+  through the svgFork DAG; confounder + backdoor definition boxes) → naive comparison → gap poll
+  → selection bias → simulated world → endogeneity → size of bias → limits of adjustment →
+  what-would-fix-it poll. Cause → number → damage.
+- **The lottery is introduced ONLY in Part 2**, on a NEW dedicated slide right after the ideal
+  experiment (concrete before abstract): what we ran, the Z row joining the data table, the
+  exposure equation gaining γZ, and the svgDag fork-vs-instrument figure (moved from the
+  definition slide, caption rewritten without condition names). "Our instrument" slide DELETED
+  (its scouting q-biz folded into "The instrument, defined", which is now single-column:
+  definition + 4 condition cards + opposite-of-a-control + scouting line).
+- **Simulated world shows the two-equation Part 1 world** (no Z, no γ slider on svgLab; γZ
+  arrives with the lottery slide's equation update). Callout says the equations "generate the
+  dashboard you saw", which stays literally true.
+- **Limits of adjustment rebuilt**: the close-the-backdoor callout moved here from the old
+  confounding slide (teach the fix where it is attempted); svgAdj redrawn to the correct
+  convention (W BOXED "held fixed", block marks on the W-paths, arrows never dashed away:
+  conditioning blocks paths, does not delete causes); NEW live toggle svgAdjDemo "pretend intent
+  were logged": stratifying the simulated world on U recovers €15.5 vs planted €15 (verified in
+  node), untick and the right bar is a dashed "requires the U column: not in the data" ghost.
+  Punchline sharpened: the method is fine, the missing column is the problem.
+
+### 2026-07-21 · triple-check correctness review (3 independent reviewers) — ALL FINDINGS FIXED
+Three parallel reviews (econometric claims; figure code vs claims; internal consistency) over the
+28-slide deck. Core econometrics verified sound (PO decomposition exact; OVB = selection-bias term
+exact for binary X; δ=βπ; strata arithmetic; poll indices; no banned vocabulary; no dangling
+references). 20 findings fixed:
+- **Revenue vs contribution (the one WRONG):** Y now defined on the data slide as contribution
+  euros ("sales" for short), case/poll wording follows, and the price-map unit check teaches the
+  conversion instead of contradicting it.
+- **κ vs λ:** sliders relabeled "intent's pull on sales κ" (they were mislabeled "targeting");
+  the size-of-bias lesson now names both knobs (λ targeting, κ leak).
+- **Overclaims softened:** negotiation-poll reveal reframed as a no-regret cap vs a break-even
+  gamble (no "guarantee", no probability-on-a-parameter); verdict now says more measurement is
+  "worth close to nothing here", not "cannot change the decision"; LATE "exactly the users a
+  higher bid would newly expose" → "the same kind of marginal user"; always-takers "our money" →
+  "the lottery"; F>10 rationale distinguishes weak-IV threshold from bare significance;
+  monotonicity card de-circularized; Δ decomposition unhatted; "cancels" → "contributes zero".
+- **Figure truthfulness:** svgWald prints €3.48 ÷ 0.2106 = €16.5 (was €3.5 ÷ 0.21 = €16.5, false
+  at displayed precision); svgAR band now drawn from the baked ar_lo/ar_hi (was a second,
+  disagreeing JS interval); svgWeak replicates run at full n=3000 (were n=1500, overstating
+  instability ~2x at any drawn F), band = middle 90% of 20 repeats (was min/max of 8), x = median
+  replicate F; svgData bars zero-based with € ticks (was an undisclosed €30 baseline); svgEndo
+  bottom panel plots Y − βX ("sales with the ad effect removed") so "ad or no ad" is true;
+  svgFit2 fit tolerance tightened; svgLab histogram window widened to [0,120]; svgStrata caption
+  discloses live-draw rounding vs text tokens.
+- **Consistency:** β̂_IV glossed at first use (conditions slide); false "first/second definition"
+  ordinals removed; figure label "Wald" (never introduced in prose) → "IV estimate"; one precision
+  deck-wide ({{nb11.iv_est}}, the wald token no longer used); 13 orphaned figure IIFEs + unused
+  const N deleted (the code layer no longer carries 2SLS/Bayes/Criteo strings).
+Known accepted: title slide shares data-sec with Part 1 (matches the geo deck); the read-the-gap
+poll names selection bias one slide before its formal definition (intentional name-then-define).
+Rebuilt + verified: 28/28, 0 mjx-merror, 0 unresolved tokens, all 20 live figures draw, division
+and AR labels now match the prose.
+
+**CORRECTED same day: the keep-list is the deck.** The first cut of `_sh` kept all 51 slides and
+only refactored; Francesco: "I said explicitly what to keep and what is not interesting." Now the
+deck is **28 slides**: title + the rebuilt spine (case → data → naive/PO table → poll → selection
+bias → confounding → simulated world → endogeneity → size of bias → limits of adjustment → poll →
+ideal experiment → instrument → our instrument → relevance → conditions 2+3 → reduced form → IV
+estimate → why the division is forced) + the explicit keeps (weak instruments, Anderson and Rubin,
+compliers/LATE, checklist, price map, negotiation poll, verdict-and-recommendation as the closing
+slide). CUT: 2SLS (even the practice note), grading day, precision-is-not-validity, the
+strong-enough poll, ALL of Part 6 (Criteo), deliverable/takeaways/close, the Bayes deep dive, both
+backups. 4 polls, 25 shard tokens. Unused figure IIFEs remain in the JS, guarded and inert.
+
+The directives encoded in `_sh` (per Francesco's slide-by-slide comments):
+1. **Plots everywhere, math demoted.** Eleven NEW figures: svgHist (sales histogram, sd shown),
+   svgLab (live histograms by exposure with κ/γ sliders on the simulated-world slide), svgSplit
+   (three candidate decompositions of the €23.7 bar, "the dashboard cannot tell them apart"),
+   svgEndo (exposure share + avg sales by intent quintile = Cov>0 as a picture), svgBias (naive
+   bar split truth vs bias, live κ, replaces the old marker plot), svgAdj (DAG: W-backdoors closed,
+   U-backdoor open), svgIdeal (two DAGs, the U→X arrow cut), svgZX (mini first-stage DAG next to
+   the regression), svgExcl2 (contamination as a stacked bar, live s), svgWald (the division as
+   flow boxes), svgFit2 (prediction line vs measured line, crossing = the estimate); svgStrata
+   rebuilt taller with per-segment annotations. Equations now geo-style: bare eqbox (compact
+   symbol-glossary lbl at most), interpretation in bullets ("read π in words: ...").
+2. **Layouts unblocked**: slide 2 = single flow (4 fact cards → pitch → decision), no forced
+   two-column compression; confounding rebalanced; laboratory decompressed by the live fig.
+3. **Descriptive titles only** ("The cast of four" → "The data"); no "the customer's life",
+   no "is (not) our dial"; the lottery introduced as three short bullets, never one long sentence.
+4. **Potential outcomes made explicit**: naive-comparison slide carries the observed/N/A table;
+   NEW slide "Selection bias" AFTER the read-the-gap poll with the decomposition
+   Δ_naive = effect + E[Y(0)|X=1] − E[Y(0)|X=0] and svgSplit.
+5. **Polls are engagement, not exams**: "commit to a number" (spoiled by the planted €15) →
+   "what would fix it?" (which data addition identifies the effect; answer: randomized exposure);
+   "what can the data check?" DELETED (its scorecard moved into the checklist slide);
+   "the recommendation" → "the negotiation" (highest rate you would still sign: the interval floor).
+6. **Estimator arc ends at the division**: Wald slide + why-forced slide are the destination;
+   2SLS demoted to one practice-note slide ("the software does the division", SE warning kept).
+   Side-channel renamed d → s so it cannot collide with the reduced form δ. F introduced as "the
+   significance test every such number carries" (quoted, never derived). β re-glossed wherever it
+   reappears. LATE slide rebuilt around "the marginal customer is exactly whom a higher bid buys";
+   checklist gains the honest-scorecard callout; price map gets the three-zone reading.
+Parts 6 (real data), Close, Deep dive · Bayes, Backup: carried over unchanged from iv_slides.
+
 ## 2026-07-21 · Francesco's comment pass (APPLIED) — frequentist-complete main deck, Bayes demoted to appendix
 Full revision from Francesco's slide-by-slide comments. The deck is now **51 slides** (39 main + 9
 "Deep dive · Bayes" + 2 backup + title), rebuilt and verified (node --check OK, headless DOM 51/51,
