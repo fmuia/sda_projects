@@ -40,19 +40,19 @@
 
 # ---- Act III · The loop --------------------------------------------------------------
 - id: roas_truth_prose
-  slides: ["When the observational model lies"]
+  slides: ["Why calibrate? A model can rank channels backwards"]
   texts: ["93.39", "171.41", "nearly twice as effective", "the direct opposite of the truth", "two lift tests"]
   source: labs.roas_x1
 
 - id: roas_truth_data_x1
-  slides: ["When the observational model lies"]
+  slides: ["Why calibrate? A model can rank channels backwards"]
   expr: "float(roas['x1'])"
   value: 93.39
   tol: 0.005
   source: labs.roas_x1
 
 - id: roas_truth_data_x2
-  slides: ["When the observational model lies"]
+  slides: ["Why calibrate? A model can rank channels backwards"]
   expr: "float(roas['x2'])"
   value: 171.41
   tol: 0.005

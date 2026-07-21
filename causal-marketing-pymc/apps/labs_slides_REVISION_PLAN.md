@@ -30,6 +30,27 @@ standards (adapted arc; see "Genre" below).
   headless DOM 11 slides, counter 1/11, 0 mjx-merror, 0 JS errors; 0 em-dashes; polls A/B,
   probe, ROAS toggle green in the browser harness; all 11 slides screenshotted and read.
 
+## 2026-07-21 REVIEW ROUND 2 (Alexander) — DONE, verified
+- **Probe slide names its number**: "the previous slide's number" -> "The incrementality
+  estimate you just saw (the share of the new product's sales that are genuinely new, not
+  cannibalized) decides the launch review."
+- **Widget mechanism explained**: two bullets between poll and figure: the model learns
+  "normal growth" from the pre-launch window and extrapolates it; a second launch inside the
+  window becomes part of "normal" (projection too fast -> under-credit), after the launch it
+  inflates the observed line (-> over-credit).
+- **Acts renamed to the client engagements** (data-sec + kickers + TOC): Opening ·
+  Case 1 · Colgate-Palmolive (poll, case, probe) · Case 2 · HelloFresh (calibration warm-up,
+  loop) · Case 3 · Nürnberger Versicherung (poll) · Closing (provenance, pattern, close) ·
+  Backup.
+- **The inversion slide got a home + provenance**: retitled "Why calibrate? A model alone can
+  rank channels backwards", framed as Case 2's warm-up, sub states it is PyMC Labs' published
+  calibration tutorial (badge "baked from the tutorial"); claims re-anchored to the new data-t.
+- **Acronyms glossed at first use**: MMM ("a marketing-mix model (MMM) explains total sales as
+  the sum of per-channel contributions..."), ROAS ("return on ad spend (ROAS, sales per unit
+  of spend)"), CPL ("cost per lead (CPL)").
+- Re-verified: 90 checks 0 failures; node --check OK; 11 slides / 0 mjx-merror / 0 JS errors;
+  0 em-dashes; slides 4 (both widget states) and 5 screenshotted and read.
+
 ## 2026-07-21 addendum: second interactive (the "break it yourself" widget) — DONE, verified
 - The probe slide (4) now carries a live figure (svgBreak): a checkbox + month slider inject a
   second product launch into the schematic world; the analyst's counterfactual is a pre-period

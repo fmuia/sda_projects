@@ -196,7 +196,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
 <div class="deck" id="deck">
 
 <!-- ============ 1 · TITLE ============ -->
-<section class="slide title" data-t="Title" data-sec="Act I · The claim">
+<section class="slide title" data-t="Title" data-sec="Opening">
   <div class="kicker">Causal inference for marketing · SDA Bocconi · closing act</div>
   <h1 class="method">Causal Inference in the Wild</h1>
   <div class="sub">Drawing from real PyMC Labs client engagements.</div>
@@ -210,9 +210,9 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
   </div>
 </section>
 
-<!-- ============ ACT I · THE CLAIM ============ -->
-<section class="slide" data-t="Poll: you are the consultant" data-sec="Act I · The claim">
-  <div class="kicker">Act I · The claim</div>
+<!-- ============ CASE 1 · COLGATE-PALMOLIVE ============ -->
+<section class="slide" data-t="Poll: you are the consultant" data-sec="Case 1 · Colgate-Palmolive">
+  <div class="kicker">Case 1 · Colgate-Palmolive</div>
   <h2>You are the consultant</h2>
   <div class="sub">The counterfactuals you built today are what clients buy. First test: route a real call.</div>
   <div class="sbody" style="max-width:980px">
@@ -231,9 +231,8 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
   </div>
 </section>
 
-<!-- ============ ACT II · THE COUNTERFACTUAL, SOLD ============ -->
-<section class="slide" data-t="Colgate: incremental or cannibalistic" data-sec="Act II · The counterfactual, sold">
-  <div class="kicker">Act II · The counterfactual, sold</div>
+<section class="slide" data-t="Colgate: incremental or cannibalistic" data-sec="Case 1 · Colgate-Palmolive">
+  <div class="kicker">Case 1 · Colgate-Palmolive</div>
   <h2>Colgate-Palmolive: incremental, or cannibalistic?</h2>
   <div class="sbody"><div class="cols c32">
     <div>
@@ -255,16 +254,20 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
   </div></div>
 </section>
 
-<section class="slide" data-t="What would break it?" data-sec="Act II · The counterfactual, sold">
-  <div class="kicker">Act II · The counterfactual, sold · open floor</div>
+<section class="slide" data-t="What would break it?" data-sec="Case 1 · Colgate-Palmolive">
+  <div class="kicker">Case 1 · Colgate-Palmolive · open floor</div>
   <h2>What would break it?</h2>
   <div class="sbody" style="max-width:1100px">
     <div class="poll" id="pollProbe">
       <div class="ph">🗣 Open floor · 2 minutes</div>
-      <div class="pq">You are Colgate's CMO, and the previous slide's number decides the launch review. Name one real-world event that would make it wrong.</div>
+      <div class="pq">You are Colgate's CMO. The incrementality estimate you just saw (the share of the new product's sales that are genuinely new, not cannibalized) decides the launch review. Name one real-world event that would make it wrong.</div>
       <button class="reveal-btn">What the model itself confessed</button>
-      <div class="answer"><b>A second launch.</b> When another product entered the estimation window, the same machinery reported {{labs.fail_range}} incrementality against a planted truth of {{labs.fail_truth}}: the counterfactual absorbed part of the very effect it was meant to isolate. An honest consultancy publishes exactly this: the {{labs.fail_range}} miss is printed in the same post as the win. Now break it yourself below; this morning's version of the disease was spillover, and the defence is design, not statistics.</div>
+      <div class="answer"><b>A second launch.</b> When another product entered the estimation window, the same machinery reported {{labs.fail_range}} incrementality against a planted truth of {{labs.fail_truth}}: the counterfactual absorbed part of the very effect it was meant to isolate. An honest consultancy publishes exactly this: the {{labs.fail_range}} miss is printed in the same post as the win. This morning's version of the disease was spillover; the defence is design, not statistics.</div>
     </div>
+    <ul>
+      <li><b>What the model learns:</b> everything before the launch defines "normal growth", and the projection (red) extrapolates that normal forward.</li>
+      <li><b>What a second launch does:</b> inside the window it becomes part of "normal", so the projection rises too fast and under-credits the true lift; after the launch it inflates the observed line instead, and over-credits.</li>
+    </ul>
     <div class="fig" style="max-width:1000px">
       <div class="fh">Break it yourself: slide a second launch into the window <span class="badge">schematic</span></div>
       <div class="canvas"><svg id="svgBreak" viewBox="0 0 720 200"></svg></div>
@@ -273,34 +276,35 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
         <label>month <input type="range" id="brkT" min="4" max="22" step="1" value="6" disabled> <span class="val" id="brkTv">-6</span></label>
         <span id="brkRead"></span>
       </div>
-      <div class="cap">Same schematic world as the previous slide; the trend fit on the pre-period projects the counterfactual. The real case reported {{labs.fail_range}} against a truth of {{labs.fail_truth}}.</div>
+      <div class="cap">Same schematic world as the previous slide. The real case reported {{labs.fail_range}} against a truth of {{labs.fail_truth}}.</div>
     </div>
   </div>
 </section>
 
-<!-- ============ ACT III · THE LOOP ============ -->
-<section class="slide" data-t="When the observational model lies" data-sec="Act III · The loop">
-  <div class="kicker">Act III · The loop</div>
-  <h2>When the observational model lies</h2>
+<!-- ============ CASE 2 · HELLOFRESH ============ -->
+<section class="slide" data-t="Why calibrate? A model can rank channels backwards" data-sec="Case 2 · HelloFresh">
+  <div class="kicker">Case 2 · HelloFresh · the tool, and its failure mode</div>
+  <h2>Why calibrate? A model alone can rank channels backwards</h2>
+  <div class="sub">Before the HelloFresh story, the tool it relies on: a warm-up from PyMC Labs' published calibration tutorial.</div>
   <div class="sbody">
+    <ul>
+      <li><b>The tool:</b> a marketing-mix model (MMM) explains total sales as the sum of per-channel contributions, fit on observational spend data: no experiment anywhere in it.</li>
+      <li><b>The grading:</b> the tutorial plants a truth: return on ad spend (ROAS, sales per unit of spend) of {{labs.roas_x1}} for channel x1 against {{labs.roas_x2}} for x2, so x2 is {{labs.roas_gap_words}}.</li>
+      <li><b>The repair:</b> {{labs.lift_tests_n}} per channel, entered into the likelihood, recover both values: the experiment is the model's anchor, exactly Ch 9's role.</li>
+    </ul>
     <div class="fig">
-      <div class="fh">One MMM on observational spend alone, one planted truth, one inversion <span class="badge">baked from the post</span></div>
+      <div class="fh">One MMM on observational spend alone, one planted truth, one inversion <span class="badge">baked from the tutorial</span></div>
       <div class="canvas"><svg id="svgRoas" viewBox="0 0 720 200"></svg></div>
       <div class="controls"><label><input type="checkbox" id="roasCal"> add {{labs.lift_tests_n}} per channel</label><span id="roasRead"></span></div>
       <div class="cap">Left: the ranking the uncalibrated model reported. Right: the planted truth the experiments recover.</div>
     </div>
     <div class="callout key"><div class="ct">The inversion</div>
     Fit on observational data alone, the baseline model ranked x1 above x2: {{labs.roas_wrong_ranking}}.</div>
-    <ul>
-      <li><b>The truth:</b> planted ROAS {{labs.roas_x1}} for x1 against {{labs.roas_x2}} for x2: x2 is {{labs.roas_gap_words}}.</li>
-      <li><b>The repair:</b> {{labs.lift_tests_n}} per channel, entered into the likelihood at the saturation curve, recover both values.</li>
-      <li><b>Why Ch 9 exists:</b> the experiment is not the model's rival; it is the model's anchor.</li>
-    </ul>
   </div>
 </section>
 
-<section class="slide" data-t="HelloFresh runs the loop" data-sec="Act III · The loop">
-  <div class="kicker">Act III · The loop</div>
+<section class="slide" data-t="HelloFresh runs the loop" data-sec="Case 2 · HelloFresh">
+  <div class="kicker">Case 2 · HelloFresh</div>
   <h2>HelloFresh runs the loop, at industrial scale</h2>
   <div class="sbody"><div class="cols c32">
     <div>
@@ -322,15 +326,15 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
   </div></div>
 </section>
 
-<!-- ============ ACT IV · WHAT IT EARNS ============ -->
-<section class="slide" data-t="Poll: price the engagement" data-sec="Act IV · What it earns">
-  <div class="kicker">Act IV · What it earns</div>
+<!-- ============ CASE 3 · NÜRNBERGER VERSICHERUNG ============ -->
+<section class="slide" data-t="Poll: price the engagement" data-sec="Case 3 · Nürnberger Versicherung">
+  <div class="kicker">Case 3 · Nürnberger Versicherung</div>
   <h2>Price the engagement</h2>
   <div class="sub">A German insurer, last-touch attribution, and a funnel-aware causal MMM: nb04's mediation chain, in production.</div>
   <div class="sbody" style="max-width:980px">
     <div class="poll" id="pollB" data-correct="2">
       <div class="ph">✋ Poll</div>
-      <div class="pq">Nürnberger Versicherung replaced last-touch attribution steering with a funnel-aware causal MMM. Over {{labs.cpl_window}} of model-guided spend, cost per lead moved by how much?</div>
+      <div class="pq">Nürnberger Versicherung replaced last-touch attribution steering with a funnel-aware causal MMM. Over {{labs.cpl_window}} of model-guided spend, cost per lead (CPL) moved by how much?</div>
       <div class="opts">
         <button class="opt" data-i="0"><span class="let">A</span> Down about 5%: models rarely beat heuristics</button>
         <button class="opt" data-i="1"><span class="let">B</span> Down about 15%</button>
@@ -345,9 +349,9 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
   </div>
 </section>
 
-<!-- ============ ACT V · PROVENANCE ============ -->
-<section class="slide" data-t="The tools were the product too" data-sec="Act V · Provenance">
-  <div class="kicker">Act V · Provenance</div>
+<!-- ============ CLOSING ============ -->
+<section class="slide" data-t="The tools were the product too" data-sec="Closing">
+  <div class="kicker">Closing · Provenance</div>
   <h2>The tools were the product too</h2>
   <div class="sbody">
     <ul>
@@ -361,8 +365,8 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
   </div>
 </section>
 
-<section class="slide" data-t="The pattern in every engagement" data-sec="Act V · Provenance">
-  <div class="kicker">Act V · Provenance</div>
+<section class="slide" data-t="The pattern in every engagement" data-sec="Closing">
+  <div class="kicker">Closing</div>
   <h2>The pattern in every engagement</h2>
   <div class="sbody">
     <ul>
@@ -382,9 +386,8 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
   </div>
 </section>
 
-<!-- ============ CLOSE ============ -->
-<section class="slide" data-t="Close" data-sec="Close">
-  <div class="kicker">Close</div>
+<section class="slide" data-t="Close" data-sec="Closing">
+  <div class="kicker">Closing</div>
   <h2>One breath</h2>
   <div class="sbody" style="max-width:980px">
     <div class="callout key"><div class="ct">What you now hold</div>
