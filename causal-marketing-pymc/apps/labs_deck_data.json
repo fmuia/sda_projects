@@ -1,0 +1,184 @@
+{
+  "_meta": {
+    "retrieved": "2026-07-19",
+    "note": "Source of truth for apps/labs_slides_src.html (the business-applications closer deck). Every entry pins a number or quote EXACTLY as printed at source_url on the retrieval date; the build substitutes {{labs.key}} tokens from `text` and verify_labs_deck.py re-checks presence on the slides. This file plays the role the notebook shards play for the other two decks: numbers are never typed into the template. Quotes carry the page's own typography (en-dashes in ranges, R-squared as the superscript glyph, spaced commas) except where a slide must drop an em-dash per the deck grammar; claims then check the dash-free fragments. 2026-07-21: ten pins removed with the cut to three examples (Bolt validation/honesty quote, streaming-service scale, do-operator wedge, HF inference-speedup + TV anecdote); recover them from git history if those cases return."
+  },
+  "labs.market": {
+    "text": "$20.8 billion in 2023",
+    "value": 20.8,
+    "source_url": "https://www.pymc-labs.com/blog-posts/causal-sales-analytics-are-my-sales-incremental-or-cannibalistic",
+    "quote": "Providing these business insights is enormously valuable for making product development decisions in a global market estimated at $20.8 billion in 2023."
+  },
+  "labs.colgate_year": {
+    "text": "2023",
+    "value": 2023,
+    "source_url": "https://www.pymc-labs.com/blog-posts/causal-sales-analytics-are-my-sales-incremental-or-cannibalistic",
+    "quote": "Back in 2023, Colgate-Palmolive approached us with exactly these questions."
+  },
+  "labs.colgate_truth": {
+    "text": "50%",
+    "value": 50,
+    "source_url": "https://www.pymc-labs.com/blog-posts/causal-sales-analytics-are-my-sales-incremental-or-cannibalistic",
+    "quote": "In our simulation we made it such that there was 50% incrementality and 50% cannibalization"
+  },
+  "labs.colgate_ci": {
+    "text": "49-59%",
+    "source_url": "https://www.pymc-labs.com/blog-posts/causal-sales-analytics-are-my-sales-incremental-or-cannibalistic",
+    "quote": "The model's parameter estimate (right) shows a very reasonable estimate - 94% credible intervals from 49-59%."
+  },
+  "labs.colgate_ci_level": {
+    "text": "94%",
+    "value": 94,
+    "source_url": "https://www.pymc-labs.com/blog-posts/causal-sales-analytics-are-my-sales-incremental-or-cannibalistic",
+    "quote": "94% credible intervals from 49-59%"
+  },
+  "labs.fail_range": {
+    "text": "64-76%",
+    "source_url": "https://www.pymc-labs.com/blog-posts/causal-sales-analytics-are-my-sales-incremental-or-cannibalistic",
+    "quote": "What actually happened was your product was 100% incremental, but the model's estimate falls quite far short of this, estimating somewhere between 64-76% incrementality."
+  },
+  "labs.fail_truth": {
+    "text": "100%",
+    "value": 100,
+    "source_url": "https://www.pymc-labs.com/blog-posts/causal-sales-analytics-are-my-sales-incremental-or-cannibalistic",
+    "quote": "What actually happened was your product was 100% incremental"
+  },
+  "labs.colgate_counterfactual_quote": {
+    "text": "estimate the counterfactual sales of all products would have been if the new product had not been introduced",
+    "source_url": "https://www.pymc-labs.com/blog-posts/causal-sales-analytics-discrete-choice-modeling",
+    "quote": "More specifically, we need to estimate the counterfactual sales of all products would have been if the new product had not been introduced."
+  },
+  "labs.roas_x1": {
+    "text": "93.39",
+    "value": 93.39,
+    "source_url": "https://www.pymc-labs.com/blog-posts/mmm_roas_lift",
+    "quote": "True ROAS for x1: 93.39"
+  },
+  "labs.roas_x2": {
+    "text": "171.41",
+    "value": 171.41,
+    "source_url": "https://www.pymc-labs.com/blog-posts/mmm_roas_lift",
+    "quote": "True ROAS for x2: 171.41"
+  },
+  "labs.roas_gap_words": {
+    "text": "nearly twice as effective",
+    "source_url": "https://www.pymc-labs.com/blog-posts/mmm_roas_lift",
+    "quote": "x2 is nearly twice as effective as x1."
+  },
+  "labs.roas_wrong_ranking": {
+    "text": "the direct opposite of the truth",
+    "source_url": "https://www.pymc-labs.com/blog-posts/mmm_roas_lift",
+    "quote": "In this example, the baseline model suggested x1 was more effective than x2 [em-dash on page] the direct opposite of the truth."
+  },
+  "labs.lift_tests_n": {
+    "text": "two lift tests",
+    "value": 2,
+    "source_url": "https://www.pymc-labs.com/blog-posts/mmm_roas_lift",
+    "quote": "After adding two lift tests per channel, the model recovers ROAS estimates very close to the true values: 93.39 for x1 and 171.41 for x2"
+  },
+  "labs.hf_var": {
+    "text": "60%",
+    "value": 60,
+    "source_url": "https://www.pymc-labs.com/blog-posts/reducing-customer-acquisition-costs-how-we-helped-optimizing-hellofreshs-marketing-budget",
+    "quote": "The outcome? Predictions aligned much more closely with reality, cutting variance by 60%."
+  },
+  "labs.hf_priors_experiments": {
+    "text": "lift or incrementality tests",
+    "source_url": "https://www.pymc-labs.com/blog-posts/bayesian-media-mix-modeling-for-marketing-optimization",
+    "quote": "Another source of prior knowledge could be the results of carefully conducted field experiments such as lift or incrementality tests."
+  },
+  "labs.hf_panel_calibration": {
+    "text": "calibrated to ensure consistency with incrementality measurements",
+    "source_url": "https://www.pymc-labs.com/blog-posts/2022-11-11-HelloFresh",
+    "quote": "[17:14] Bayesian MMM can be calibrated to ensure consistency with incrementality measurements (panel-discussion agenda entry)"
+  },
+  "labs.bolt_pr": {
+    "text": "budget allocation approach to PyMC-Marketing",
+    "source_url": "https://www.pymc-labs.com/blog-posts/marketing-mix-modeling-a-complete-guide",
+    "quote": "Bolt contributed back by opening a pull request to add their budget allocation approach to PyMC-Marketing, ensuring other teams could benefit from the same advances."
+  },
+  "labs.cpl": {
+    "text": "more than 27%",
+    "value": 27,
+    "source_url": "https://www.pymc-labs.com/blog-posts/funnel-aware-mmm",
+    "quote": "\"This year we were able to drive the CPL down by more than 27%, which is very, very good.\" - Philip Herp, Nürnberger Versicherung"
+  },
+  "labs.cpl_window": {
+    "text": "June through November",
+    "source_url": "https://www.pymc-labs.com/blog-posts/funnel-aware-mmm",
+    "quote": "From June through November, Nürnberger used the model's budget allocation recommendations to guide their digital spend."
+  },
+  "labs.herp_attribution_quote": {
+    "text": "attribution mechanics instead of incremental business impact",
+    "source_url": "https://www.pymc-labs.com/blog-posts/funnel-aware-mmm",
+    "quote": "We were optimizing for attribution mechanics instead of incremental business impact. (Philip Herp)"
+  },
+  "labs.trust_quote": {
+    "text": "Trust is not created by R² values. It is created when business reality matches model expectations.",
+    "source_url": "https://www.pymc-labs.com/blog-posts/funnel-aware-mmm",
+    "quote": "Trust is not created by R² values. It is created when business reality matches model expectations. (blockquote, introduced by 'As Philip notes:')"
+  },
+  "labs.gdpr_sentence": {
+    "text": "customer journeys appeared artificially shortened",
+    "source_url": "https://www.pymc-labs.com/blog-posts/funnel-aware-mmm",
+    "quote": "But with GDPR and increasing tracking restrictions, customer journeys appeared artificially shortened, upper- and mid-funnel channels became partially invisible, and channel contribution was biased toward bottom-funnel performance."
+  },
+  "labs.nurn_2026": {
+    "text": "full production for 2026",
+    "value": 2026,
+    "source_url": "https://www.pymc-labs.com/blog-posts/funnel-aware-mmm",
+    "quote": "Nürnberger is scaling the model into full production for 2026, expanding the channel set and deepening the funnel structure."
+  },
+  "labs.hf_batch": {
+    "text": "5–6 hours to 5–6 minutes",
+    "source_url": "https://www.pymc-labs.com/blog-posts/bayes-is-slow-speeding-up-hellofreshs-bayesian-ab-tests-by-60x",
+    "quote": "Refactoring the computation into one large unpooled model to fit all datasets simultaneously reduced batch runtime from 5–6 hours to 5–6 minutes. (en-dashes as printed)"
+  },
+  "labs.hf_thousands": {
+    "text": "thousands of concurrent tests",
+    "source_url": "https://www.pymc-labs.com/blog-posts/bayes-is-slow-speeding-up-hellofreshs-bayesian-ab-tests-by-60x",
+    "quote": "HelloFresh needed a scalable, trustworthy Bayesian A/B testing pipeline that could handle thousands of concurrent tests efficiently."
+  },
+  "labs.hf_test_types": {
+    "text": "A/B, ABC, and ABCD",
+    "source_url": "https://www.pymc-labs.com/blog-posts/bayes-is-slow-speeding-up-hellofreshs-bayesian-ab-tests-by-60x",
+    "quote": "A company at HelloFresh's scale runs a large number of A/B, ABC, and ABCD test campaigns simultaneously. (separate sentence from the 'thousands' claim; do not merge into one quoted claim)"
+  },
+  "labs.criteo_rows": {
+    "text": "13,979,592",
+    "value": 13979592,
+    "source_url": "https://ailab.criteo.com/criteo-uplift-prediction-dataset/",
+    "quote": "Rows: 13,979,592 (Criteo Uplift Prediction Dataset v2.1; the dataset behind this afternoon's real-data act)"
+  },
+  "labs.causalpy_methods": {
+    "text": "synthetic control, interrupted time series, difference in differences, and regression discontinuity",
+    "source_url": "https://www.pymc-labs.com/blog-posts/causalpy-a-new-package-for-bayesian-causal-inference-for-quasi-experiments",
+    "quote": "Four quasi-experimental methods are supported: synthetic control, interrupted time series, difference in differences, and regression discontinuity. (the launch post does NOT mention IV; CausalPy's IV estimator, used in this course's notebooks, came later)"
+  },
+  "labs.causalpy_tv": {
+    "text": "cannot be randomised",
+    "source_url": "https://www.pymc-labs.com/blog-posts/causalpy-a-new-package-for-bayesian-causal-inference-for-quasi-experiments",
+    "quote": "TV advertising: Individual exposure to a linear TV campaign cannot be randomised. Yet understanding the causal impact of that campaign on customer behaviour remains a core business need."
+  },
+  "labs.webinar_agenda": {
+    "text": "Instrumental Variables",
+    "source_url": "https://www.pymc-labs.com/blog-posts/2023-06-20-juan-marketing-analytics",
+    "quote": "Timestamps agenda entries: 06:49 Geo-Experimentation; 16:24 MMM Structure; 31:14 Causal Inference (Synthetic control); 32:10 Causal Inference (Difference-in-Differences and Regression Discontinuity); 32:39 Instrumental Variables (separate agenda entries, compiled here)"
+  },
+  "labs.dl_explored": {
+    "text": "Explored 11 approaches, 0 converged.",
+    "value": 11,
+    "source_url": "https://www.pymc-labs.com/blog-posts/open-sourcing-decision-lab-scaling-ai-judgment-data-science",
+    "quote": "Explored 11 approaches, 0 converged. Returned: \"No valid model found. Run a geo-holdout experiment.\""
+  },
+  "labs.dl_verdict": {
+    "text": "No valid model found. Run a geo-holdout experiment.",
+    "source_url": "https://www.pymc-labs.com/blog-posts/open-sourcing-decision-lab-scaling-ai-judgment-data-science",
+    "quote": "Explored 11 approaches, 0 converged. Returned: \"No valid model found. Run a geo-holdout experiment.\" (Decision Lab result cell, benchmark table, adversarial MMM dataset)"
+  },
+  "labs.dl_vanilla": {
+    "text": "Confidently wrong.",
+    "source_url": "https://www.pymc-labs.com/blog-posts/open-sourcing-decision-lab-scaling-ai-judgment-data-science",
+    "quote": "Vanilla Agent result cell: Fit a model, recommended budget reallocations. Confidently wrong."
+  }
+}
