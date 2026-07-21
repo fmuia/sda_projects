@@ -41,8 +41,8 @@ CHAR_BUDGET = 2600          # visible chars per slide (fold-out bodies excluded)
 CHAR_BUDGET_HARD = True
 
 
-def load_deck():
-    html = DECK.read_text()
+def load_deck(deck: Path = DECK):
+    html = deck.read_text()
     i = html.index("/*__DATA__*/")
     j = html.index("{", i)
     data, _ = json.JSONDecoder().raw_decode(html, j)
@@ -83,8 +83,8 @@ def norm(s):
     return re.sub(r"[\s  ]+", " ", s)
 
 
-def main() -> int:
-    html, data, slides, slides_visible = load_deck()
+def main(deck: Path = DECK) -> int:
+    html, data, slides, slides_visible = load_deck(deck)
     pins = json.loads(DATAFILE.read_text())
     env = make_env(data)
     claims = yaml.safe_load(CLAIMS.read_text())
@@ -166,4 +166,9 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    import argparse
+
+    ap = argparse.ArgumentParser(description="Verify a labs-claims deck against apps/labs_claims.yaml.")
+    ap.add_argument("--deck", type=Path, default=DECK, help="deck to verify (default: labs_slides.html)")
+    a = ap.parse_args()
+    sys.exit(main(a.deck.resolve()))

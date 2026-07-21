@@ -126,24 +126,9 @@ def naive_grid() -> dict:
                        "diff-in-differences", "synthetic control"]}
 
 
-def main(src: Path = SRC, out: Path = OUT) -> None:
-    html = src.read_text()
-    tokens = load_tokens()
-
-    # 1 · scalar tokens ------------------------------------------------------------------
-    used, missing = set(), []
-    def sub_token(m: re.Match) -> str:
-        key = m.group(1).strip()
-        if key not in tokens:
-            missing.append(key)
-            return m.group(0)
-        used.add(key)
-        return tokens[key]
-    html = re.sub(r"\{\{([a-z0-9_.]+)\}\}", sub_token, html)
-    if missing:
-        sys.exit("FAIL: unknown tokens (not in the shards): " + ", ".join(sorted(set(missing))))
-
-    # 2 · the data bundle ----------------------------------------------------------------
+def build_bundle() -> dict:
+    """Assemble the full DATA bundle (nb07 lecture bundle + shard scalars + aliases +
+    real-data bundle + extras + the naive grid). Shared with build_unified_slides.py."""
     if not BUNDLE.exists():
         sys.exit(f"FAIL: {BUNDLE} missing — re-execute nb07 (its lecture-bundle cell writes it).")
     bundle_meta = json.loads(BUNDLE.read_text())
@@ -195,26 +180,56 @@ def main(src: Path = SRC, out: Path = OUT) -> None:
     bundle_meta["naive_grid"] = naive_grid()
     print(f"naive grid: {len(bundle_meta['naive_grid']['s'])}×"
           f"{len(bundle_meta['naive_grid']['sd'])} cells from cmp.dgp.geo_panel")
+    return bundle_meta
 
+
+def inject_data(html: str, bundle_meta: dict) -> str:
+    """Replace the JSON object after the /*__DATA__*/ marker with the baked bundle."""
     if "/*__DATA__*/" not in html:
         sys.exit("FAIL: template has no /*__DATA__*/ marker.")
     j = html.index("{", html.index("/*__DATA__*/"))
     _, end = json.JSONDecoder().raw_decode(html, j)
-    html = html[:j] + json.dumps(bundle_meta, separators=(",", ":")) + html[end:]
+    return html[:j] + json.dumps(bundle_meta, separators=(",", ":")) + html[end:]
 
-    # 2b · the N map: formatted number strings the deck's JS writes into prose spans.
-    # The template's /*__NUMS__*/{...}/*__ENDNUMS__*/ map supplies the KEYS; every value is
-    # re-derived from the shards (nb07.<key>), so a number can no more go stale here than in
-    # the {{token}} prose layer. A key missing from the shards is a build error.
+
+def inject_nums(html: str, tokens: dict[str, str]) -> str:
+    """The N map: formatted number strings the deck's JS writes into prose spans.
+    The template's /*__NUMS__*/{...}/*__ENDNUMS__*/ map supplies the KEYS; every value is
+    re-derived from the shards (nb07.<key>), so a number can no more go stale here than in
+    the {{token}} prose layer. A key missing from the shards is a build error."""
     nm = re.search(r"/\*__NUMS__\*/(\{.*?\})/\*__ENDNUMS__\*/", html, re.S)
-    if nm:
-        n_keys = list(json.loads(nm.group(1)))
-        missing_n = [k for k in n_keys if f"nb07.{k}" not in tokens and f"nb07b.{k}" not in tokens]
-        if missing_n:
-            sys.exit("FAIL: N-map keys not in the shards: " + ", ".join(missing_n))
-        nmap = {k: tokens.get(f"nb07.{k}", tokens.get(f"nb07b.{k}")) for k in n_keys}
-        html = html[:nm.start(1)] + json.dumps(nmap, separators=(",", ":")) + html[nm.end(1):]
-        print(f"N map: {len(nmap)} formatted numbers injected from shards")
+    if not nm:
+        return html
+    n_keys = list(json.loads(nm.group(1)))
+    missing_n = [k for k in n_keys if f"nb07.{k}" not in tokens and f"nb07b.{k}" not in tokens]
+    if missing_n:
+        sys.exit("FAIL: N-map keys not in the shards: " + ", ".join(missing_n))
+    nmap = {k: tokens.get(f"nb07.{k}", tokens.get(f"nb07b.{k}")) for k in n_keys}
+    html = html[:nm.start(1)] + json.dumps(nmap, separators=(",", ":")) + html[nm.end(1):]
+    print(f"N map: {len(nmap)} formatted numbers injected from shards")
+    return html
+
+
+def main(src: Path = SRC, out: Path = OUT) -> None:
+    html = src.read_text()
+    tokens = load_tokens()
+
+    # 1 · scalar tokens ------------------------------------------------------------------
+    used, missing = set(), []
+    def sub_token(m: re.Match) -> str:
+        key = m.group(1).strip()
+        if key not in tokens:
+            missing.append(key)
+            return m.group(0)
+        used.add(key)
+        return tokens[key]
+    html = re.sub(r"\{\{([a-z0-9_.]+)\}\}", sub_token, html)
+    if missing:
+        sys.exit("FAIL: unknown tokens (not in the shards): " + ", ".join(sorted(set(missing))))
+
+    # 2 · the data bundle, 2b · the N map -----------------------------------------------
+    html = inject_data(html, build_bundle())
+    html = inject_nums(html, tokens)
 
     # 3 · book figures -------------------------------------------------------------------
     fig_names = sorted(set(re.findall(r"<!--FIG:([a-z0-9_]+)-->", html)))
