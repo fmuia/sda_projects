@@ -62,6 +62,13 @@ standards (adapted arc; see "Genre" below).
   inversion callout above the fold. Re-verified: 90 checks 0 failures, 11 slides, 0 errors;
   slides 3 and 5 screenshotted and read.
 
+## 2026-07-21 round 2c: provenance slide polish — DONE, verified
+- CausalPy + PyMC-Marketing logos added as white .logo-chip rows (flat_logo.png from each
+  package's docs/_static, downscaled to 120px height, PNG base64; dark-mode safe like the
+  title chips).
+- The "Provenance" callout box dropped; "The agenda test" bullet renamed "Webinars and
+  content" (reviewer's wording). 90 checks green; slide screenshotted.
+
 ## 2026-07-21 addendum: second interactive (the "break it yourself" widget) — DONE, verified
 - The probe slide (4) now carries a live figure (svgBreak): a checkbox + month slider inject a
   second product launch into the schematic world; the analyst's counterfactual is a pre-period
