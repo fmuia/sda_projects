@@ -1,9 +1,8 @@
 {
   "_meta": {
     "retrieved": "2026-07-19",
-    "note": "Source of truth for apps/labs_slides_src.html (the business-applications closer deck). Every entry pins a number or quote EXACTLY as printed at source_url on the retrieval date; the build substitutes {{labs.key}} tokens from `text` and verify_labs_deck.py re-checks presence on the slides. This file plays the role the notebook shards play for the other two decks: numbers are never typed into the template. Quotes carry the page's own typography (en-dashes in ranges, R-squared as the superscript glyph, spaced commas) except where a slide must drop an em-dash per the deck grammar; claims then check the dash-free fragments."
+    "note": "Source of truth for apps/labs_slides_src.html (the business-applications closer deck). Every entry pins a number or quote EXACTLY as printed at source_url on the retrieval date; the build substitutes {{labs.key}} tokens from `text` and verify_labs_deck.py re-checks presence on the slides. This file plays the role the notebook shards play for the other two decks: numbers are never typed into the template. Quotes carry the page's own typography (en-dashes in ranges, R-squared as the superscript glyph, spaced commas) except where a slide must drop an em-dash per the deck grammar; claims then check the dash-free fragments. 2026-07-21: ten pins removed with the cut to three examples (Bolt validation/honesty quote, streaming-service scale, do-operator wedge, HF inference-speedup + TV anecdote); recover them from git history if those cases return."
   },
-
   "labs.market": {
     "text": "$20.8 billion in 2023",
     "value": 20.8,
@@ -49,7 +48,6 @@
     "source_url": "https://www.pymc-labs.com/blog-posts/causal-sales-analytics-discrete-choice-modeling",
     "quote": "More specifically, we need to estimate the counterfactual sales of all products would have been if the new product had not been introduced."
   },
-
   "labs.roas_x1": {
     "text": "93.39",
     "value": 93.39,
@@ -78,17 +76,11 @@
     "source_url": "https://www.pymc-labs.com/blog-posts/mmm_roas_lift",
     "quote": "After adding two lift tests per channel, the model recovers ROAS estimates very close to the true values: 93.39 for x1 and 171.41 for x2"
   },
-
   "labs.hf_var": {
     "text": "60%",
     "value": 60,
     "source_url": "https://www.pymc-labs.com/blog-posts/reducing-customer-acquisition-costs-how-we-helped-optimizing-hellofreshs-marketing-budget",
     "quote": "The outcome? Predictions aligned much more closely with reality, cutting variance by 60%."
-  },
-  "labs.hf_inference": {
-    "text": "from 20 minutes to 2",
-    "source_url": "https://www.pymc-labs.com/blog-posts/reducing-customer-acquisition-costs-how-we-helped-optimizing-hellofreshs-marketing-budget",
-    "quote": "Inference time dropped from 20 minutes to 2 - a 10x speedup"
   },
   "labs.hf_priors_experiments": {
     "text": "lift or incrementality tests",
@@ -100,27 +92,11 @@
     "source_url": "https://www.pymc-labs.com/blog-posts/2022-11-11-HelloFresh",
     "quote": "[17:14] Bayesian MMM can be calibrated to ensure consistency with incrementality measurements (panel-discussion agenda entry)"
   },
-  "labs.hf_tv_anecdote": {
-    "text": "one of their best",
-    "source_url": "https://www.pymc-labs.com/blog-posts/marketing-mix-modeling-a-complete-guide",
-    "quote": "One early recommendation was to increase TV spend. The marketing team was skeptical, as TV felt expensive compared to digital channels. But they took the risk, and the following quarter turned out to be one of their best."
-  },
-  "labs.bolt_validation": {
-    "text": "validated against experiments and quasi-experiments",
-    "source_url": "https://www.pymc-labs.com/blog-posts/marketing-mix-modeling-a-complete-guide",
-    "quote": "Every result was validated against experiments and quasi-experiments such as Google's CausalImpact, so the MMM stayed grounded in reality."
-  },
   "labs.bolt_pr": {
     "text": "budget allocation approach to PyMC-Marketing",
     "source_url": "https://www.pymc-labs.com/blog-posts/marketing-mix-modeling-a-complete-guide",
     "quote": "Bolt contributed back by opening a pull request to add their budget allocation approach to PyMC-Marketing, ensuring other teams could benefit from the same advances."
   },
-  "labs.honesty_quote": {
-    "text": "Bayesian methods bring more honesty to the results, you see the uncertainty",
-    "source_url": "https://www.pymc-labs.com/blog-posts/marketing-mix-modeling-a-complete-guide",
-    "quote": "Bayesian methods bring more honesty to the results, you see the uncertainty, and you can fold in prior knowledge instead of guessing. (unattributed in the article's takeaways; do not credit a named speaker)"
-  },
-
   "labs.cpl": {
     "text": "more than 27%",
     "value": 27,
@@ -153,41 +129,6 @@
     "source_url": "https://www.pymc-labs.com/blog-posts/funnel-aware-mmm",
     "quote": "Nürnberger is scaling the model into full production for 2026, expanding the channel set and deepening the funnel structure."
   },
-
-  "labs.do_gap_words": {
-    "text": "a large apparent difference",
-    "source_url": "https://www.pymc-labs.com/blog-posts/causal-analysis-with-pymc-answering-what-if-with-the-new-do-operator",
-    "quote": "A naive analysis of sales by Google Ads status shows a large apparent difference between the two groups, even though the true causal effect is zero. (NOTE: the post gives NO percentage for the naive gap; never put one on a slide)"
-  },
-  "labs.do_true_zero": {
-    "text": "zero",
-    "value": 0,
-    "source_url": "https://www.pymc-labs.com/blog-posts/causal-analysis-with-pymc-answering-what-if-with-the-new-do-operator",
-    "quote": "Critically, the true causal effect of Google Ads on sales is set to zero (beta_zy = 0), representing the ground truth Average Treatment Effect (ATE)."
-  },
-  "labs.do_est": {
-    "text": "6.2%",
-    "value": 6.2,
-    "source_url": "https://www.pymc-labs.com/blog-posts/causal-analysis-with-pymc-answering-what-if-with-the-new-do-operator",
-    "quote": "Causal effect of Google Ads on sales is 6.2% [-4.1%, 16.5%] of the effect of TV on sales"
-  },
-  "labs.do_ci": {
-    "text": "-4.1% to 16.5%",
-    "source_url": "https://www.pymc-labs.com/blog-posts/causal-analysis-with-pymc-answering-what-if-with-the-new-do-operator",
-    "quote": "The estimated causal effect of Google Ads on sales is 6.2% of TV's effect, with a credible interval ranging from -4.1% to 16.5%."
-  },
-
-  "labs.scale_obs": {
-    "text": "1 to 10 million",
-    "source_url": "https://www.pymc-labs.com/blog-posts/bayesian-inference-at-scale-running-ab-tests-with-millions-of-observations",
-    "quote": "PyMC Labs worked with a large video streaming service that faced the specific challenge of having too much data, 1 to 10 million observations per test."
-  },
-  "labs.scale_22s": {
-    "text": "22 seconds",
-    "value": 22,
-    "source_url": "https://www.pymc-labs.com/blog-posts/bayesian-inference-at-scale-running-ab-tests-with-millions-of-observations",
-    "quote": "The fast model was run on a dataset of 100 million observations. MCMC sampling completed in 22 seconds on a standard iMac."
-  },
   "labs.hf_batch": {
     "text": "5–6 hours to 5–6 minutes",
     "source_url": "https://www.pymc-labs.com/blog-posts/bayes-is-slow-speeding-up-hellofreshs-bayesian-ab-tests-by-60x",
@@ -209,7 +150,6 @@
     "source_url": "https://ailab.criteo.com/criteo-uplift-prediction-dataset/",
     "quote": "Rows: 13,979,592 (Criteo Uplift Prediction Dataset v2.1; the dataset behind this afternoon's real-data act)"
   },
-
   "labs.causalpy_methods": {
     "text": "synthetic control, interrupted time series, difference in differences, and regression discontinuity",
     "source_url": "https://www.pymc-labs.com/blog-posts/causalpy-a-new-package-for-bayesian-causal-inference-for-quasi-experiments",
@@ -225,7 +165,6 @@
     "source_url": "https://www.pymc-labs.com/blog-posts/2023-06-20-juan-marketing-analytics",
     "quote": "Timestamps agenda entries: 06:49 Geo-Experimentation; 16:24 MMM Structure; 31:14 Causal Inference (Synthetic control); 32:10 Causal Inference (Difference-in-Differences and Regression Discontinuity); 32:39 Instrumental Variables (separate agenda entries, compiled here)"
   },
-
   "labs.dl_explored": {
     "text": "Explored 11 approaches, 0 converged.",
     "value": 11,

@@ -1,8 +1,36 @@
-# Business-applications closer deck (`apps/labs_slides.html`) — COMPLETE
+# Business-applications closer deck (`apps/labs_slides.html`) — COMPLETE (rev 2)
 
-The third deck: five real PyMC Labs engagements linked back to Ch 9 (synthetic control) and
-Ch 13 (IV), closing the SDA Bocconi session. **DONE 2026-07-19: 14 slides, verified.**
-Built to the `lecture-deck` + `slide-grammar` standards (adapted arc; see "Genre" below).
+The third deck: real PyMC Labs engagements linked back to Ch 9 (synthetic control) and
+Ch 13 (IV), closing the SDA Bocconi session. Built to the `lecture-deck` + `slide-grammar`
+standards (adapted arc; see "Genre" below).
+
+## 2026-07-21 REVIEW ROUND 1 (Alexander, slide-by-slide critique) — DONE, verified
+- **Title**: "Causal Inference, Invoiced" (too tacky) -> **"Causal Inference in the Wild"**;
+  subtitle -> "Drawing from real PyMC Labs client engagements." (reviewer's wording).
+  Footer + <title> tag renamed; "The pattern on every invoice" retitled to
+  "The pattern in every engagement" (the invoice metaphor left with the old title).
+- **Five examples -> three**: kept **Colgate-Palmolive** (carries the triage poll + the
+  open probe), **HelloFresh** (one merged slide: the calibration loop AND the
+  industrial-scale/instrument-supply story, so the Ch 13 link survives), **Nürnberger**
+  (carries the estimate poll). CUT: Bolt (name remains only as a half-clause of
+  pymc-marketing provenance), the streaming service, and the whole do-operator
+  "wedge" slide. The mmm_roas_lift inversion slide STAYS: it is PyMC Labs' own tutorial
+  demo (not a client engagement), the deck's only interactive, and the "why Ch 9 exists"
+  bridge; flag to the reviewer, cuttable in round 2.
+- **14 -> 11 slides** (10 presented + the Sources backup): Title · triage poll · Colgate ·
+  probe · inversion · HelloFresh · Nürnberger poll · provenance · pattern · Close · Sources.
+  The old "purchase order" framing slide was cut; its thesis lives in the triage poll's
+  sub line and the Close box. Acts renumbered (old Act VI -> Act V · Provenance).
+- **Pins**: 10 entries removed from labs_deck_data.json (do_* wedge facts, streaming
+  scale facts, Bolt validation + honesty quote, HF inference-speedup + TV anecdote) so the
+  auto-generated Sources slide stays truthful; recover from git history if cases return.
+  Claims rewired: cast_of_clients/bolt_loop/honesty_quote/do_operator_null/scale_cards
+  removed; hellofresh_loop + hellofresh_scale anchored to the new merged slide.
+- **Re-verified (all)**: build + verifier **90 checks, 0 failures**; node --check OK;
+  headless DOM 11 slides, counter 1/11, 0 mjx-merror, 0 JS errors; 0 em-dashes; polls A/B,
+  probe, ROAS toggle green in the browser harness; all 11 slides screenshotted and read.
+
+## 2026-07-19 initial build — 14 slides, 5 examples, verified (superseded by rev 2)
 Plan of record: ~/.claude/plans/ok-so-organization-wise-mellow-church.md (approved).
 
 ## Files
@@ -14,43 +42,41 @@ Plan of record: ~/.claude/plans/ok-so-organization-wise-mellow-church.md (approv
   source_url + retrieval date (2026-07-19) + the exact page quote. Numbers come from PyMC Labs
   blog posts (+ the Criteo dataset page), NOT notebook shards — book/build/ is not needed.
 - `apps/labs_claims.yaml` + `apps/verify_labs_deck.py` — claims registry + verifier (geo-style,
-  runs automatically inside `make html-labs`). 118 checks green.
+  runs automatically inside `make html-labs`). 90 checks green (rev 2).
 - `scratchpad/assemble_labs_src.py` (+ 2 fragments) — ONE-TIME chrome splicer that generated
   labs_slides_src.html from iv_slides_src.html's chrome. The src is now canonical; re-running
   the assembler overwrites it from the fragments (only do this deliberately).
 
-## Final state: 14 slides, 3 engagement moments, 4 live/SVG figures
-Act I The claim (1-3): Title · purchase-order framing (qbig) · **Poll A "you are the consultant"**
-  (Colgate triage; correct C = project the counterfactual; reveal eliminates A/B/D).
-Act II The counterfactual, sold (4-5): Colgate ITS case (svgCounter schematic; 50% truth →
+## Final state (rev 2): 11 slides, 3 engagement moments, 3 live/SVG figures
+Act I The claim (1-2): Title ("Causal Inference in the Wild") · **Poll A "you are the
+  consultant"** (Colgate triage; correct C = project the counterfactual; sub line carries
+  the deck's thesis).
+Act II The counterfactual, sold (3-4): Colgate ITS case (svgCounter schematic; 50% truth →
   94% CI 49-59%) · **open probe "what would break it?"** (reveal: overlapping launches, 64-76%
   vs 100%; ties to Ch 9 spillover).
-Act III The loop (6-7): mmm_roas_lift inversion (svgRoas with "add two lift tests" toggle;
-  93.39 vs 171.41) · HelloFresh + Bolt (svgLoop triangle; 60% variance cut; CausalImpact
-  validation; TV-skepticism anecdote).
-Act IV What it earns (8): **Poll B "price the engagement"** (Nürnberger CPL; correct C = more
+Act III The loop (5-6): mmm_roas_lift inversion (svgRoas with "add two lift tests" toggle;
+  93.39 vs 171.41) · HelloFresh merged slide (svgLoop triangle; 60% variance cut; panel
+  calibration agenda; thousands of concurrent tests, 5–6 h → 5–6 min; Criteo 13,979,592 as
+  "this regime"; instrument-supply callout = the Ch 13 link).
+Act IV What it earns (7): **Poll B "price the engagement"** (Nürnberger CPL; correct C = more
   than 27%; reveal = GDPR mechanism + "Trust is not created by R² values" quote).
-Act V The IV side (9-10): do-operator wedge demo (svgWedge DAG, two roads; large-gap-vs-zero,
-  6.2% [-4.1% to 16.5%]) · industrial instrument supply (3 cards: thousands of tests / 1-10M
-  obs per test, 22 s for 100M rows / Criteo 13,979,592).
-Act VI Provenance (11-12): CausalPy (4 designs; launch post does NOT list IV — deck says the IV
-  estimator "joined the package later") + pymc-marketing + webinar agenda · pattern synthesis +
-  Decision Lab table ("No valid model found. Run a geo-holdout experiment.").
-Close (13) · Backup Sources (14, table auto-generated from labs_deck_data.json at build time).
+Act V Provenance (8-9): CausalPy (4 designs; launch post does NOT list IV — deck says the IV
+  estimator "joined the package later") + pymc-marketing (Bolt PR half-clause) + webinar
+  agenda · "The pattern in every engagement" synthesis + Decision Lab table.
+Close (10) · Backup Sources (11, table auto-generated from labs_deck_data.json at build time).
 
-## Verification (all PASSED 2026-07-19)
+## Verification (rev 2, all PASSED 2026-07-21)
 1. `node --check` on the extracted main script: OK.
-2. Headless `--dump-dom`: 14 slides, counter "1 / 14", **0 mjx-merror**, **0 JS errors**.
-3. Screenshots read at 1440x900 for all 14 slides + dark-theme spot checks (6, 9). One layout
-   fix applied: S6's figure shrunk (viewBox 240→200, sub line dropped) so bullet 3 sits above
-   the fold.
+2. Headless `--dump-dom`: 11 slides, counter "1 / 11", **0 mjx-merror**, **0 JS errors**.
+3. Screenshots read at 1440x900 for all 11 slides (rev-1 pass additionally spot-checked dark
+   theme; chrome unchanged since).
 4. Sweeps: **0 em-dashes** in src (en-dashes in "5–6 hours" are the page's own range typography,
    allowed); no raw currency inside math (no math beyond chrome in this deck).
-5. `verify_labs_deck.py`: **118 checks, 0 warnings, 0 failures** — claim texts on data-t-anchored
+5. `verify_labs_deck.py`: **90 checks, 0 warnings, 0 failures** — claim texts on data-t-anchored
    slides, DATA-vs-pin equality (ROAS), pin hygiene (url+quote+retrieved), token residue,
    automated em-dash sweep, 2600-char hard budget.
-6. Poll end-to-end in a real browser (injected harness): Poll A select-wrong→reveal marks
-   correct/wrong + shows answer; Poll B same; open probe reveals; ROAS toggle updates readout.
+6. Poll end-to-end in a real browser (injected harness): Poll A reveal marks correct/wrong +
+   shows answer; Poll B same; open probe reveals; ROAS toggle updates readout.
 
 ## Content rules specific to this deck
 - **Never hand-type a number**: add a pin to `labs_deck_data.json` (text + source_url + quote +
@@ -73,5 +99,6 @@ Close (13) · Backup Sources (14, table auto-generated from labs_deck_data.json 
 - Edit `apps/labs_slides_src.html`, then `make html-labs` (build + verify in one target).
 - Verify harness: node --check; Chrome `--headless=new ... --dump-dom`; per-slide screenshots
   via `file://...#N` (1-indexed); poll harness pattern in the session notes.
-- Timing: designed as a 10-15 min closer. If the session runs long, the cut is slide 5 (the
-  open probe): the deck reads cleanly without it (S4's grading bullet keeps the honesty beat).
+- Timing: designed as a ~10 min closer at 11 slides. If the session runs long, the cut is
+  slide 4 (the open probe): the deck reads cleanly without it (the Colgate slide's grading
+  bullet keeps the honesty beat).

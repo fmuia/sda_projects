@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="author" content="SDA Bocconi · Causal Marketing">
-<title>Causal Inference, Invoiced: PyMC Labs cases (slides)</title>
+<title>Causal Inference in the Wild: PyMC Labs cases (slides)</title>
 <style>
 :root{
   --navy:#1f3a5f; --navy2:#2b4d78; --ink:#22303f; --muted:#5c6b7e; --faint:#8a95a4;
@@ -198,8 +198,8 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
 <!-- ============ 1 · TITLE ============ -->
 <section class="slide title" data-t="Title" data-sec="Act I · The claim">
   <div class="kicker">Causal inference for marketing · SDA Bocconi · closing act</div>
-  <h1 class="method">Causal Inference, Invoiced</h1>
-  <div class="sub">Five real PyMC Labs engagements: the counterfactuals you built today, as products clients pay for.</div>
+  <h1 class="method">Causal Inference in the Wild</h1>
+  <div class="sub">Drawing from real PyMC Labs client engagements.</div>
   <div class="authors">
     <div class="author"><div class="an">Francesco Muia</div><div class="ad">PhD in Theoretical Physics, EMBA. Consultant for PyMC Labs and Brown University.</div><div class="ae">francesco.muia@pymc-labs.com</div></div>
     <div class="author"><div class="an">Alexander Fengler</div><div class="ad">PhD in Statistics. Postdoc at Brown University and consultant for PyMC Labs.</div><div class="ae">alexander.fengler@pymc-labs.com</div></div>
@@ -211,30 +211,10 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
 </section>
 
 <!-- ============ ACT I · THE CLAIM ============ -->
-<section class="slide" data-t="Every question was a purchase order" data-sec="Act I · The claim">
-  <div class="kicker">Act I · The claim</div>
-  <h2>Every question today was a purchase order</h2>
-  <div class="sub">The two decks you just sat through asked two questions. Both are questions real clients pay to have answered.</div>
-  <div class="sbody">
-    <div class="qbig">
-      <div class="qrow"><span class="qn">1</span> Did the campaign work, when no market was held out? <span class="qtag">this morning · synthetic control</span></div>
-      <div class="qrow"><span class="qn">2</span> What does one exposure cause, when the platform picks who is exposed? <span class="qtag">this afternoon · instrumental variables</span></div>
-    </div>
-    <div class="callout key"><div class="ct">The claim of this closing act</div>
-    The counterfactual you built today is not a classroom exercise: it is the deliverable consulting clients pay for.</div>
-    <p>The evidence, from PyMC Labs' public case write-ups:</p>
-    <ul>
-      <li><b>Colgate-Palmolive:</b> is a new product's growth real, or cannibalized from the house?</li>
-      <li><b>HelloFresh and Bolt:</b> which channels cause acquisitions, and can the model be trusted with budget?</li>
-      <li><b>Nürnberger Versicherung:</b> which funnel stage deserves the money?</li>
-      <li><b>A streaming service:</b> randomized experiments with millions of users per test.</li>
-    </ul>
-  </div>
-</section>
-
 <section class="slide" data-t="Poll: you are the consultant" data-sec="Act I · The claim">
   <div class="kicker">Act I · The claim</div>
   <h2>You are the consultant</h2>
+  <div class="sub">The counterfactuals you built today are what clients buy. First test: route a real call.</div>
   <div class="sbody" style="max-width:980px">
     <div class="poll" id="pollA" data-correct="2">
       <div class="ph">✋ Poll</div>
@@ -311,19 +291,18 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
   </div>
 </section>
 
-<section class="slide" data-t="HelloFresh and Bolt run the loop" data-sec="Act III · The loop">
+<section class="slide" data-t="HelloFresh runs the loop" data-sec="Act III · The loop">
   <div class="kicker">Act III · The loop</div>
-  <h2>HelloFresh and Bolt run the loop at brand scale</h2>
+  <h2>HelloFresh runs the loop, at industrial scale</h2>
   <div class="sbody"><div class="cols c32">
     <div>
       <ul>
-        <li><b>HelloFresh, the model:</b> MMM priors fed by field experiments such as lift or incrementality tests; a 60% cut in prediction variance; inference from 20 minutes to 2 minutes.</li>
-        <li><b>HelloFresh, on stage:</b> the panel's own agenda: Bayesian MMM can be calibrated to ensure consistency with incrementality measurements.</li>
-        <li><b>Bolt:</b> built its MMM in-house on pymc-marketing, with every result validated against experiments and quasi-experiments such as Google's CausalImpact: a Bayesian cousin of this morning's synthetic control.</li>
-        <li><b>Model vs gut:</b> an early call to raise TV spend met skepticism; the team took the risk, and the next quarter was one of their best.</li>
+        <li><b>The loop:</b> MMM priors fed by field experiments such as lift or incrementality tests; a 60% cut in prediction variance.</li>
+        <li><b>On stage:</b> the panel's own agenda: Bayesian MMM can be calibrated to ensure consistency with incrementality measurements.</li>
+        <li><b>The experiment supply:</b> a pipeline handling thousands of concurrent tests: A/B, ABC, and ABCD campaigns run simultaneously, the overnight batch down from 5–6 hours to 5–6 minutes; the Criteo experiment you saw this afternoon (13,979,592 users) sits in exactly this regime.</li>
       </ul>
-      <div class="callout"><div class="ct">From the case write-up</div>
-      "Bayesian methods bring more honesty to the results, you see the uncertainty, and you can fold in prior knowledge instead of guessing."</div>
+      <div class="callout key"><div class="ct">The supply chain, for Ch 13</div>
+      The experiments a company already runs are its instrument supply: a randomized encouragement is the instrument for the exposure you cannot randomize.</div>
     </div>
     <div>
       <div class="fig">
@@ -358,55 +337,15 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
   </div>
 </section>
 
-<!-- ============ ACT V · THE IV SIDE ============ -->
-<section class="slide" data-t="The wedge, in the wild" data-sec="Act V · The IV side">
-  <div class="kicker">Act V · The IV side</div>
-  <h2>The wedge, in the wild</h2>
-  <div class="sub">PyMC Labs' own demonstration of the afternoon's disease: exposure that chooses itself.</div>
-  <div class="sbody"><div class="cols c32">
-    <div>
-      <div class="fig">
-        <div class="fh">One confounder, two roads out</div>
-        <div class="canvas"><svg id="svgWedge" viewBox="0 0 720 260"></svg></div>
-        <div class="cap">TV drives both the decision to run search ads and the sales; the dashboard gap is real arithmetic about incomparable groups.</div>
-      </div>
-    </div>
-    <div>
-      <div class="callout key"><div class="ct">The planted null</div>
-      In the demo the dashboard showed a large apparent difference between ad-on and ad-off periods, while the planted causal effect of the ads was zero.</div>
-      <ul>
-        <li><b>The null, found:</b> modeling the confounder recovers 6.2% of the TV effect, interval -4.1% to 16.5%: zero, correctly not excluded.</li>
-        <li><b>Road one, model it:</b> draw the DAG, adjust for TV, intervene with the do-operator: nb02 and nb05's move, and what Labs did here.</li>
-        <li><b>Road two, bypass it:</b> when the confounder cannot be measured, find the instrument: the road you built this afternoon.</li>
-      </ul>
-    </div>
-  </div></div>
-</section>
-
-<section class="slide" data-t="Your instrument supply is industrial" data-sec="Act V · The IV side">
-  <div class="kicker">Act V · The IV side</div>
-  <h2>Your instrument supply is industrial</h2>
-  <div class="sub">The afternoon's Wald estimate needed nothing but a randomized assignment and two averages. Companies own that infrastructure at scale.</div>
-  <div class="sbody">
-    <div class="cards">
-      <div class="card"><b>HelloFresh</b><div class="small">A pipeline handling thousands of concurrent tests; A/B, ABC, and ABCD campaigns run simultaneously; the overnight batch fell from 5–6 hours to 5–6 minutes.</div></div>
-      <div class="card"><b>A streaming service</b><div class="small">1 to 10 million observations per test; a 100-million-row run sampled in 22 seconds on a standard iMac.</div></div>
-      <div class="card"><b>This afternoon's referee</b><div class="small">Criteo's 13,979,592-user experiment sits in exactly this regime.</div></div>
-    </div>
-    <div class="callout key"><div class="ct">The supply chain</div>
-    The experiments a company already runs are its instrument supply: a randomized encouragement is the instrument for the exposure you cannot randomize.</div>
-  </div>
-</section>
-
-<!-- ============ ACT VI · PROVENANCE ============ -->
-<section class="slide" data-t="The tools were the product too" data-sec="Act VI · Provenance">
-  <div class="kicker">Act VI · Provenance</div>
+<!-- ============ ACT V · PROVENANCE ============ -->
+<section class="slide" data-t="The tools were the product too" data-sec="Act V · Provenance">
+  <div class="kicker">Act V · Provenance</div>
   <h2>The tools were the product too</h2>
   <div class="sbody">
     <ul>
       <li><b>CausalPy:</b> synthetic control, interrupted time series, difference in differences, and regression discontinuity in one open-source package: this morning's method and its quasi-experimental family, industrialized by PyMC Labs. The IV estimator you ran this afternoon joined the package later.</li>
       <li><b>Its launch example:</b> individual exposure to a TV campaign cannot be randomised, yet its causal impact remains a core business need: the sentence both of today's lectures opened with.</li>
-      <li><b>pymc-marketing:</b> nb06's MMM library; Bolt's budget allocation approach to PyMC-Marketing came back as a pull request.</li>
+      <li><b>pymc-marketing:</b> nb06's MMM library; one client's budget allocation approach to PyMC-Marketing came back as a pull request (Bolt).</li>
       <li><b>The agenda test:</b> the consultancy's own webinar walks geo-experimentation, MMM, synthetic control, difference-in-differences, regression discontinuity and Instrumental Variables: the syllabus you just finished.</li>
     </ul>
     <div class="callout key"><div class="ct">Provenance</div>
@@ -414,9 +353,9 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
   </div>
 </section>
 
-<section class="slide" data-t="The pattern on every invoice" data-sec="Act VI · Provenance">
-  <div class="kicker">Act VI · Provenance</div>
-  <h2>The pattern on every invoice</h2>
+<section class="slide" data-t="The pattern in every engagement" data-sec="Act V · Provenance">
+  <div class="kicker">Act V · Provenance</div>
+  <h2>The pattern in every engagement</h2>
   <div class="sbody">
     <ul>
       <li><b>The deliverable is a counterfactual:</b> a world minus the launch, the campaign, the exposure: priced in euros.</li>
@@ -463,17 +402,15 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
         <tr><td>pymc-labs.com · 2022-11-11-HelloFresh</td><td style="text-align:left">hf_panel_calibration</td></tr>
         <tr><td>pymc-labs.com · 2023-06-20-juan-marketing-analytics</td><td style="text-align:left">webinar_agenda</td></tr>
         <tr><td>pymc-labs.com · bayes-is-slow-speeding-up-hellofreshs-bayesian-ab-tests-by-60x</td><td style="text-align:left">hf_batch, hf_test_types, hf_thousands</td></tr>
-        <tr><td>pymc-labs.com · bayesian-inference-at-scale-running-ab-tests-with-millions-of-observations</td><td style="text-align:left">scale_22s, scale_obs</td></tr>
         <tr><td>pymc-labs.com · bayesian-media-mix-modeling-for-marketing-optimization</td><td style="text-align:left">hf_priors_experiments</td></tr>
-        <tr><td>pymc-labs.com · causal-analysis-with-pymc-answering-what-if-with-the-new-do-operator</td><td style="text-align:left">do_ci, do_est, do_gap_words, do_true_zero</td></tr>
         <tr><td>pymc-labs.com · causal-sales-analytics-are-my-sales-incremental-or-cannibalistic</td><td style="text-align:left">colgate_ci, colgate_ci_level, colgate_truth, colgate_year, fail_range, fail_truth, market</td></tr>
         <tr><td>pymc-labs.com · causal-sales-analytics-discrete-choice-modeling</td><td style="text-align:left">colgate_counterfactual_quote</td></tr>
         <tr><td>pymc-labs.com · causalpy-a-new-package-for-bayesian-causal-inference-for-quasi-experiments</td><td style="text-align:left">causalpy_methods, causalpy_tv</td></tr>
         <tr><td>pymc-labs.com · funnel-aware-mmm</td><td style="text-align:left">cpl, cpl_window, gdpr_sentence, herp_attribution_quote, nurn_2026, trust_quote</td></tr>
-        <tr><td>pymc-labs.com · marketing-mix-modeling-a-complete-guide</td><td style="text-align:left">bolt_pr, bolt_validation, hf_tv_anecdote, honesty_quote</td></tr>
+        <tr><td>pymc-labs.com · marketing-mix-modeling-a-complete-guide</td><td style="text-align:left">bolt_pr</td></tr>
         <tr><td>pymc-labs.com · mmm_roas_lift</td><td style="text-align:left">lift_tests_n, roas_gap_words, roas_wrong_ranking, roas_x1, roas_x2</td></tr>
         <tr><td>pymc-labs.com · open-sourcing-decision-lab-scaling-ai-judgment-data-science</td><td style="text-align:left">dl_explored, dl_vanilla, dl_verdict</td></tr>
-        <tr><td>pymc-labs.com · reducing-customer-acquisition-costs-how-we-helped-optimizing-hellofreshs-marketing-budget</td><td style="text-align:left">hf_inference, hf_var</td></tr>
+        <tr><td>pymc-labs.com · reducing-customer-acquisition-costs-how-we-helped-optimizing-hellofreshs-marketing-budget</td><td style="text-align:left">hf_var</td></tr>
       </tbody>
     </table>
   </div>
@@ -486,7 +423,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
 <div class="navzone left" id="navL"><span>‹</span></div>
 <div class="navzone right" id="navR"><span>›</span></div>
 <div class="foot">
-  <span>Causal Marketing · SDA Bocconi · Causal Inference, Invoiced</span>
+  <span>Causal Marketing · SDA Bocconi · Causal Inference in the Wild</span>
   <span class="spacer"></span>
   <button id="tocBtn">☰ Contents (t)</button>
   <button id="themeBtn">◑ Theme (d)</button>
@@ -627,41 +564,6 @@ window.fitSlide=fitSlide;
     svg.appendChild(el('text',{x:152,y:132,'font-size':10,fill:c.muted},'calibrates'));
     svg.appendChild(el('text',{x:152,y:144,'font-size':10,fill:c.muted},'(priors, lift tests)'));
     svg.appendChild(el('text',{x:170,y:262,'text-anchor':'middle','font-size':10,fill:c.muted},'nb06 · this morning: Ch 9 · this closing act: all three'));
-  }
-  draw(); window.__redraw.push(draw);
-})();
-
-/* ==== fig: the confounder DAG, two roads out (S9) ==== */
-(function(){
-  const svg=document.getElementById('svgWedge'); if(!svg)return;
-  function draw(){
-    clr(svg); const c=COL();
-    const TV={x:360,y:48}, ADS={x:180,y:130}, S={x:540,y:130};
-    function node(n,label,col){
-      svg.appendChild(el('circle',{cx:n.x,cy:n.y,r:26,fill:'none',stroke:col,'stroke-width':2.2}));
-      svg.appendChild(el('text',{x:n.x,y:n.y+4,'text-anchor':'middle','font-size':12,'font-weight':'700',fill:c.navy},label));
-    }
-    function arrow(a,b,col,dash){
-      const dx=b.x-a.x,dy=b.y-a.y,L=Math.hypot(dx,dy),ux=dx/L,uy=dy/L;
-      const x1=a.x+28*ux,y1=a.y+28*uy,x2=b.x-30*ux,y2=b.y-30*uy;
-      const attrs={x1,y1,x2,y2,stroke:col,'stroke-width':2};
-      if(dash)attrs['stroke-dasharray']='5 4';
-      svg.appendChild(el('line',attrs));
-      const ang=Math.atan2(uy,ux);
-      svg.appendChild(el('path',{d:`M${x2} ${y2} L${x2-10*Math.cos(ang-0.42)} ${y2-10*Math.sin(ang-0.42)} L${x2-10*Math.cos(ang+0.42)} ${y2-10*Math.sin(ang+0.42)} Z`,fill:col}));
-    }
-    node(TV,'TV',c.orange); node(ADS,'Ads',c.blue); node(S,'Sales',c.navy);
-    arrow(TV,ADS,c.orange); arrow(TV,S,c.orange);
-    arrow(ADS,S,c.red,true);
-    svg.appendChild(el('text',{x:360,y:150,'text-anchor':'middle','font-size':10,fill:c.red},'dashboard: large gap · planted truth: zero'));
-    svg.appendChild(el('text',{x:360,y:26,'text-anchor':'middle','font-size':10,fill:c.muted},'the confounder (drives both)'));
-    // two roads
-    svg.appendChild(el('rect',{x:70,y:190,width:270,height:52,rx:9,fill:'none',stroke:c.green,'stroke-width':1.8}));
-    svg.appendChild(el('text',{x:205,y:211,'text-anchor':'middle','font-size':11,'font-weight':'700',fill:c.green},'Road 1: model the confounder'));
-    svg.appendChild(el('text',{x:205,y:228,'text-anchor':'middle','font-size':10,fill:c.muted},'draw the DAG, adjust for TV, do-operator'));
-    svg.appendChild(el('rect',{x:380,y:190,width:270,height:52,rx:9,fill:'none',stroke:c.blue,'stroke-width':1.8}));
-    svg.appendChild(el('text',{x:515,y:211,'text-anchor':'middle','font-size':11,'font-weight':'700',fill:c.blue},'Road 2: bypass it'));
-    svg.appendChild(el('text',{x:515,y:228,'text-anchor':'middle','font-size':10,fill:c.muted},'find the instrument: this afternoon'));
   }
   draw(); window.__redraw.push(draw);
 })();
