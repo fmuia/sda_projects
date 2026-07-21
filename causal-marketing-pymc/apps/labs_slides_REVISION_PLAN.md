@@ -30,6 +30,20 @@ standards (adapted arc; see "Genre" below).
   headless DOM 11 slides, counter 1/11, 0 mjx-merror, 0 JS errors; 0 em-dashes; polls A/B,
   probe, ROAS toggle green in the browser harness; all 11 slides screenshotted and read.
 
+## 2026-07-21 addendum: second interactive (the "break it yourself" widget) — DONE, verified
+- The probe slide (4) now carries a live figure (svgBreak): a checkbox + month slider inject a
+  second product launch into the schematic world; the analyst's counterfactual is a pre-period
+  trend+seasonality fit that is EXACT in the clean world (readout: measured/true lift = 100%,
+  green) and bends once the ramp enters the fit window. At month -10 the readout lands at 68%,
+  inside the real engagement's pinned 64-76%; near the window edge or post-period it OVER-credits
+  (~180%/~124%): the number bends in either direction. No new numbers invented: the 64-76% / 100%
+  pins annotate the widget; the schematic stays labelled schematic.
+- The probe's watch-callout folded into the poll answer to make room; slide verified above the
+  fold in both states (default + revealed/active). Deck stays at 11 slides; interactive figures
+  now 2 (ROAS calibration toggle + this) plus the two polls and the probe.
+- Re-verified: 90 checks 0 failures; node --check OK; 11 slides / 0 JS errors; widget states
+  tested in the browser harness (off=100%, t6=68%, t14=181%, t20=124%).
+
 ## 2026-07-19 initial build — 14 slides, 5 examples, verified (superseded by rev 2)
 Plan of record: ~/.claude/plans/ok-so-organization-wise-mellow-church.md (approved).
 

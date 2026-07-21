@@ -258,15 +258,23 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
 <section class="slide" data-t="What would break it?" data-sec="Act II · The counterfactual, sold">
   <div class="kicker">Act II · The counterfactual, sold · open floor</div>
   <h2>What would break it?</h2>
-  <div class="sbody" style="max-width:980px">
+  <div class="sbody" style="max-width:1100px">
     <div class="poll" id="pollProbe">
       <div class="ph">🗣 Open floor · 2 minutes</div>
       <div class="pq">You are Colgate's CMO, and the previous slide's number decides the launch review. Name one real-world event that would make it wrong.</div>
       <button class="reveal-btn">What the model itself confessed</button>
-      <div class="answer"><b>A second launch.</b> When another product entered during the estimation window, the same machinery reported 64-76% incrementality against a planted truth of 100%: the counterfactual absorbed part of the very effect it was meant to isolate. You met this disease this morning as spillover: the leak no diagnostic can see, and the defence is design, not statistics.</div>
+      <div class="answer"><b>A second launch.</b> When another product entered the estimation window, the same machinery reported 64-76% incrementality against a planted truth of 100%: the counterfactual absorbed part of the very effect it was meant to isolate. An honest consultancy publishes exactly this: the 64-76% miss is printed in the same post as the win. Now break it yourself below; this morning's version of the disease was spillover, and the defence is design, not statistics.</div>
     </div>
-    <div class="callout watch"><div class="ct">Why this is on a public blog</div>
-    An honest consultancy publishes its failure modes: the 64-76% miss is printed in the same post as the win.</div>
+    <div class="fig" style="max-width:1000px">
+      <div class="fh">Break it yourself: slide a second launch into the window <span class="badge">schematic</span></div>
+      <div class="canvas"><svg id="svgBreak" viewBox="0 0 720 200"></svg></div>
+      <div class="controls">
+        <label><input type="checkbox" id="brkOn"> a second product launches nearby</label>
+        <label>month <input type="range" id="brkT" min="4" max="22" step="1" value="6" disabled> <span class="val" id="brkTv">-6</span></label>
+        <span id="brkRead"></span>
+      </div>
+      <div class="cap">Same schematic world as the previous slide; the trend fit on the pre-period projects the counterfactual. The real case reported 64-76% against a truth of 100%.</div>
+    </div>
   </div>
 </section>
 
@@ -565,6 +573,72 @@ window.fitSlide=fitSlide;
     svg.appendChild(el('text',{x:152,y:144,'font-size':10,fill:c.muted},'(priors, lift tests)'));
     svg.appendChild(el('text',{x:170,y:262,'text-anchor':'middle','font-size':10,fill:c.muted},'nb06 · this morning: Ch 9 · this closing act: all three'));
   }
+  draw(); window.__redraw.push(draw);
+})();
+
+/* ==== fig: break the counterfactual yourself (probe slide) ==== */
+(function(){
+  const svg=document.getElementById('svgBreak'); if(!svg)return;
+  const on=document.getElementById('brkOn'), tr=document.getElementById('brkT');
+  const tv=document.getElementById('brkTv'), rd=document.getElementById('brkRead');
+  function draw(){
+    clr(svg); const c=COL();
+    const D=DATA.counter, n=D.actual.length, L=D.launch;
+    const active=on&&on.checked, t2=tr?+tr.value:10;
+    if(tr)tr.disabled=!active;
+    if(tv)tv.textContent=(t2-L>=0?'+':'')+(t2-L);
+    // world: base = D.cf; first launch lift = D.actual - D.cf; second launch = same ramp shape
+    const lift2=i=>(active&&i>=t2)?11*(1-Math.exp(-(i-t2)/2.5)):0;
+    const y=[],cfTrue=[];
+    for(let i=0;i<n;i++){cfTrue.push(D.cf[i]+lift2(i));y.push(D.actual[i]+lift2(i));}
+    // the analyst's counterfactual: trend + seasonality fit on the observed pre-period.
+    // In the clean world this model is EXACT (the schematic base is linear + sin(i/2.2)),
+    // so measured/true reads 100% until the second launch contaminates the fit window.
+    const feats=i=>[1,i,Math.sin(i/2.2)];
+    const M=[[0,0,0],[0,0,0],[0,0,0]],v=[0,0,0];
+    for(let i=0;i<L;i++){const f=feats(i);
+      for(let r=0;r<3;r++){v[r]+=f[r]*y[i];for(let s=0;s<3;s++)M[r][s]+=f[r]*f[s];}}
+    for(let r=0;r<3;r++){                       // Gaussian elimination, 3x3
+      let p=r;for(let s=r+1;s<3;s++)if(Math.abs(M[s][r])>Math.abs(M[p][r]))p=s;
+      [M[r],M[p]]=[M[p],M[r]];[v[r],v[p]]=[v[p],v[r]];
+      for(let s=r+1;s<3;s++){const f=M[s][r]/M[r][r];
+        for(let k=r;k<3;k++)M[s][k]-=f*M[r][k]; v[s]-=f*v[r];}}
+    const co=[0,0,0];
+    for(let r=2;r>=0;r--){let acc=v[r];for(let k=r+1;k<3;k++)acc-=M[r][k]*co[k];co[r]=acc/M[r][r];}
+    const cfHat=[]; for(let i=0;i<n;i++){const f=feats(i);cfHat.push(co[0]*f[0]+co[1]*f[1]+co[2]*f[2]);}
+    // measured vs true lift over the post-period
+    let g=0,t=0; for(let i=L;i<n;i++){g+=y[i]-cfHat[i];t+=D.actual[i]-D.cf[i];}
+    const share=Math.round(100*g/t);
+    // scales
+    const W=720,H=200,mL=52,mR=118,mT=20,mB=30;
+    const lo=Math.min(...cfHat,...y,...cfTrue)-5, hi=Math.max(...y,...cfHat)+5;
+    const x=lin(0,n-1,mL,W-mR), yy=lin(lo,hi,H-mB,mT);
+    svg.appendChild(el('line',{x1:mL,y1:H-mB,x2:W-mR,y2:H-mB,stroke:c.rule}));
+    [0,L,n-1].forEach(k=>svg.appendChild(el('text',{x:x(k),y:H-mB+14,'text-anchor':'middle','font-size':10},k-L)));
+    svg.appendChild(el('text',{x:(mL+W-mR)/2,y:H-4,'text-anchor':'middle','font-size':10},'months around the launch'));
+    svg.appendChild(el('line',{x1:x(L),y1:mT,x2:x(L),y2:H-mB,stroke:c.faint,'stroke-dasharray':'4 3'}));
+    svg.appendChild(el('text',{x:x(L),y:mT-6,'text-anchor':'middle','font-size':10,fill:c.muted},'launch'));
+    if(active){
+      svg.appendChild(el('line',{x1:x(t2),y1:mT,x2:x(t2),y2:H-mB,stroke:c.orange,'stroke-dasharray':'4 3'}));
+      svg.appendChild(el('text',{x:x(t2),y:mT-6,'text-anchor':'middle','font-size':10,fill:c.orange},'2nd launch'));
+    }
+    svg.appendChild(el('path',{d:path(cfTrue.map((v,i)=>[x(i),yy(v)])),fill:'none',stroke:c.grey,'stroke-width':2,'stroke-dasharray':'6 4'}));
+    svg.appendChild(el('path',{d:path(cfHat.map((v,i)=>[x(i),yy(v)])),fill:'none',stroke:c.red,'stroke-width':2,'stroke-dasharray':'2 3'}));
+    svg.appendChild(el('path',{d:path(y.map((v,i)=>[x(i),yy(v)])),fill:'none',stroke:c.navy,'stroke-width':2.4}));
+    // legend
+    const lx=W-mR+8;
+    [['observed',c.navy,null],['true no-launch',c.grey,'6 4'],['model projection',c.red,'2 3']].forEach((r,i)=>{
+      const attrs={x1:lx,y1:mT+8+i*15,x2:lx+20,y2:mT+8+i*15,stroke:r[1],'stroke-width':2};
+      if(r[2])attrs['stroke-dasharray']=r[2];
+      svg.appendChild(el('line',attrs));
+      svg.appendChild(el('text',{x:lx+25,y:mT+11+i*15,'font-size':9},r[0]));
+    });
+    if(rd){rd.textContent='measured / true lift: '+share+'%';
+      rd.style.fontWeight='800';
+      rd.style.color=Math.abs(share-100)<=5?c.green:(Math.abs(share-100)<=20?c.orange:c.red);}
+  }
+  if(on)on.addEventListener('change',draw);
+  if(tr)tr.addEventListener('input',draw);
   draw(); window.__redraw.push(draw);
 })();
 
