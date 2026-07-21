@@ -12,9 +12,16 @@ FORM, not word-count (a shorter paragraph is still wrong). Captured as the `slid
 - Em-dashes 31 -> 0 (prose, callout titles, h2s, endnote-flag, one JS comment); en-dashes kept
   (names/ranges: Bernstein-von Mises, EUR239-276k).
 - Balance: slide 3 -> fig-left/reading-right (cols c32); slide 21 -> fig beside setup bullets;
-  slide 20 punchline box moved above its fold. Two inherently-dense slides keep 1-2 trailing
-  elaboration elements a hair below the fold (14: fold+punchline; 32: 2 eye-calibration bullets) --
-  core content fully visible; can split/fold further on request.
+  slide 20 punchline box moved above its fold.
+- 2026-07-20 · slides 14 & 32 rebalanced to fully fit one screen (closes the earlier "a hair below
+  the fold" caveat). S14 "Every shortcut is an assumption": the four estimator readings folded into
+  their eqbox `.lbl` (redundant case numbers dropped, the live figure already grades them), layout
+  changed to equations-left / figure-right (`cols`), sub + payoff callout tightened; the mathfold and
+  the "a wrong claim never improves with more data" callout now clear the fold. S32 "Bayes in one
+  slide": prior/likelihood/posterior trio merged into one bullet, theta + the two eye-calibration
+  bullets tightened, redundant fig `.cap` dropped, svgBayes viewBox 205->180 (H matched); both
+  calibration bullets now fully visible. Rebuilt: 304 checks / 0 failures, whole-slide mjx-merror 0,
+  claims EUR14.2k + EUR13.0k/week intact, removed display spans null-guarded (no orphan refs).
 - Preserved everything: all live-figure span IDs, {{tokens}}, equations, figures, polls, tables,
   and every geo_claims.yaml required-text substring.
 - VERIFIED: build clean; verify_geo_deck.py 304 checks / 0 failures (all numbers intact); whole-deck

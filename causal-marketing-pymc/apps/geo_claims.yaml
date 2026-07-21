@@ -37,17 +37,9 @@
   tol: 0.01
 
 # ---- Act II ------------------------------------------------------------------------
-- id: pre_rmse
-  slides: ["Fit the blend (live)"]
-  text: "3.23"
-  expr: "rmse(treated[:40], synth_cl[:40])"
-  value: 3.23
-  tol: 0.01
-  shard: nb07.cl_pre_rmse
-
 - id: classical_total
-  slides: ["Fit the blend (live)", "Significance, the usual way", "What the statistics says",
-           "What you say to the board (classical)", "Why the two paradigms agree", "What the simulation proved", "The deliverable", "Close"]
+  slides: ["Poll: is it real?", "What the statistics says",
+           "What you say to the board (classical)", "What the simulation proved", "The deliverable", "Close"]
   text: "€260k"
   expr: "sum(treated[40:] - synth_cl[40:])"
   value: 260.3
@@ -56,14 +48,16 @@
   tol_shard: 0.5
 
 - id: truth_per_week
-  slides: ["Every shortcut is an assumption", "What the simulation proved"]
+  # On "Every shortcut is an assumption" the truth is drawn LIVE by svgNaive
+  # ('planted truth €'+fmt(truth)+'k'), not written as prose, so it is not a static-text slide here.
+  slides: ["What the simulation proved"]
   text: "€14.2k"
   expr: "sum(treated[40:] - y0_true[40:]) / 20"
   value: 14.21
   tol: 0.02
 
 - id: truth_total
-  slides: ["What the statistics says", "Why the two paradigms agree", "What the simulation proved"]
+  slides: ["What the statistics says", "What the simulation proved"]
   text: "€284k"
   expr: "sum(treated[40:] - y0_true[40:])"
   value: 284.2
@@ -157,16 +151,10 @@
   value: 8.86
   tol: 0.01
 
-- id: hull_oos_ratio
-  slides: ["What the constraint buys (live)"]
-  text: "1.6"
-  shard: nb07.hull_oos_ratio
-  shard_text: "1.6"
-
 # ---- Act III -----------------------------------------------------------------------
 - id: permutation_p
   slides: ["Poll: is it real?", "Placebo-in-space (live)", "What the statistics says",
-           "The classical verdict", "What you say to the board (classical)", "The deliverable", "Close"]
+           "What you say to the board (classical)", "The deliverable", "Close"]
   text: "0.033"
   expr: "(1 + sum(abs(placebo_tot) >= sum(treated[40:] - synth_cl[40:]))) / (len(placebo_tot) + 1)"
   value: 0.0333
@@ -204,7 +192,7 @@
 
 - id: inversion_quantiles
   slides: ["Interval by test inversion (live)"]
-  texts: ['q_{0.05}=-75', 'q_{0.95}=+65']
+  texts: ['q_{0.05}\!=\!-75', 'q_{0.95}\!=\!+65']
   expr: "pctl(placebo_tot, 5)"
   value: -75
   tol: 1.0
@@ -256,7 +244,7 @@
 
 # ---- Act IV ------------------------------------------------------------------------
 - id: breakeven_lift
-  slides: ["The margin trap (live)", "The classical verdict", "Three worlds, one classical report"]
+  slides: ["The margin trap (live)", "What you say to the board (classical)", "Three worlds, one classical report"]
   text: "214"
   expr: "75 / 0.35"
   value: 214.3
@@ -284,7 +272,7 @@
   tol_shard: 0.005
 
 - id: expected_net_classical
-  slides: ["Poll: the margin", "The classical verdict", "The deliverable", "Close"]
+  slides: ["Poll: the margin", "What you say to the board (classical)", "The deliverable", "Close"]
   text: "€16k"
   expr: "0.35 * sum(treated[40:] - synth_cl[40:]) - 75"
   value: 16.1
@@ -302,14 +290,14 @@
   tol_shard: 0.2
 
 - id: revenue_margin_to_spare
-  slides: ["The margin trap (live)", "The classical verdict"]
+  slides: ["The margin trap (live)", "What you say to the board (classical)"]
   text: "€46k"
   expr: "sum(treated[40:] - synth_cl[40:]) - 75 / 0.35"
   value: 46
   tol: 0.2
 
 - id: profit_interval
-  slides: ["The classical verdict"]    # slides 27/29 state it inside LaTeX / as prose
+  slides: ["What you say to the board (classical)"]    # stated in the ③-Confident bullet
   text: "[€68k, €117k]"
   expr: "0.35 * (sum(treated[40:] - synth_cl[40:]) - pctl(placebo_tot, 95))"
   value: 68.25
@@ -348,17 +336,13 @@
   tol: 0.05
 
 - id: bayes_total_ar1
-  slides: ["Why the two paradigms agree"]
+  slides: ["Endnote: the diagnosis and the fix"]
   text: "€262k"
   expr: "mean(tot_ar1)"
   value: 262
   tol: 4.0            # DATA holds a 1,200-draw subsample; shard is the full run
   shard: nb07.bayes_total
   tol_shard: 0.5
-
-- id: bayes_arm_labelled_ar1
-  slides: ["Why the two paradigms agree"]
-  text: "Bayesian posterior mean (AR(1), the shipped arm)"
 
 - id: iid_form_disclaimer
   slides: ["The Bayesian synthetic control"]
@@ -643,8 +627,8 @@
 
 # ---- Phase 3: the rollout ledger and the portfolio ---------------------------------
 - id: rollout_reach
-  slides: ["The €4M call, without a posterior"]
-  texts: ["R ≈ 53 pilot-equivalents", "€4M"]
+  slides: ["What €4M actually buys"]
+  texts: ["53 pilot-budgets", "€4M"]
   expr: "4000 / 75"
   value: 53.3
   tol: 0.1
@@ -752,16 +736,16 @@
   shard: nb07.iid_lo
   tol_shard: 1.0
 
-# ---- the classical €4M read (Act IV), which the posterior slide now builds on -------
+# ---- the classical €4M read (Act IV, rebuilt as 28a/28b/28c) ------------------------
 - id: rollout_classical_net
-  slides: ["The €4M call, without a posterior"]
+  slides: ["What €4M actually buys"]
   text: "+€860k"
   expr: "0.35 * (4000/75) * sum(treated[40:] - synth_cl[40:]) - 4000"
   value: 860
   tol: 3.0
 
 - id: rollout_classical_interval
-  slides: ["The €4M call, without a posterior"]
+  slides: ["What €4M actually buys"]
   # scaled from the published design-based interval [195, 335]: 18.667x195-4000 / x335-4000
   text: "[−€360k, +€2.25M]"
   expr: "0.35 * (4000/75) * 195 - 4000"
@@ -774,23 +758,156 @@
   value: 2253
   tol: 1.0
 
+# ---- the €4M rollout (slides 26-27), reframed 2026-07-21 -----------------------------
+# The metro is NOT treated as "chosen for promise" (that would open the backdoor the deck
+# deliberately parks on slide 1). So there is no systematic "selection haircut": the only
+# sign-known discount is SATURATION = (4000/2250)^(beta-1), beta in [0.6, 0.8], 2250 =
+# 30 markets x €75k = the pilot-intensity national budget. Market-representativeness is
+# symmetric uncertainty (widens the band, no mean shift). beta is a client-owned input;
+# these entries pin the arithmetic, not truth. The required-delta / plausible-delta
+# comparison now lives in the "Measure it, don't guess it" fold-out (demoted from a slide).
 - id: rollout_delta_zone_provable
-  slides: ["The €4M call, without a posterior"]
-  text: "δ ≥ 1.10"
+  # upper edge of the required-delta band (tau at the interval bottom)
+  slides: ["What €4M actually buys"]
+  text: "[0.64, 1.10]"
   expr: "(75/0.35) / 195"
   value: 1.099
   tol: 0.005
 
 - id: rollout_delta_zone_disproven
-  slides: ["The €4M call, without a posterior"]
-  text: "δ ≤ 0.64"
+  # lower edge of the required-delta band (tau at the interval top)
+  slides: ["What €4M actually buys"]
+  text: "[0.64, 1.10]"
   expr: "(75/0.35) / 335"
   value: 0.64
   tol: 0.005
 
 - id: rollout_delta_breakeven_classical
-  slides: ["The €4M call, without a posterior"]
-  text: "δ ≈ 0.82"
+  slides: ["What €4M actually buys"]
+  text: "central 0.82"
   expr: "(75/0.35) / sum(treated[40:] - synth_cl[40:])"
   value: 0.823
   tol: 0.005
+
+- id: per_market_intensity
+  slides: ["What €4M actually buys", "Measure it, don't guess it"]
+  text: "€133k"
+  expr: "(4000/30) / 75"
+  value: 1.78
+  tol: 0.005
+
+- id: intensity_multiple
+  slides: ["What €4M actually buys"]
+  text: "1.78×"
+  expr: "(4000/30) / 75"
+  value: 1.78
+  tol: 0.005
+
+- id: saturation_central_pct
+  # slide 26: diminishing returns alone leave ~84% (saturation at beta=0.7)
+  slides: ["What €4M actually buys"]
+  text: "84%"
+  expr: "(4000/2250)**(0.7-1)"
+  value: 0.841
+  tol: 0.01
+
+- id: required_central_pct
+  # slide 26: break-even needs ~82% (required delta central)
+  slides: ["What €4M actually buys"]
+  text: "82%"
+  expr: "(75/0.35) / 260"
+  value: 0.824
+  tol: 0.01
+
+- id: delta_plaus_pessimistic
+  slides: ["What €4M actually buys"]
+  text: "0.79"
+  expr: "(4000/2250)**(0.6-1)"
+  value: 0.794
+  tol: 0.005
+
+- id: delta_plaus_central
+  slides: ["What €4M actually buys"]
+  text: "0.84"
+  expr: "(4000/2250)**(0.7-1)"
+  value: 0.841
+  tol: 0.005
+
+- id: delta_plaus_optimistic
+  slides: ["What €4M actually buys"]
+  text: "0.89"
+  expr: "(4000/2250)**(0.8-1)"
+  value: 0.891
+  tol: 0.005
+
+- id: delta_plaus_band_stated
+  # the plausible band, quoted in the slide-27 fold-out and echoed on the Act V slide
+  slides: ["What €4M actually buys", "The €4M decision"]
+  text: "[0.79, 0.89]"
+
+- id: rollout_profit_pessimistic
+  slides: ["What €4M actually buys"]
+  text: "−€1.11M"
+  expr: "0.35*((4000/2250)**(0.6-1))*(4000/75)*195 - 4000"
+  value: -1108
+  tol: 10
+
+- id: rollout_profit_central
+  # central case is essentially break-even; slide shows "about €0"
+  slides: ["What €4M actually buys"]
+  text: "about €0"
+  expr: "0.35*((4000/2250)**(0.7-1))*(4000/75)*260 - 4000"
+  value: 84
+  tol: 20
+
+- id: rollout_profit_optimistic
+  slides: ["What €4M actually buys"]
+  text: "+€1.57M"
+  expr: "0.35*((4000/2250)**(0.8-1))*(4000/75)*335 - 4000"
+  value: 1574
+  tol: 10
+
+- id: test_k_power
+  # sized from the decision: delta=1 vs 0.64 (36% shortfall) against between-market CV
+  slides: ["Measure it, don't guess it"]
+  text: "4.3"
+  expr: "((1.6449 + 0.8416) * 0.30 / 0.36)**2"
+  value: 4.3
+  tol: 0.05
+
+- id: test_k_power_cv04
+  # at CV 0.4 the power-only requirement rises to ~7.6, stated on-slide as "≈ 8"
+  slides: ["Measure it, don't guess it"]
+  text: "≈ 8"
+  expr: "((1.6449 + 0.8416) * 0.40 / 0.36)**2"
+  value: 7.63
+  tol: 0.05
+
+- id: test_cost
+  slides: ["Measure it, don't guess it"]
+  text: "€1.07M"
+  expr: "8 * 4000/30"
+  value: 1067
+  tol: 3
+
+- id: test_inference_floor
+  # 0.033 is the 1-treated pilot's permutation floor; 8 randomized pairs give 1/2^8
+  slides: ["Measure it, don't guess it"]
+  texts: ["0.033", "0.004"]
+  expr: "1/2**8"
+  value: 0.004
+  tol: 0.0002
+
+- id: voi_rollout_cited_28c
+  # same computation as rollout_voi_peak, restated in prose on slide 27 (rounded to the
+  # nearest 10 like the Act V readout span)
+  slides: ["Measure it, don't guess it"]
+  text: "€320k"
+  expr: "mean(np.maximum(0.35 * 0.8 * (4000/75) * tot_ar1 - 4000, 0))"
+  value: 320
+  tol: 45
+
+- id: deliverable_rollout_bands
+  # the deliverable memo's interval-version recommendation (consistency pin, text-only)
+  slides: ["The deliverable"]
+  texts: ["64–110%", "79–89%", "€1.07M", "8 stratified markets"]

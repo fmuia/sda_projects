@@ -109,11 +109,22 @@ def geo_panel(
     n_dmas: int = 30,
     lift_pct: float = 0.12,
     seed: int = 3,
+    macro_sd: float = 1.2,
+    load_spread: float = 0.4,
 ):
     """Weekly DMA sales panel with a common factor structure (trend, season,
     a macro shock) shared by treated + control DMAs, so a naive before/after
     or treated-vs-average-control comparison is confounded by that shared
     structure, but a synthetic control can reconstruct it.
+
+    ``macro_sd`` is the per-week std of the shared macro random walk (the
+    confounder's amplitude); ``load_spread`` is the half-width of the uniform
+    factor loadings (drawn on ``1 ± load_spread``), i.e. how differently the
+    markets respond to the shared factors. Both keep the *default* draw
+    stream byte-identical (``normal``/``uniform`` consume the same count of
+    raw variates regardless of scale/bounds), so the shipped seed-5 panel is
+    unchanged; the two knobs exist so the deck can sweep the identical DGP
+    across the (spread, macro-shock) grid its live figure exposes.
 
     Returns (sales_wide DataFrame [dma x week], true_effect per week on the
     treated DMA, launch_week, treated_dma_label).
@@ -122,11 +133,11 @@ def geo_panel(
     t = np.arange(n_weeks)
     trend = 0.4 * t
     season = 8 * np.sin(2 * np.pi * t / 26) + 4 * np.sin(2 * np.pi * t / 13)
-    macro = np.cumsum(rng.normal(0, 1.2, n_weeks))
+    macro = np.cumsum(rng.normal(0, macro_sd, n_weeks))
     F = np.column_stack([trend, season, macro])
 
     levels = rng.uniform(80, 140, n_dmas)
-    loads = rng.uniform(0.6, 1.4, (n_dmas, 3))
+    loads = rng.uniform(1 - load_spread, 1 + load_spread, (n_dmas, 3))
     sales = levels[:, None] + loads @ F.T + rng.normal(0, 3, (n_dmas, n_weeks))
 
     treated_idx = 0

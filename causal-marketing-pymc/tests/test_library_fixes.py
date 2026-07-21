@@ -295,3 +295,23 @@ def test_report_begin_does_not_touch_the_companion_notebook():
     assert report._nb_of("nb07b.sc") == "nb07b"
     with pytest.raises(ValueError):
         report.begin("nb7")          # malformed id must be rejected, not silently glob-delete
+
+
+# ---------------------------------------------------------------------------------------------
+# The geo deck's live "four estimators" figure sweeps dgp.geo_panel across a (load_spread,
+# macro_sd) grid. That only stays honest if the two new knobs are STREAM-PRESERVING: at their
+# defaults the shipped seed-5 panel (and every published nb07 number baked from it) must be
+# byte-identical, and at the case dials (load_spread=0.4, macro_sd=1.2) the parameterised call
+# must reproduce the default call exactly. If a future edit reorders the draws, this fails.
+# ---------------------------------------------------------------------------------------------
+def test_geo_panel_new_knobs_are_stream_preserving():
+    base_df, base_eff, base_launch, base_lab = dgp.geo_panel(seed=5)
+    # explicit knobs at their documented case values must reproduce the default draw exactly
+    df, eff, launch, lab = dgp.geo_panel(seed=5, macro_sd=1.2, load_spread=0.4)
+    np.testing.assert_array_equal(df.values, base_df.values)
+    np.testing.assert_array_equal(eff, base_eff)
+    assert (launch, lab) == (base_launch, base_lab)
+
+    # and the knobs actually bite: a different macro_sd / load_spread changes the panel
+    other, _, _, _ = dgp.geo_panel(seed=5, macro_sd=2.4, load_spread=0.1)
+    assert not np.allclose(other.values, base_df.values)

@@ -12,6 +12,51 @@ Approved directives (2026-07-18):
 2. Bayes is not the focus but must NOT be over-compressed (kept a 6-slide arc inside Part 5);
 3. real data must be emphasized, not compressed (Part 6 expanded to 6 slides).
 
+## 2026-07-21 · Francesco's comment pass (APPLIED) — frequentist-complete main deck, Bayes demoted to appendix
+Full revision from Francesco's slide-by-slide comments. The deck is now **51 slides** (39 main + 9
+"Deep dive · Bayes" + 2 backup + title), rebuilt and verified (node --check OK, headless DOM 51/51,
+0 mjx-merror, 0 unresolved tokens, 73 shard tokens).
+
+Structural changes (do not undo):
+1. **Bayes is an appendix.** The 8-slide Bayes arc (interval-cannot-say, Bayes-in-one-slide, model,
+   knob, BvM, P(pays), poll buy-evidence, VOI) plus the off-switch moved AFTER the Close as
+   "Deep dive · Bayes", framed "most likely not lectured". The main deck is a complete frequentist
+   treatment: verdict slide now carries the full recommendation (buy at cost, cap at the interval
+   floor €iv_lo, re-measure only if the rate climbs toward it). Deliverable/takeaways/close are
+   posterior-free; the ONLY Bayes mention before the appendix is one pointer on the Close slide.
+   2SLS KEPT (it is the frequentist workhorse: correct SEs, covariates, what software runs).
+2. **Part 6 stripped of Bayes**: probit row out of the PROVED table, Bayesian row out of the
+   referee table AND the svgRef figure (2 bars now, respaced), market-taught card 2 rewritten.
+3. **Slide 2 de-spoiled** (no "catch" callout, the confusing "arithmetic about two groups" bullet
+   gone) + NEW Poll "the pitch" (pollF) right after it; NEW Poll "read the gap" (pollG, the
+   Δ_naive decomposition) after the naive-comparison slide. 7 polls total.
+4. **Title slide = geo deck's**: title-grid + course line ("A guest lecture for Prof. Michele
+   Russo's course") + geo author bios + decorative intervals-aside SVG.
+5. **Register**: the word "coin" is BANNED (prose, labels, figure JS): Z is "the (serving-priority)
+   lottery", generic randomness is "randomization / random draw", nb11.coinflip renders as
+   "break-even". Titles are titles (short noun phrases; explanations moved to .sub); subtitles are
+   clarifications, never operative content. No forward references to later parts anywhere (the
+   single allowed pointer: Close slide "a Bayesian deep dive and two backup slides follow").
+   No em-dashes, no prose semicolons (bullet separators only). "One warning that saves careers"
+   → "Do not hand-roll the standard error".
+6. **Content upgrades**: cast slide introduces the lottery in prose BEFORE the table and defines
+   €17.1 as the sd of Y; table headers left-aligned over left-aligned columns (deck-wide);
+   naive-comparison slide decompressed with a "Definition · selection bias" box; confounding slide
+   gains "Definition · backdoor path" + a "close the backdoor" callout explaining
+   conditioning/matching/propensity as one move; σ defined as the logistic function on the
+   laboratory slide; OVB slide gains a "What the formula teaches" box (systematic, grows with
+   targeting, n absent); adjustment slide gains the two-identical-rows intuition callout.
+
+## 2026-07-20 · slide-grammar pass (user directive) — verified already compliant, NO edits
+Ran the `slide-grammar` skill against the deck. Finding: it is ALREADY fully in the grammar from the
+v2 rebuild + classical deepening: 0 em-dashes, 58 callout boxes, 126 bullets, definition-first
+register. Every remaining `<p>` is grammar-sanctioned (one-clause equation lead-in, one-sentence
+`q-biz` punchline, muted footnote caption e.g. sampler-health, or the three deliberate board-ready
+quote sentences on "The deliverable"); none is a running paragraph, so converting any would be churn,
+not improvement. Balance (grammar rule 6) spot-checked by screenshot at 1600x1000 on the densest
+slides: cast-of-four table (3), 2SLS (20), probit-code (33): all fit one screen. Conclusion: no
+source change; the deck passes the grammar as shipped.
+
 ## Files
 - `apps/iv_slides.html` — the deck (2.4 MB, self-contained). Build: `make html-iv-slides`.
 - `apps/iv_slides_src.html` — editable template (edit this, then rebuild).
