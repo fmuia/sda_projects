@@ -242,9 +242,9 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
   <div class="sub">A Bayesian modeling consultancy: custom decision-making models where off-the-shelf tools fall short, and the open-source libraries the field runs on (PyMC, PyMC-Marketing, CausalPy).</div>
   <div class="sbody">
     <ul>
-      <li><b>What we sell:</b> senior modeling expertise, not software licenses.</li>
+      <li><b>What we sell:</b> Senior modeling expertise, end-to-end data science, not a software license.</li>
       <li><b>Open source is the top of the funnel:</b> the libraries build reach; the consulting monetizes the expertise behind them.</li>
-      <li><b>How we work:</b> small senior teams, starting from the client's decision; the client keeps the model, not a black box.</li>
+      <li><b>How we work:</b> small senior teams; the client keeps the model and surrounding functionality transparently, not the core libraries.</li>
     </ul>
     <table class="mini">
       <thead><tr><th>Engagement</th><th style="text-align:left">What it is</th><th style="text-align:left">Typical client</th></tr></thead>
@@ -332,7 +332,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
   <div class="callout key"><div class="ct">Why marketing analytics is going Bayesian</div>
   Marketing data is short, noisy, and highly correlated, and every model ends in a spend decision, which is exactly where priors and full uncertainty pay off.</div>
   <div class="callout watch"><div class="ct">For today, this is a curiosity</div>
-  The entire lecture runs on classical methods, and every number you will see is frequentist; we surface the Bayesian read only as a flavour at the edges, never as the load-bearing tool.</div>
+  Our lectures will center around classical methods to stay didactically coherent. We will only hint at what the Bayesian approach affords.</div>
   <details class="mathfold"><summary><span class="tw">▸</span> Where it is already the default (and where it is not)</summary><div class="mfbody">
     <ul style="margin:.2rem 0">
       <li><b>Marketing mix modeling:</b> the modern open-source MMM tools are Bayesian (Google's Meridian, PyMC-Marketing); with only two or three years of weekly data and correlated channels, plain regression is unstable, and priors on adstock, saturation, and ROI stabilize it.</li>
@@ -382,7 +382,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
 <section class="slide" data-t="Colgate: incremental or cannibalistic" data-sec="Case 1 · Colgate-Palmolive">
   <div class="kicker">Case 1 · Colgate-Palmolive</div>
   <h2>Colgate-Palmolive: incremental, or cannibalistic?</h2>
-  <div class="sub"><b>Incremental</b>: sales won from competitors or category growth. <b>Cannibalistic</b>: sales taken from your own products. The launch verdict is the split.</div>
+  <div class="sub"><b>Incremental</b>: sales won from competitors or category growth. <b>Cannibalistic</b>: sales taken from your own products. The question for the launch: how much of its sales is which?</div>
   <div class="sbody"><div class="cols c32">
     <div>
       <div class="fig">
@@ -396,8 +396,8 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
       "We need to estimate the counterfactual sales of all products would have been if the new product had not been introduced."</div>
       <ul>
         <li><b>The client:</b> Colgate-Palmolive, {{labs.colgate_year}}; a market estimated at {{labs.market}}.</li>
-        <li><b>The method:</b> a multivariate Bayesian interrupted time series: project the pre-launch world forward.</li>
-        <li><b>The grading:</b> a planted {{labs.colgate_truth}} recovered as a {{labs.colgate_ci_level}} interval of {{labs.colgate_ci}}: recover a known truth first, then be believed.</li>
+        <li><b>The method:</b> a multivariate interrupted time series: project the pre-launch world forward.</li>
+        <li><b>The grading:</b> the model is first run on simulated sales where the true incrementality is fixed at {{labs.colgate_truth}} by construction; it estimates {{labs.colgate_ci}} (a {{labs.colgate_ci_level}} interval): it must find an answer we planted before we trust it on the real one.</li>
       </ul>
     </div>
   </div></div>
@@ -452,7 +452,7 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
   <div class="sbody">
     <div class="cards">
       <div class="card"><b>The setting</b>a company spreads its budget across many ad channels (TV, search, social) and needs to know which ones actually pay back.</div>
-      <div class="card"><b>The everyday tool</b>a model reads years of spend-and-sales history and scores each channel's return on ad spend, cheaply and always-on.</div>
+      <div class="card"><b>The everyday tool: a marketing-mix model (MMM)</b>it reads years of spend-and-sales history and scores each channel's return on ad spend, cheaply and always-on.</div>
       <div class="card"><b>The catch, and our job</b>history is not an experiment; a company spends more exactly when demand is already high, so the model can credit the season instead of the channel and rank them backwards.</div>
       <div class="card"><b>What we add</b>a real experiment: nudge one channel's budget by a known amount, measure the sales it truly causes, and anchor the model to that number. This is calibration.</div>
     </div>
@@ -493,25 +493,41 @@ window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg
 </section>
 
 <!-- ============ PART 1 · CASE 3 · NÜRNBERGER VERSICHERUNG (8) ============ -->
+<section class="slide" data-t="Nürnberger: steering by the last click" data-sec="Case 3 · Nürnberger Versicherung">
+  <div class="kicker">Case 3 · Nürnberger Versicherung</div>
+  <h2>Nürnberger Versicherung: steering by the last click</h2>
+  <div class="sub">A German insurance group, spending across the whole funnel: awareness video and demand generation up top, branded search at the bottom.</div>
+  <div class="sbody">
+    <div class="cards">
+      <div class="card"><b>The old ruler: last-touch attribution</b>credit every sale to the last ad click before it; simple, standard, and blind to everything upstream of that click.</div>
+      <div class="card"><b>What broke it</b>under GDPR, {{labs.gdpr_sentence}}: the last click was often the only click the tracker could still see.</div>
+      <div class="card"><b>The replacement: a funnel-aware causal MMM</b>a marketing-mix model that encodes the funnel: upper-funnel spend creates demand that surfaces later in lower-funnel channels, so credit flows to the cause, not to the final click.</div>
+      <div class="card"><b>The stakes</b>budget follows the ruler: whatever the measurement under-credits, the spreadsheet de-funds.</div>
+    </div>
+    <div class="callout"><div class="ct">The client, before the fix</div>
+    "We were optimizing for {{labs.herp_attribution_quote}}." (Philip Herp, Nürnberger Versicherung)</div>
+  </div>
+</section>
+
 <section class="slide" data-t="Poll: price the engagement" data-sec="Case 3 · Nürnberger Versicherung">
   <div class="kicker">Case 3 · Nürnberger Versicherung</div>
-  <h2>Price the engagement</h2>
-  <div class="sub">A German insurer, last-touch attribution, and a funnel-aware causal MMM, in production.</div>
+  <h2>Who does the last click cheat?</h2>
+  <div class="sub">The terms are on the table; the poll asks you to use them.</div>
   <div class="sbody" style="max-width:980px">
-    <div class="poll" id="pollE" data-correct="2">
+    <div class="poll" id="pollE" data-correct="1">
       <div class="ph">✋ Poll</div>
-      <div class="pq">Nürnberger Versicherung replaced last-touch attribution steering with a funnel-aware causal MMM. Over {{labs.cpl_window}} of model-guided spend, cost per lead (CPL) moved by how much?</div>
+      <div class="pq">Under GDPR-shortened tracking, which channels does last-touch attribution systematically under-credit?</div>
       <div class="opts">
-        <button class="opt" data-i="0"><span class="let">A</span> Down about 5%: models rarely beat heuristics
-          <span class="why">Wrong twice: under GDPR last-touch was not a harmless heuristic but a systematically biased one, so replacing it was worth far more than a rounding error.</span></button>
-        <button class="opt" data-i="1"><span class="let">B</span> Down about 15%
-          <span class="why">Still too small: the measured drop was {{labs.cpl}}, because last-touch had been under-crediting the entire upper funnel, not just trimming at the edges.</span></button>
-        <button class="opt" data-i="2"><span class="let">C</span> Down more than 27%</button>
-        <button class="opt" data-i="3"><span class="let">D</span> Down more than 50%: attribution was hopeless
-          <span class="why">The right direction but the wrong story: last-touch was biased, not hopeless, and the measured drop was {{labs.cpl}}, not half the CPL.</span></button>
+        <button class="opt" data-i="0"><span class="let">A</span> Bottom-funnel search: the last click before the sale
+          <span class="why">Backwards: the last visible click collects all the credit, so search is over-credited, not cheated.</span></button>
+        <button class="opt" data-i="1"><span class="let">B</span> Upper-funnel awareness: video and demand generation</button>
+        <button class="opt" data-i="2"><span class="let">C</span> All channels, equally
+          <span class="why">The bias is structural, not uniform: whatever sits far from the last visible click loses, and whatever sits next to it wins.</span></button>
+        <button class="opt" data-i="3"><span class="let">D</span> None: attribution is honest accounting
+          <span class="why">Honest accounting of clicks, not of causes: steps the tracker cannot see get exactly zero credit.</span></button>
       </div>
       <button class="reveal-btn">Reveal</button>
-      <div class="answer"><b>C.</b> "This year we were able to drive the CPL down by {{labs.cpl}}, which is very, very good" (Philip Herp, Nürnberger Versicherung). Under GDPR, {{labs.gdpr_sentence}}, so last-touch under-credited the upper funnel and budget followed {{labs.herp_attribution_quote}}. The client is scaling into {{labs.nurn_2026}}.</div>
+      <div class="answer"><b>B.</b> Under GDPR, {{labs.gdpr_sentence}}, so the last click was often the only visible step, the upper funnel vanished from the books, and budget followed {{labs.herp_attribution_quote}}. The funnel-aware model re-priced it: "This year we were able to drive the CPL down by {{labs.cpl}}, which is very, very good" (Philip Herp), over {{labs.cpl_window}} of model-guided spend, and cost per lead (CPL) is the price of one new customer lead. The client is scaling into {{labs.nurn_2026}}.</div>
     </div>
     <div class="callout key"><div class="ct">The client's bar for belief</div>
     "{{labs.trust_quote}}"</div>
@@ -3432,35 +3448,31 @@ window.fitSlide=fitSlide;
   draw(); window.__redraw.push(draw);
 })();
 
-/* ==== fig: the MMM / experiment / synthetic-control loop (S7) ==== */
+/* ==== fig: the MMM / experiment calibration loop (S7) ==== */
 (function(){
   const svg=document.getElementById('svgLoop'); if(!svg)return;
   function draw(){
     clr(svg); const c=COL();
-    const nodes=[
-      {x:170,y:52,w:150,label:'MMM',sub:'always-on model'},
-      {x:88,y:212,w:150,label:'Geo experiment',sub:'episodic truth'},
-      {x:252,y:212,w:150,label:'Synthetic control',sub:'reads it out'},
-    ];
-    function box(n,col){
-      svg.appendChild(el('rect',{x:n.x-n.w/2,y:n.y-26,width:n.w,height:52,rx:10,fill:'none',stroke:col,'stroke-width':2}));
-      svg.appendChild(el('text',{x:n.x,y:n.y-5,'text-anchor':'middle','font-size':13,'font-weight':'700',fill:c.navy},n.label));
-      svg.appendChild(el('text',{x:n.x,y:n.y+13,'text-anchor':'middle','font-size':10,fill:c.muted},n.sub));
+    function box(x,y,w,label,sub,col){
+      svg.appendChild(el('rect',{x:x-w/2,y:y-26,width:w,height:52,rx:10,fill:'none',stroke:col,'stroke-width':2}));
+      svg.appendChild(el('text',{x:x,y:y-5,'text-anchor':'middle','font-size':13,'font-weight':'700',fill:c.navy},label));
+      svg.appendChild(el('text',{x:x,y:y+13,'text-anchor':'middle','font-size':10,fill:c.muted},sub));
     }
-    box(nodes[0],c.blue); box(nodes[1],c.orange); box(nodes[2],c.green);
+    box(170,60,190,'MMM','always-on budget model',c.blue);
+    box(170,220,190,'Geo experiment','episodic ground truth',c.orange);
     function arrow(x1,y1,x2,y2){
       svg.appendChild(el('line',{x1,y1,x2,y2,stroke:c.faint,'stroke-width':1.6}));
       const a=Math.atan2(y2-y1,x2-x1);
       svg.appendChild(el('path',{d:`M${x2} ${y2} L${x2-9*Math.cos(a-0.4)} ${y2-9*Math.sin(a-0.4)} L${x2-9*Math.cos(a+0.4)} ${y2-9*Math.sin(a+0.4)} Z`,fill:c.faint}));
     }
-    arrow(128,80,100,182);  // MMM -> experiment (asks)
-    arrow(120,182,148,80);  // experiment -> MMM (calibrates)
-    arrow(166,224,176,224); // experiment -> SC
-    svg.appendChild(el('text',{x:56,y:132,'font-size':10,fill:c.muted},'asks for'));
-    svg.appendChild(el('text',{x:56,y:144,'font-size':10,fill:c.muted},'ground truth'));
-    svg.appendChild(el('text',{x:152,y:132,'font-size':10,fill:c.muted},'calibrates'));
-    svg.appendChild(el('text',{x:152,y:144,'font-size':10,fill:c.muted},'(priors, lift tests)'));
-    svg.appendChild(el('text',{x:170,y:262,'text-anchor':'middle','font-size':10,fill:c.muted},'MMM: last slide · synthetic control: Part 2 · the loop: this session'));
+    arrow(120,86,120,194);
+    arrow(220,194,220,86);
+    svg.appendChild(el('text',{x:108,y:140,'font-size':10,fill:c.muted,'text-anchor':'end'},'asks for'));
+    svg.appendChild(el('text',{x:108,y:152,'font-size':10,fill:c.muted,'text-anchor':'end'},'ground truth'));
+    svg.appendChild(el('text',{x:232,y:140,'font-size':10,fill:c.muted},'calibrates'));
+    svg.appendChild(el('text',{x:232,y:152,'font-size':10,fill:c.muted},'(priors, lift tests)'));
+    svg.appendChild(el('text',{x:170,y:282,'text-anchor':'middle','font-size':10,fill:c.muted},'reading a geo experiment out is its own craft:'));
+    svg.appendChild(el('text',{x:170,y:294,'text-anchor':'middle','font-size':10,fill:c.muted},'that method is Part 2 of this session'));
   }
   draw(); window.__redraw.push(draw);
 })();

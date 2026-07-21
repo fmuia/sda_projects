@@ -25,7 +25,7 @@
 
 - id: colgate_method
   slides: ["Colgate: incremental or cannibalistic"]
-  text: "multivariate Bayesian interrupted time series"
+  text: "interrupted time series"
   source: labs.colgate_counterfactual_quote
 
 - id: colgate_recovery
